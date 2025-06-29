@@ -9,13 +9,14 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
+  // 실제로는 DB에서 게시글 정보를 가져와서 메타데이터를 생성
   return {
-    title: `게시글 #${id} - 개인회생`,
-    description: '신용회복 커뮤니티의 개인회생 게시글입니다.'
+    title: `게시글 #${id} - 대출이야기`,
+    description: '신용회복 커뮤니티의 대출이야기 게시글입니다.'
   }
 }
 
-// 로딩 스켈레톤 (재사용)
+// 로딩 스켈레톤 컴포넌트
 function PostDetailSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -60,7 +61,7 @@ function PostDetailSkeleton() {
   )
 }
 
-export default async function PersonalRecoveryPostPage({ params }: PageProps) {
+export default async function LoanStoryPostPage({ params }: PageProps) {
   const { id } = await params
   
   return (
@@ -73,7 +74,7 @@ export default async function PersonalRecoveryPostPage({ params }: PageProps) {
               <Suspense fallback={<PostDetailSkeleton />}>
                 <PostDetail 
                   postId={id} 
-                  category="personal-recovery" 
+                  category="loan-story" 
                 />
               </Suspense>
             </main>

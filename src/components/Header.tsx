@@ -52,7 +52,7 @@ export default function Header() {
 
         {/* 네비게이션 */}
         <nav className="border-t border-gray-100">
-          <div className="flex space-x-0 overflow-x-auto py-2">
+          <div className="flex justify-center space-x-0 overflow-x-auto py-2">
             {navigation.map((item) => {
               const Icon = item.icon
               return (

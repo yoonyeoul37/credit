@@ -4,13 +4,14 @@ import PostDetail from '@/components/PostDetail'
 import Advertisement from '@/components/Advertisement'
 
 interface PageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
   // 실제로는 DB에서 게시글 정보를 가져와서 메타데이터를 생성
   return {
-    title: `게시글 #${params.id} - 신용이야기`,
+    title: `게시글 #${id} - 신용이야기`,
     description: '신용회복 커뮤니티의 신용이야기 게시글입니다.'
   }
 }
@@ -65,31 +66,24 @@ function PostDetailSkeleton() {
   )
 }
 
-export default function CreditStoryPostPage({ params }: PageProps) {
+export default async function CreditStoryPostPage({ params }: PageProps) {
+  const { id } = await params
+  
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* 메인 콘텐츠 */}
-          <main className="flex-1">
-            <Suspense fallback={<PostDetailSkeleton />}>
-              <PostDetail 
-                postId={params.id} 
-                category="credit-story" 
-              />
-            </Suspense>
-          </main>
-
-          {/* 사이드바 */}
-          <aside className="lg:w-80">
-            <div className="space-y-6">
-              <Advertisement 
-                category="creditStory" 
-                position="sidebar" 
-                size="medium"
-              />
-            </div>
-          </aside>
+      <div className="flex justify-center px-4 py-8">
+        <div className="w-full max-w-7xl">
+          <div className="flex justify-center">
+            {/* 메인 콘텐츠 */}
+            <main className="w-full max-w-4xl">
+              <Suspense fallback={<PostDetailSkeleton />}>
+                <PostDetail 
+                  postId={id} 
+                  category="credit-story" 
+                />
+              </Suspense>
+            </main>
+          </div>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
   ArrowLeft, Heart, MessageCircle, Eye, Clock, User, Send, 
-  ThumbsUp, Reply, MoreVertical, Flag, Share2 
+  ThumbsUp, Reply, MoreVertical, Flag, Share2, Edit3, Trash2, X, Image
 } from 'lucide-react'
 
 interface Comment {
@@ -30,6 +30,7 @@ interface Post {
   views_count: number
   category: string
   tags: string[]
+  images?: string[]
   is_liked?: boolean
 }
 
@@ -47,10 +48,16 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
   const [replyContent, setReplyContent] = useState('')
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [userNickname, setUserNickname] = useState('')
+  const [commentPassword, setCommentPassword] = useState('')
+  const [showMenu, setShowMenu] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | null>(null)
+  const [password, setPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   
   const router = useRouter()
 
-  // 익명 닉네임 생성
+  // 저장된 닉네임 불러오기 또는 자동 생성
   useEffect(() => {
     const generateNickname = () => {
       const adjectives = ['따뜻한', '희망찬', '용기있는', '지혜로운', '친근한', '성실한']
@@ -58,7 +65,13 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
       const numbers = Math.floor(Math.random() * 900) + 100
       return `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${numbers}`
     }
-    setUserNickname(generateNickname())
+    
+    const savedNickname = localStorage.getItem('user-nickname')
+    if (savedNickname) {
+      setUserNickname(savedNickname)
+    } else {
+      setUserNickname(generateNickname())
+    }
   }, [])
 
   // 데모 데이터 로드
@@ -97,6 +110,10 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
         views_count: 156,
         category,
         tags: ['신용점수', '신용회복', '성공사례', '팁'],
+        images: [
+          'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=500&h=300&fit=crop',
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop'
+        ],
         is_liked: false
       }
 
@@ -146,6 +163,18 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
     loadData()
   }, [postId, category])
 
+  // 메뉴 드롭다운 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showMenu) {
+        setShowMenu(false)
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showMenu])
+
   const getCategoryInfo = (cat: string) => {
     const categories: { [key: string]: { name: string; color: string; icon: string } } = {
       'credit-story': { name: '신용이야기', color: 'blue', icon: '💳' },
@@ -184,12 +213,15 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!commentContent.trim()) return
+    if (!commentContent.trim() || !userNickname.trim() || !commentPassword.trim()) return
+
+    // 닉네임 저장
+    localStorage.setItem('user-nickname', userNickname.trim())
 
     const newComment: Comment = {
       id: Date.now(),
       content: commentContent.trim(),
-      user_nickname: userNickname,
+      user_nickname: userNickname.trim(),
       created_at: new Date().toISOString(),
       likes_count: 0,
       replies: []
@@ -197,6 +229,7 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
 
     setComments([...comments, newComment])
     setCommentContent('')
+    setCommentPassword('')
     
     if (post) {
       setPost({ ...post, comments_count: post.comments_count + 1 })
@@ -229,6 +262,59 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
     }
   }
 
+  const handleEdit = () => {
+    setPasswordAction('edit')
+    setShowPasswordModal(true)
+    setShowMenu(false)
+  }
+
+  const handleDelete = () => {
+    setPasswordAction('delete')
+    setShowPasswordModal(true)
+    setShowMenu(false)
+  }
+
+  const handlePasswordSubmit = () => {
+    if (!password.trim()) {
+      setPasswordError('비밀번호를 입력해주세요')
+      return
+    }
+
+    if (password.length !== 4 || !/^\d{4}$/.test(password)) {
+      setPasswordError('4자리 숫자를 입력해주세요')
+      return
+    }
+
+    // 실제로는 서버에서 비밀번호 확인
+    // 지금은 데모용으로 1234로 설정
+    if (password !== '1234') {
+      setPasswordError('비밀번호가 일치하지 않습니다')
+      return
+    }
+
+    if (passwordAction === 'edit') {
+      // 수정 페이지로 이동
+      router.push(`/write?category=${category}&edit=${postId}`)
+    } else if (passwordAction === 'delete') {
+      // 삭제 처리
+      if (confirm('정말로 삭제하시겠습니까?')) {
+        alert('게시글이 삭제되었습니다')
+        router.push(`/${category}`)
+      }
+    }
+
+    setShowPasswordModal(false)
+    setPassword('')
+    setPasswordError('')
+  }
+
+  const closePasswordModal = () => {
+    setShowPasswordModal(false)
+    setPassword('')
+    setPasswordError('')
+    setPasswordAction(null)
+  }
+
   if (loading) {
     return (
       <div className={`max-w-4xl mx-auto ${className}`}>
@@ -257,7 +343,7 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
   }
 
   return (
-    <div className={`max-w-4xl mx-auto ${className}`}>
+    <div className={className}>
       {/* 네비게이션 */}
       <div className="mb-6">
         <Link
@@ -272,15 +358,15 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
       {/* 게시글 */}
       <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         {/* 게시글 헤더 */}
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center space-x-2 mb-4">
+        <div className="p-6 border-b border-gray-100 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
             <span className="text-lg">{categoryInfo.icon}</span>
             <span className={`text-sm font-medium text-${categoryInfo.color}-700 bg-${categoryInfo.color}-100 px-2 py-1 rounded-full`}>
               {categoryInfo.name}
             </span>
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4 leading-tight text-center">
             {post.title}
           </h1>
           
@@ -316,6 +402,32 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
               {post.content}
             </div>
           </div>
+
+          {/* 이미지 갤러리 */}
+          {post.images && post.images.length > 0 && (
+            <div className="mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {post.images.map((image, index) => (
+                  <div key={index} className="relative group cursor-pointer">
+                    <img
+                      src={image}
+                      alt={`게시글 이미지 ${index + 1}`}
+                      className="w-full h-48 sm:h-64 object-cover rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
+                      onClick={() => {
+                        // 이미지 확대 보기 기능은 나중에 추가 가능
+                        window.open(image, '_blank')
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Image className="w-8 h-8 text-white drop-shadow-lg" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* 태그 */}
           {post.tags.length > 0 && (
@@ -348,15 +460,41 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
                 <span>{post.likes_count}</span>
               </button>
               
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                <Share2 className="w-4 h-4" />
-                <span>공유</span>
-              </button>
-            </div>
-            
-            <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-white transition-colors">
+                          <button className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+              <Share2 className="w-4 h-4" />
+              <span>공유</span>
+            </button>
+          </div>
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-white transition-colors"
+            >
               <MoreVertical className="w-4 h-4" />
             </button>
+            
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="py-1">
+                  <button
+                    onClick={handleEdit}
+                    className="flex items-center space-x-2 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>수정하기</span>
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center space-x-2 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>삭제하기</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           </div>
         </div>
       </article>
@@ -373,9 +511,35 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
         {/* 댓글 작성 */}
         <div className="p-6 border-b border-gray-100 bg-gray-50">
           <form onSubmit={handleCommentSubmit} className="space-y-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <User className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600">💚 {userNickname}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    value={userNickname}
+                    onChange={(e) => setUserNickname(e.target.value)}
+                    placeholder="닉네임 입력"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 (4자리)</label>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">🔒</span>
+                  <input
+                    type="password"
+                    value={commentPassword}
+                    onChange={(e) => setCommentPassword(e.target.value)}
+                    placeholder="4자리 숫자"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={4}
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex space-x-3">
               <textarea
@@ -388,7 +552,7 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
               />
               <button
                 type="submit"
-                disabled={!commentContent.trim()}
+                disabled={!commentContent.trim() || !userNickname.trim() || !commentPassword.trim()}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               >
                 <Send className="w-4 h-4" />
@@ -484,6 +648,70 @@ const PostDetail = ({ postId, category, className = '' }: PostDetailProps) => {
           </div>
         )}
       </div>
+
+      {/* 비밀번호 확인 모달 */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {passwordAction === 'edit' ? '게시글 수정' : '게시글 삭제'}
+              </h3>
+              <button
+                onClick={closePasswordModal}
+                className="p-1 text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-gray-600 mb-4">
+                {passwordAction === 'edit' 
+                  ? '게시글을 수정하려면 작성시 설정한 비밀번호를 입력해주세요.' 
+                  : '게시글을 삭제하려면 작성시 설정한 비밀번호를 입력해주세요.'
+                }
+              </p>
+              
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호 (4자리 숫자)
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="4자리 숫자 입력"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={4}
+                autoFocus
+              />
+              
+              {passwordError && (
+                <p className="text-red-600 text-sm mt-2">{passwordError}</p>
+              )}
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={closePasswordModal}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handlePasswordSubmit}
+                className={`flex-1 px-4 py-3 text-white rounded-lg transition-colors ${
+                  passwordAction === 'delete' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {passwordAction === 'edit' ? '수정하기' : '삭제하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

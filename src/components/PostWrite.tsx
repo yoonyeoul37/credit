@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Send, Tag, User, AlertCircle, Heart } from 'lucide-react'
+import { ArrowLeft, Send, Tag, User, AlertCircle, Heart, Upload, X, Image } from 'lucide-react'
 import Link from 'next/link'
 
 interface PostWriteProps {
@@ -15,6 +15,10 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
   const [tags, setTags] = useState<string[]>([])
   const [currentTag, setCurrentTag] = useState('')
   const [userNickname, setUserNickname] = useState('')
+  const [password, setPassword] = useState('')
+  const [images, setImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [isDragOver, setIsDragOver] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   
@@ -22,7 +26,7 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
   const searchParams = useSearchParams()
   const category = searchParams.get('category') || 'credit-story'
 
-  // 익명 닉네임 자동 생성
+  // 저장된 닉네임 불러오기 또는 자동 생성
   useEffect(() => {
     const generateNickname = () => {
       const adjectives = [
@@ -41,7 +45,13 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
       return `${adjective}${noun}${numbers}`
     }
 
-    setUserNickname(generateNickname())
+    // 브라우저에 저장된 닉네임 불러오기
+    const savedNickname = localStorage.getItem('user-nickname')
+    if (savedNickname) {
+      setUserNickname(savedNickname)
+    } else {
+      setUserNickname(generateNickname())
+    }
   }, [])
 
   const getCategoryInfo = (cat: string) => {
@@ -125,6 +135,77 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/')
+      const isValidSize = file.size <= 5 * 1024 * 1024 // 5MB 제한
+      return isImage && isValidSize
+    })
+
+    if (validFiles.length + images.length > 5) {
+      alert('이미지는 최대 5개까지 업로드할 수 있습니다.')
+      return
+    }
+
+    const newImages = [...images, ...validFiles]
+    setImages(newImages)
+
+    // 미리보기 이미지 생성
+    validFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target?.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index)
+    const newPreviews = imagePreviews.filter((_, i) => i !== index)
+    setImages(newImages)
+    setImagePreviews(newPreviews)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    
+    const files = Array.from(e.dataTransfer.files)
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/')
+      const isValidSize = file.size <= 5 * 1024 * 1024
+      return isImage && isValidSize
+    })
+
+    if (validFiles.length + images.length > 5) {
+      alert('이미지는 최대 5개까지 업로드할 수 있습니다.')
+      return
+    }
+
+    const newImages = [...images, ...validFiles]
+    setImages(newImages)
+
+    validFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target?.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {}
     
@@ -139,6 +220,20 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
     } else if (content.length < 20) {
       newErrors.content = '내용은 20자 이상 입력해주세요'
     }
+
+    if (!userNickname.trim()) {
+      newErrors.nickname = '닉네임을 입력해주세요'
+    } else if (userNickname.length < 2) {
+      newErrors.nickname = '닉네임은 2자 이상 입력해주세요'
+    } else if (userNickname.length > 10) {
+      newErrors.nickname = '닉네임은 10자 이하로 입력해주세요'
+    }
+
+    if (!password.trim()) {
+      newErrors.password = '비밀번호를 입력해주세요'
+    } else if (password.length !== 4 || !/^\d{4}$/.test(password)) {
+      newErrors.password = '비밀번호는 4자리 숫자로 입력해주세요'
+    }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -152,13 +247,18 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
     setIsSubmitting(true)
     
     try {
+      // 닉네임을 브라우저에 저장
+      localStorage.setItem('user-nickname', userNickname.trim())
+      
       // 여기서 실제 DB 저장 로직 구현 (Supabase)
       const postData = {
         title: title.trim(),
         content: content.trim(),
         tags,
-        user_nickname: userNickname,
+        user_nickname: userNickname.trim(),
+        password_hash: password, // 실제로는 해시화해서 저장해야 함
         category,
+        images: images, // 실제로는 Supabase Storage에 업로드 후 URL 저장
         created_at: new Date().toISOString()
       }
       
@@ -222,13 +322,65 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
 
       {/* 작성 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 닉네임 표시 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center space-x-2">
-            <User className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600">작성자:</span>
-            <span className="font-medium text-green-700">💚 {userNickname}</span>
-            <span className="text-xs text-gray-500">(자동 생성된 익명 닉네임)</span>
+        {/* 닉네임 입력 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            닉네임 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center space-x-3">
+            <User className="w-5 h-5 text-gray-500" />
+            <input
+              type="text"
+              value={userNickname}
+              onChange={(e) => setUserNickname(e.target.value)}
+              placeholder="사용하실 닉네임을 입력해주세요"
+              className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                errors.nickname 
+                  ? 'border-red-300 focus:ring-red-500' 
+                  : 'border-gray-200 focus:ring-blue-500'
+              }`}
+              maxLength={10}
+            />
+          </div>
+          {errors.nickname && (
+            <div className="flex items-center space-x-1 mt-2 text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>{errors.nickname}</span>
+            </div>
+          )}
+          <div className="text-xs text-gray-500 mt-1">
+            💚 닉네임은 브라우저에 저장되어 다음에 자동으로 입력됩니다
+          </div>
+        </div>
+
+        {/* 비밀번호 입력 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            게시글 비밀번호 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center space-x-3">
+            <span className="text-lg">🔒</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="4자리 숫자 입력 (수정/삭제시 필요)"
+              className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                errors.password 
+                  ? 'border-red-300 focus:ring-red-500' 
+                  : 'border-gray-200 focus:ring-blue-500'
+              }`}
+              maxLength={4}
+            />
+          </div>
+          {errors.password && (
+            <div className="flex items-center space-x-1 mt-2 text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>{errors.password}</span>
+            </div>
+          )}
+          <div className="text-xs text-gray-500 mt-1">
+            ⚠️ 게시글 수정이나 삭제할 때 필요합니다. 꼭 기억해주세요!
           </div>
         </div>
 
@@ -336,6 +488,78 @@ const PostWrite = ({ className = '' }: PostWriteProps) => {
           
           <div className="text-xs text-gray-500">
             태그는 최대 5개까지 추가할 수 있습니다. ({tags.length}/5)
+          </div>
+        </div>
+
+        {/* 이미지 업로드 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            이미지 (선택사항)
+          </label>
+          
+          {/* 이미지 업로드 버튼 */}
+          <div className="mb-4">
+            <label 
+              className={`inline-flex items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                isDragOver 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : images.length >= 5 
+                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="text-center">
+                <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} />
+                <span className={`text-sm ${isDragOver ? 'text-blue-600' : 'text-gray-600'}`}>
+                  {isDragOver 
+                    ? '이미지를 여기에 놓으세요' 
+                    : images.length >= 5 
+                      ? '이미지 업로드 한도에 도달했습니다'
+                      : '클릭하여 이미지를 선택하거나 드래그해서 놓으세요'
+                  }
+                </span>
+                <span className="text-xs text-gray-500 block mt-1">
+                  JPG, PNG, GIF (최대 5MB, 5개까지)
+                </span>
+              </div>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={images.length >= 5}
+              />
+            </label>
+          </div>
+
+          {/* 이미지 미리보기 */}
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={preview}
+                    alt={`미리보기 ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="text-xs text-gray-500 mt-2">
+            📸 이미지는 최대 5개까지 업로드할 수 있습니다. ({images.length}/5)
           </div>
         </div>
 
