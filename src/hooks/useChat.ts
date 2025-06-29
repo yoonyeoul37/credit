@@ -5,7 +5,7 @@ import { supabase, ChatRoom, ChatMessage, ChatParticipant } from '@/lib/supabase
 import { RealtimeChannel } from '@supabase/supabase-js'
 
 // 🎯 로컬 데모 모드 (네트워크 문제 해결 시까지)
-const DEMO_MODE = true
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || false
 
 // 익명 사용자 관리
 const generateUserHash = (): string => {
