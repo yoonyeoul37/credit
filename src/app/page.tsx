@@ -108,6 +108,16 @@ const stats = [
 export default function HomePage() {
   return (
     <div className="min-h-screen">
+      {/* 상단 광고 배너 */}
+      <Advertisement
+        position="header"
+        title={sampleAds.header.title}
+        description={sampleAds.header.description}
+        link={sampleAds.header.link}
+        size="small"
+        closeable={true}
+      />
+      
       {/* 히어로 섹션 */}
       <section className="bg-gradient-to-br from-blue-50 via-white to-green-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -336,6 +346,26 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      
+      {/* 하단 광고 배너 */}
+      <Advertisement
+        position="footer"
+        title={sampleAds.footer.title}
+        description={sampleAds.footer.description}
+        link={sampleAds.footer.link}
+        size="small"
+        closeable={true}
+      />
+      
+      {/* 구글 애드센스 - 하단 배너 */}
+      <Advertisement
+        position="adsense"
+        title="하단 배너 (728x90 또는 320x50)"
+        description=""
+        link="#"
+        size="small"
+        adType="adsense"
+      />
     </div>
   )
 }

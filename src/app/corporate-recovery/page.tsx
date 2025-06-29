@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Search, Filter, Building2, Clock, Eye, MessageCircle, ThumbsUp } from 'lucide-react'
+import Advertisement from '@/components/Advertisement'
+import { categoryAds } from '@/lib/ads'
 
 export const metadata: Metadata = {
   title: '법인회생',
@@ -219,6 +221,29 @@ export default function CorporateRecoveryPage() {
 
           {/* 사이드바 */}
           <div className="lg:col-span-1">
+            {/* 법인회생 전문 법무사/변호사 광고 */}
+            {categoryAds.corporateRecovery.map((ad, index) => (
+              <Advertisement
+                key={index}
+                position="sidebar"
+                title={ad.title}
+                description={ad.description}
+                link={ad.link}
+                size="medium"
+                closeable={true}
+              />
+            ))}
+            
+            {/* 구글 애드센스 광고 자리 */}
+            <Advertisement
+              position="adsense"
+              title="사이드바 하단 (300x250)"
+              description=""
+              link="#"
+              size="medium"
+              adType="adsense"
+            />
+            
             {/* 도움말 */}
             <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

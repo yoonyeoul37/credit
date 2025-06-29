@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Search, Filter, Star, Clock, Eye, MessageCircle, ThumbsUp } from 'lucide-react'
+import Advertisement from '@/components/Advertisement'
+import { categoryAds } from '@/lib/ads'
 
 export const metadata: Metadata = {
   title: '성공사례',
@@ -225,6 +227,29 @@ export default function SuccessStoryPage() {
 
           {/* 사이드바 */}
           <div className="lg:col-span-1">
+            {/* 성공사례 관련 광고 */}
+            {categoryAds.successStory.map((ad, index) => (
+              <Advertisement
+                key={index}
+                position="sidebar"
+                title={ad.title}
+                description={ad.description}
+                link={ad.link}
+                size="medium"
+                closeable={true}
+              />
+            ))}
+            
+            {/* 구글 애드센스 광고 자리 */}
+            <Advertisement
+              position="adsense"
+              title="사이드바 중간 (300x250)"
+              description=""
+              link="#"
+              size="medium"
+              adType="adsense"
+            />
+            
             {/* 성공 요인 */}
             <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Search, Filter, TrendingUp, Clock, Eye, MessageCircle, ThumbsUp } from 'lucide-react'
 import Advertisement from '@/components/Advertisement'
+import { categoryAds } from '@/lib/ads'
 
 export const metadata: Metadata = {
   title: '신용이야기',
@@ -205,14 +206,14 @@ export default function CreditStoryPage() {
                     </div>
                   </div>
                   
-                  {/* 두 번째 게시글 다음에 중간 광고 삽입 */}
+                  {/* 두 번째 게시글 다음에 신용카드 설계 광고 삽입 */}
                   {index === 1 && (
                     <div className="my-6">
                       <Advertisement
                         position="content"
-                        title={creditAds.content.title}
-                        description={creditAds.content.description}
-                        link={creditAds.content.link}
+                        title={categoryAds.creditStory[0].title}
+                        description={categoryAds.creditStory[0].description}
+                        link={categoryAds.creditStory[0].link}
                         size="medium"
                         closeable={true}
                       />
@@ -240,17 +241,28 @@ export default function CreditStoryPage() {
 
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            {/* 신용 관련 맞춤 광고 */}
-            <div className="mb-6">
+            {/* 신용카드 맞춤 광고 */}
+            {categoryAds.creditStory.slice(1).map((ad, index) => (
               <Advertisement
+                key={index}
                 position="sidebar"
-                title={creditAds.sidebar.title}
-                description={creditAds.sidebar.description}
-                link={creditAds.sidebar.link}
+                title={ad.title}
+                description={ad.description}
+                link={ad.link}
                 size="medium"
                 closeable={true}
               />
-            </div>
+            ))}
+            
+            {/* 구글 애드센스 광고 자리 */}
+            <Advertisement
+              position="adsense"
+              title="사이드바 중간 (300x250)"
+              description=""
+              link="#"
+              size="medium"
+              adType="adsense"
+            />
 
             {/* 인기 태그 */}
             <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
