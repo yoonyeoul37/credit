@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, Plus, Search, Headphones, Clock, Users, MessageCircle, Send, Heart } from 'lucide-react'
 import Advertisement from '@/components/Advertisement'
 import { categoryAds } from '@/lib/ads'
+import ChatRoom from '@/components/ChatRoom'
 
 export const metadata: Metadata = {
   title: '실시간상담',
@@ -120,53 +121,68 @@ export default function LiveChatPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 메인 컨텐츠 */}
           <div className="lg:col-span-2">
-            {/* 실시간 채팅방 */}
+            {/* 메인 실시간 채팅방 */}
             <section className="mb-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2 text-green-500" />
-                💬 실시간 채팅방
+                💬 신용회복 종합상담방
               </h2>
               
-              <div className="grid grid-cols-1 gap-4">
-                {liveChats.map((chat) => (
+              {/* 환경 변수 테스트 */}
+              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 mb-4">
+                <h4 className="font-bold text-yellow-800">🔍 디버그 정보</h4>
+                <p className="text-sm text-yellow-700">
+                  Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || '❌ 없음'}
+                </p>
+                <p className="text-sm text-yellow-700">
+                  Supabase Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ 있음' : '❌ 없음'}
+                </p>
+              </div>
+              
+              {/* 실시간 채팅 컴포넌트 */}
+              <ChatRoom roomId={1} className="mb-6" />
+            </section>
+
+            {/* 다른 채팅방 목록 */}
+            <section className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">🏠 다른 채팅방</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {liveChats.slice(1).map((chat) => (
                   <div
                     key={chat.id}
-                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer hover:border-indigo-200"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-gray-900 hover:text-indigo-600 text-sm">
                         {chat.title}
-                      </h3>
-                      <div className="flex items-center space-x-2">
+                      </h4>
+                      <div className="flex items-center space-x-1">
                         {chat.status === 'active' ? (
-                          <div className="flex items-center space-x-1">
+                          <>
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                             <span className="text-xs text-green-600 font-medium">LIVE</span>
-                          </div>
+                          </>
                         ) : (
-                          <div className="flex items-center space-x-1">
+                          <>
                             <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
                             <span className="text-xs text-yellow-600 font-medium">예정</span>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>
                     
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                       {chat.description}
                     </p>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs">
-                          {chat.category}
-                        </span>
-                        <span className="flex items-center">
-                          <Users className="w-4 h-4 mr-1" />
-                          {chat.participants}명 참여중
-                        </span>
-                      </div>
-                      <span className="text-sm text-gray-500">{chat.time}</span>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                        {chat.category}
+                      </span>
+                      <span className="flex items-center">
+                        <Users className="w-3 h-3 mr-1" />
+                        {chat.participants}명
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -211,24 +227,26 @@ export default function LiveChatPage() {
           </div>
 
           {/* 사이드바 */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             {/* 실시간상담 관련 광고 */}
-            {categoryAds.liveChat.map((ad, index) => (
-              <Advertisement
-                key={index}
-                position="sidebar"
-                title={ad.title}
-                description={ad.description}
-                link={ad.link}
-                size="medium"
-                closeable={true}
-              />
-            ))}
+            <div className="space-y-4">
+              {categoryAds.liveChat.map((ad, index) => (
+                <Advertisement
+                  key={index}
+                  position="sidebar"
+                  title={ad.title}
+                  description={ad.description}
+                  link={ad.link}
+                  size="medium"
+                  closeable={true}
+                />
+              ))}
+            </div>
             
             {/* 구글 애드센스 광고 자리 */}
             <Advertisement
               position="adsense"
-              title="사이드바 하단 (300x250)"
+              title="사이드바 중간 (300x250)"
               description=""
               link="#"
               size="medium"
@@ -236,7 +254,7 @@ export default function LiveChatPage() {
             />
             
             {/* 실시간 현황 */}
-            <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse mr-2"></div>
                 실시간 현황
@@ -262,7 +280,7 @@ export default function LiveChatPage() {
             </div>
 
             {/* 채팅 가이드라인 */}
-            <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 채팅 가이드라인</h3>
               <ul className="space-y-2">
                 {chatGuidelines.map((guideline, index) => (

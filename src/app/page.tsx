@@ -108,16 +108,6 @@ const stats = [
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* 상단 광고 배너 */}
-      <Advertisement
-        position="header"
-        title={sampleAds.header.title}
-        description={sampleAds.header.description}
-        link={sampleAds.header.link}
-        size="small"
-        closeable={true}
-      />
-      
       {/* 히어로 섹션 */}
       <section className="bg-gradient-to-br from-blue-50 via-white to-green-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,77 +194,64 @@ export default function HomePage() {
 
               <div className="space-y-4">
                 {hotPosts.map((post, index) => (
-                  <div key={post.id}>
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-3">
-                            {post.isHot && (
-                              <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
-                                🔥 HOT
-                              </span>
-                            )}
-                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                              {post.category}
+                  <div
+                    key={post.id}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-3">
+                          {post.isHot && (
+                            <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+                              🔥 HOT
                             </span>
+                          )}
+                          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                            {post.category}
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer">
+                          {post.title}
+                        </h3>
+                        
+                        <p className="text-gray-600 mb-3 line-clamp-2">
+                          {post.content}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {post.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <span className="font-medium text-green-700">💚 {post.author}</span>
+                            <span>{post.time}</span>
                           </div>
-                          
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer">
-                            {post.title}
-                          </h3>
-                          
-                          <p className="text-gray-600 mb-3 line-clamp-2">
-                            {post.content}
-                          </p>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {post.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span className="font-medium text-green-700">💚 {post.author}</span>
-                              <span>{post.time}</span>
-                            </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span className="flex items-center">
-                                <ThumbsUp className="w-4 h-4 mr-1" />
-                                {post.likes}
-                              </span>
-                              <span className="flex items-center">
-                                <MessageCircle className="w-4 h-4 mr-1" />
-                                {post.comments}
-                              </span>
-                              <span className="flex items-center">
-                                <Eye className="w-4 h-4 mr-1" />
-                                {post.views}
-                              </span>
-                            </div>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <span className="flex items-center">
+                              <ThumbsUp className="w-4 h-4 mr-1" />
+                              {post.likes}
+                            </span>
+                            <span className="flex items-center">
+                              <MessageCircle className="w-4 h-4 mr-1" />
+                              {post.comments}
+                            </span>
+                            <span className="flex items-center">
+                              <Eye className="w-4 h-4 mr-1" />
+                              {post.views}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* 두 번째 게시글 다음에 중간 광고 삽입 */}
-                    {index === 1 && (
-                      <div className="my-6">
-                        <Advertisement
-                          position="content"
-                          title={sampleAds.content.title}
-                          description={sampleAds.content.description}
-                          link={sampleAds.content.link}
-                          size="medium"
-                          closeable={true}
-                        />
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -290,7 +267,7 @@ export default function HomePage() {
                 title={sampleAds.sidebar.title}
                 description={sampleAds.sidebar.description}
                 link={sampleAds.sidebar.link}
-                size="medium"
+                size="small"
                 closeable={true}
               />
             </div>
@@ -346,26 +323,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-      
-      {/* 하단 광고 배너 */}
-      <Advertisement
-        position="footer"
-        title={sampleAds.footer.title}
-        description={sampleAds.footer.description}
-        link={sampleAds.footer.link}
-        size="small"
-        closeable={true}
-      />
-      
-      {/* 구글 애드센스 - 하단 배너 */}
-      <Advertisement
-        position="adsense"
-        title="하단 배너 (728x90 또는 320x50)"
-        description=""
-        link="#"
-        size="small"
-        adType="adsense"
-      />
     </div>
   )
 }

@@ -220,24 +220,26 @@ export default function CorporateRecoveryPage() {
           </div>
 
           {/* 사이드바 */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             {/* 법인회생 전문 법무사/변호사 광고 */}
-            {categoryAds.corporateRecovery.map((ad, index) => (
-              <Advertisement
-                key={index}
-                position="sidebar"
-                title={ad.title}
-                description={ad.description}
-                link={ad.link}
-                size="medium"
-                closeable={true}
-              />
-            ))}
+            <div className="space-y-4">
+              {categoryAds.corporateRecovery.map((ad, index) => (
+                <Advertisement
+                  key={index}
+                  position="sidebar"
+                  title={ad.title}
+                  description={ad.description}
+                  link={ad.link}
+                  size="medium"
+                  closeable={true}
+                />
+              ))}
+            </div>
             
             {/* 구글 애드센스 광고 자리 */}
             <Advertisement
               position="adsense"
-              title="사이드바 하단 (300x250)"
+              title="사이드바 중간 (300x250)"
               description=""
               link="#"
               size="medium"
@@ -245,7 +247,7 @@ export default function CorporateRecoveryPage() {
             />
             
             {/* 도움말 */}
-            <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Building2 className="w-5 h-5 mr-2 text-purple-500" />
                 법인회생 핵심 포인트

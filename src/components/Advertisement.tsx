@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { X, ExternalLink } from 'lucide-react'
 
 interface AdProps {
-  position: 'header' | 'sidebar' | 'content' | 'footer'
+  position: 'header' | 'sidebar' | 'content' | 'footer' | 'adsense'
   title: string
   image?: string
   description?: string
   link: string
   size?: 'small' | 'medium' | 'large'
   closeable?: boolean
+  adType?: 'adsense' | 'regular'
 }
 
 const Advertisement = ({ 
@@ -20,46 +21,69 @@ const Advertisement = ({
   description, 
   link, 
   size = 'medium',
-  closeable = false 
+  closeable = false,
+  adType = 'regular'
 }: AdProps) => {
   const [isVisible, setIsVisible] = useState(true)
 
   if (!isVisible) return null
 
   const handleClick = () => {
-    window.open(link, '_blank')
+    if (adType !== 'adsense') {
+      window.open(link, '_blank')
+    }
   }
 
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'h-20'
+        return 'h-32'
       case 'large':
         return 'h-40'
       default:
-        return 'h-28'
+        return 'h-32'
     }
   }
 
   const getPositionClasses = () => {
     switch (position) {
       case 'header':
-        return 'w-full bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-200'
+        return 'w-full max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-200'
       case 'sidebar':
-        return 'w-full bg-white rounded-2xl shadow-sm border border-gray-100'
+        return 'w-full bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200'
       case 'content':
-        return 'w-full bg-gray-50 rounded-xl border border-gray-200'
+        return 'w-full max-w-2xl mx-auto bg-gray-50 rounded-xl border border-gray-200'
       case 'footer':
-        return 'w-full bg-gray-100 border-t border-gray-200'
+        return 'w-full max-w-4xl mx-auto bg-gray-100 border-t border-gray-200'
+      case 'adsense':
+        return 'w-full bg-gray-50 rounded-xl border border-gray-200 border-dashed'
       default:
         return 'w-full bg-white rounded-lg border border-gray-200'
     }
   }
 
+  // 애드센스용 더미 광고
+  if (adType === 'adsense') {
+    return (
+      <div className={`relative ${getPositionClasses()} ${getSizeClasses()}`}>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-center text-gray-400">
+            <div className="text-xs mb-1">Google AdSense</div>
+            <div className="text-sm font-medium">{title}</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`relative ${getPositionClasses()} ${getSizeClasses()}`}>
-      {/* 광고 표시 */}
-      <div className="absolute top-2 left-2 text-xs text-gray-400 bg-white px-2 py-1 rounded-full">
+      {/* 광고 표시 라벨 */}
+      <div className={`absolute text-gray-400 bg-gray-100 rounded-full font-medium ${
+        size === 'small' 
+          ? 'top-3 left-3 text-xs px-2 py-1' 
+          : 'top-3 left-3 text-xs px-2 py-1'
+      }`}>
         광고
       </div>
 
@@ -67,20 +91,30 @@ const Advertisement = ({
       {closeable && (
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+          className={`absolute bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 z-10 ${
+            size === 'small' 
+              ? 'top-3 right-3 w-6 h-6' 
+              : 'top-3 right-3 w-6 h-6'
+          }`}
         >
-          <X className="w-3 h-3 text-gray-400" />
+          <X className={`text-gray-500 ${
+            size === 'small' ? 'w-3 h-3' : 'w-3 h-3'
+          }`} />
         </button>
       )}
 
       {/* 광고 콘텐츠 */}
       <div 
-        className="w-full h-full p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center space-x-4"
+        className={`w-full h-full cursor-pointer hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-4 ${
+          size === 'small' ? 'p-6' : 'p-5'
+        }`}
         onClick={handleClick}
       >
         {/* 이미지가 있는 경우 */}
         {image && (
-          <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+          <div className={`flex-shrink-0 bg-gray-200 rounded-xl overflow-hidden ${
+            size === 'small' ? 'w-16 h-16' : 'w-14 h-14'
+          }`}>
             <img 
               src={image} 
               alt={title}
@@ -91,14 +125,32 @@ const Advertisement = ({
 
         {/* 텍스트 콘텐츠 */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-sm truncate flex items-center">
-            {title}
-            <ExternalLink className="w-3 h-3 ml-1 text-gray-400" />
-          </h3>
-          {description && (
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-              {description}
-            </p>
+          {size === 'small' ? (
+            // Small 사이즈: 한 줄로 제목과 설명을 나란히 배치
+            <div className="flex items-center space-x-2">
+              <h3 className="font-semibold text-gray-900 text-sm flex-shrink-0">
+                {title}
+              </h3>
+              {description && (
+                <p className="text-xs text-gray-600 truncate flex-1">
+                  {description}
+                </p>
+              )}
+              <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            </div>
+          ) : (
+            // Medium/Large 사이즈: 기존 방식
+            <>
+              <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1 flex items-center">
+                <span className="truncate">{title}</span>
+                <ExternalLink className="w-3 h-3 ml-2 text-gray-400 flex-shrink-0" />
+              </h3>
+              {description && (
+                <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                  {description}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -240,19 +240,21 @@ export default function CreditStoryPage() {
           </div>
 
           {/* 사이드바 */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             {/* 신용카드 맞춤 광고 */}
-            {categoryAds.creditStory.slice(1).map((ad, index) => (
-              <Advertisement
-                key={index}
-                position="sidebar"
-                title={ad.title}
-                description={ad.description}
-                link={ad.link}
-                size="medium"
-                closeable={true}
-              />
-            ))}
+            <div className="space-y-4">
+              {categoryAds.creditStory.slice(1).map((ad, index) => (
+                <Advertisement
+                  key={index}
+                  position="sidebar"
+                  title={ad.title}
+                  description={ad.description}
+                  link={ad.link}
+                  size="medium"
+                  closeable={true}
+                />
+              ))}
+            </div>
             
             {/* 구글 애드센스 광고 자리 */}
             <Advertisement
@@ -265,7 +267,7 @@ export default function CreditStoryPage() {
             />
 
             {/* 인기 태그 */}
-            <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <TrendingUp className="w-5 h-5 mr-2 text-red-500" />
                 인기 태그

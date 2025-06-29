@@ -49,14 +49,16 @@ export default function RootLayout({
           <Header />
           
           {/* 헤더 바로 아래 상단 배너 광고 */}
-          <Advertisement
-            position="header"
-            title={sampleAds.header.title}
-            description={sampleAds.header.description}
-            link={sampleAds.header.link}
-            size="small"
-            closeable={true}
-          />
+          <div className="mt-4">
+            <Advertisement
+              position="header"
+              title={sampleAds.header.title}
+              description={sampleAds.header.description}
+              link={sampleAds.header.link}
+              size="small"
+              closeable={true}
+            />
+          </div>
           
           <main className="flex-1">
             {children}
