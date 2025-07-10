@@ -32,7 +32,46 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         script: |
           cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
+          echo "🚀 크레딧스토리 배포 시작..."
+          
+          # 기존 프로세스 종료
+          echo "🔄 기존 프로세스 종료..."
+          pm2 stop all 2>/dev/null || echo "실행 중인 PM2 프로세스가 없습니다."
+          pkill -f "next" 2>/dev/null || echo "실행 중인 Next.js가 없습니다."
+          
+          # 최신 코드 업데이트
+          echo "📥 최신 코드 업데이트..."
           git pull origin main
-          npm ci
+          
+          # 의존성 설치
+          echo "📦 의존성 설치..."
+          npm ci --production=false
+          
+          # 빌드
+          echo "🏗️ 애플리케이션 빌드..."
           npm run build
-          pm2 restart all || pm2 start npm --name "credit-site" -- start 
+          
+          # 환경 변수 설정
+          echo "🔧 환경 변수 설정..."
+          export NODE_ENV=production
+          export PORT=3000
+          export HOSTNAME=0.0.0.0
+          
+          # 서버 시작 (PM2 없이 직접 실행)
+          echo "🚀 서버 시작..."
+          nohup npm start > /tmp/creditstory.log 2>&1 &
+          SERVER_PID=$!
+          echo $SERVER_PID > /tmp/creditstory.pid
+          
+          # 서버 시작 확인
+          sleep 3
+          if ps -p $SERVER_PID > /dev/null 2>&1; then
+            echo "✅ 서버가 성공적으로 시작되었습니다!"
+            echo "📋 PID: $SERVER_PID"
+          else
+            echo "❌ 서버 시작 실패. 로그 확인:"
+            tail -20 /tmp/creditstory.log
+            exit 1
+          fi
+          
+          echo "🎉 배포 완료!" 
