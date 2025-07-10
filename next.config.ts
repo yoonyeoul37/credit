@@ -1,12 +1,22 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // ESLint와 TypeScript 오류 임시 무시 (배포용)
   eslint: {
-    ignoreDuringBuilds: true,  // ESLint 오류 무시하고 빌드 진행
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true,  // TypeScript 오류도 무시하고 빌드 진행
+    ignoreBuildErrors: true,
   },
-};
+  // 서버 설정
+  env: {
+    PORT: '3000',
+  },
+  // 실험적 기능 비활성화
+  experimental: {
+    turbo: undefined,
+  },
+  // 출력 설정
+  output: 'standalone',
+}
 
-export default nextConfig;
+module.exports = nextConfig

@@ -33,7 +33,7 @@ EOF
 
 # 6. PM2로 서버 시작
 echo "🚀 서버 시작..."
-pm2 start ecosystem.config.js --env production
+NODE_ENV=production PORT=3000 pm2 start ecosystem.config.js --env production
 
 # 7. PM2 상태 확인
 echo "✅ 배포 완료! PM2 상태:"
