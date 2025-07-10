@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import MobileNavigation from './components/MobileNavigation';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,13 +183,16 @@ export default function Home() {
 
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
+      {/* 모바일 네비게이션 */}
+      <MobileNavigation currentPage="/" />
+      
       {/* 헤더 */}
-      <header className="border-b border-gray-200 bg-white sticky top-0">
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
               <div>
-                <h1 className="text-xl font-normal text-black">
+                <h1 className="text-lg md:text-xl font-normal text-black">
                   <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
@@ -217,29 +221,29 @@ export default function Home() {
       {/* 메인 컨텐츠 */}
       <main className="max-w-4xl mx-auto px-4 py-6">
         {/* 페이지 제목 */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-normal text-black mb-2">전체 게시글</h2>
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-normal text-black mb-2">전체 게시글</h2>
           <p className="text-sm text-gray-600">모든 카테고리의 최신 글을 확인하세요</p>
         </div>
 
         {/* 상단 배너 광고 - 조건부 렌더링 */}
         {premiumAd?.isActive && (
-          <div className="mb-6 flex justify-center">
-            <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
+          <div className="mb-4 md:mb-6 flex justify-center">
+            <div className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4">
               <div className="text-center">
-                <div className="text-lg mb-1">{premiumAd.title}</div>
-                <div className="text-xs text-blue-500">{premiumAd.content}</div>
+                <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
+                <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
               </div>
             </div>
           </div>
         )}
         
         {/* 글쓰기 버튼 */}
-        <div className="flex justify-center mb-6">
-          <div className="w-[728px] flex justify-end">
+        <div className="flex justify-center mb-4 md:mb-6">
+          <div className="w-full max-w-[728px] flex justify-end">
             <Link 
               href="/write" 
-              className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium touch-manipulation"
             >
               작성하기
             </Link>
@@ -267,20 +271,20 @@ export default function Home() {
             <div key={post.id}>
               {/* 광고 배너 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
               {index === 5 && listAd?.isActive && (
-                <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
-                  <div className="flex-shrink-0 w-8 text-right">
-                    <span className="text-sm text-orange-400">#AD</span>
+                <div className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3">
+                  <div className="flex-shrink-0 w-8 md:w-8 text-right">
+                    <span className="text-xs md:text-sm text-orange-400">#AD</span>
                   </div>
-                  <div className="flex-1 ml-4">
-                    <div className="flex items-center space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                  <div className="flex-1 ml-3 md:ml-4">
+                    <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                      <a href="#" className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
                         {listAd.title}
                       </a>
-                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded self-start">
                         금융 광고
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
                       {listAd.content.split(' | ').map((item, idx) => (
                         <span key={idx}>{item}</span>
                       ))}
@@ -290,20 +294,20 @@ export default function Home() {
               )}
               
               {/* 게시글 아이템 */}
-              <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
-                <div className="flex-shrink-0 w-8 text-right">
-                  <span className="text-sm text-gray-500">{post.id}</span>
+              <div className="flex items-start py-3 hover:bg-gray-50 -mx-2 px-3 touch-manipulation">
+                <div className="flex-shrink-0 w-8 md:w-8 text-right">
+                  <span className="text-xs md:text-sm text-gray-500">{post.id}</span>
                 </div>
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center space-x-2">
-                    <Link href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                <div className="flex-1 ml-3 md:ml-4">
+                  <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                    <Link href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm md:text-base leading-relaxed">
                       {post.title}
                     </Link>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded self-start">
                       {post.category}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
                     <span>{post.author}</span>
                     <span>{post.createdAt}</span>
                     <span>{post.commentCount} 댓글</span>
@@ -317,13 +321,13 @@ export default function Home() {
         )}
 
         {/* 페이지네이션 */}
-        <div className="mt-8 flex justify-center">
-          <div className="flex items-center space-x-2">
+        <div className="mt-6 md:mt-8 flex justify-center">
+          <div className="flex items-center space-x-1 md:space-x-2">
             {/* 이전 10페이지 */}
             {startPage > 1 && (
               <button
                 onClick={() => handlePageChange(startPage - 1)}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
+                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg touch-manipulation"
               >
                 ← 이전
               </button>
@@ -334,7 +338,7 @@ export default function Home() {
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-2 text-sm rounded ${
+                className={`px-3 py-2 text-sm rounded-lg touch-manipulation ${
                   currentPage === page
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
@@ -348,7 +352,7 @@ export default function Home() {
             {endPage < totalPages && (
               <button
                 onClick={() => handlePageChange(endPage + 1)}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
+                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg touch-manipulation"
               >
                 다음 →
               </button>
@@ -392,9 +396,9 @@ export default function Home() {
       </main>
 
       {/* 푸터 */}
-      <footer className="border-t border-gray-200 mt-16 py-12 bg-gray-50">
+      <footer className="border-t border-gray-200 mt-12 md:mt-16 py-8 md:py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
@@ -403,8 +407,8 @@ export default function Home() {
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                신용회복과 금융 재건을 위한 정보 공유 커뮤니티입니다.<br/>
-                개인회생, 법인회생, 워크아웃 등 다양한 경험을 나누며<br/>
+                신용회복과 금융 재건을 위한 정보 공유 커뮤니티입니다.<br className="hidden md:block"/>
+                개인회생, 법인회생, 워크아웃 등 다양한 경험을 나누며<br className="hidden md:block"/>
                 함께 성장해나가는 공간입니다.
               </p>
               <p className="text-xs text-gray-500">
@@ -415,27 +419,27 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-medium text-black mb-4">커뮤니티</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><Link href="/credit" className="hover:text-blue-600">신용이야기</Link></li>
-                <li><Link href="/personal" className="hover:text-blue-600">개인회생</Link></li>
-                <li><Link href="/corporate" className="hover:text-blue-600">법인회생</Link></li>
-                <li><Link href="/workout" className="hover:text-blue-600">워크아웃</Link></li>
-                <li><Link href="/card" className="hover:text-blue-600">신용카드</Link></li>
-                <li><Link href="/loan" className="hover:text-blue-600">대출</Link></li>
-                <li><Link href="/news" className="hover:text-blue-600">뉴스정보</Link></li>
-                <li><Link href="/calculator" className="hover:text-blue-600">계산기</Link></li>
+                <li><Link href="/credit" className="hover:text-blue-600 py-1 block">신용이야기</Link></li>
+                <li><Link href="/personal" className="hover:text-blue-600 py-1 block">개인회생</Link></li>
+                <li><Link href="/corporate" className="hover:text-blue-600 py-1 block">법인회생</Link></li>
+                <li><Link href="/workout" className="hover:text-blue-600 py-1 block">워크아웃</Link></li>
+                <li><Link href="/card" className="hover:text-blue-600 py-1 block">신용카드</Link></li>
+                <li><Link href="/loan" className="hover:text-blue-600 py-1 block">대출</Link></li>
+                <li><Link href="/news" className="hover:text-blue-600 py-1 block">뉴스정보</Link></li>
+                <li><Link href="/calculator" className="hover:text-blue-600 py-1 block">계산기</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-black mb-4">정보</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><Link href="/ad" className="hover:text-blue-600">광고문의</Link></li>
-                <li><Link href="/admin" className="hover:text-red-600 text-gray-500">관리자</Link></li>
+                <li><Link href="/ad" className="hover:text-blue-600 py-1 block">광고문의</Link></li>
+                <li><Link href="/admin" className="hover:text-red-600 text-gray-500 py-1 block">관리자</Link></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-gray-200 mt-8 pt-8 text-center">
+          <div className="border-t border-gray-200 mt-6 md:mt-8 pt-6 md:pt-8 text-center">
             <p className="text-xs text-gray-500">
               © 2024 크레딧스토리. 모든 권리 보유.
             </p>
@@ -446,8 +450,8 @@ export default function Home() {
       {/* 스티키 광고 */}
       {showStickyAd && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="max-w-4xl mx-auto px-3 md:px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   신용회복 전문 상담센터 - 24시간 무료 상담
@@ -457,13 +461,13 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <button className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button className="bg-white text-blue-600 px-3 md:px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors touch-manipulation">
                 상담신청
               </button>
               <button
                 onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-1 rounded transition-colors"
+                className="text-blue-100 hover:text-white p-2 rounded-lg transition-colors touch-manipulation"
                 aria-label="광고 닫기"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

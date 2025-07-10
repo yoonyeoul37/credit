@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import React from 'react';
 import Link from 'next/link';
+import MobileNavigation from '../components/MobileNavigation';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('ads');
@@ -308,6 +309,9 @@ export default function AdminPage() {
 
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
+      {/* 모바일 네비게이션 */}
+      <MobileNavigation currentPage="/admin" />
+      
       {/* 일반 헤더 */}
       <header className="border-b border-gray-200 bg-white sticky top-0">
         <div className="max-w-4xl mx-auto px-4 py-4">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import MobileNavigation from '../components/MobileNavigation';
 import { useRouter } from 'next/navigation';
 
 export default function WritePage() {
@@ -176,13 +177,16 @@ export default function WritePage() {
 
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
+      {/* 모바일 네비게이션 */}
+      <MobileNavigation currentPage="/write" />
+      
       {/* 헤더 */}
-      <header className="border-b border-gray-200 bg-white sticky top-0">
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
               <div>
-                <h1 className="text-xl font-normal text-black">
+                <h1 className="text-lg md:text-xl font-normal text-black">
                   <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
@@ -207,16 +211,16 @@ export default function WritePage() {
       </header>
 
       {/* 메인 컨텐츠 */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-normal text-black mb-2">글쓰기</h2>
+      <main className="max-w-4xl mx-auto px-4 py-4 md:py-6">
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-normal text-black mb-2">글쓰기</h2>
           <p className="text-sm text-gray-600">익명으로 글을 작성할 수 있습니다. 수정/삭제 시 비밀번호가 필요합니다.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* 작성자 정보 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-black mb-4">작성자 정보</h3>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-medium text-black mb-3 md:mb-4">작성자 정보</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -227,7 +231,7 @@ export default function WritePage() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                   placeholder="사용하실 닉네임을 입력하세요"
                   maxLength={20}
                 />
@@ -241,7 +245,7 @@ export default function WritePage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                   placeholder="수정/삭제 시 사용할 비밀번호"
                   maxLength={20}
                 />
@@ -253,8 +257,8 @@ export default function WritePage() {
           </div>
 
           {/* 글 정보 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-black mb-4">글 정보</h3>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-medium text-black mb-3 md:mb-4">글 정보</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -264,7 +268,7 @@ export default function WritePage() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base appearance-none bg-white"
                 >
                   <option value="">카테고리를 선택하세요</option>
                   {categories.map(category => (
@@ -284,7 +288,7 @@ export default function WritePage() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                   placeholder="제목을 입력하세요"
                   maxLength={100}
                 />
@@ -298,8 +302,8 @@ export default function WritePage() {
                   name="content"
                   value={formData.content}
                   onChange={handleInputChange}
-                  rows={10}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                  rows={8}
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-base min-h-[200px]"
                   placeholder="내용을 입력하세요..."
                 />
               </div>
@@ -307,8 +311,8 @@ export default function WritePage() {
           </div>
 
           {/* 이미지 업로드 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-black mb-4">이미지 첨부</h3>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-medium text-black mb-3 md:mb-4">이미지 첨부</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -319,23 +323,23 @@ export default function WritePage() {
                   accept="image/*"
                   multiple
                   onChange={handleImageUpload}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
               </div>
               
               {imageFiles.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                   {imageFiles.map(image => (
                     <div key={image.id} className="relative">
                       <img
                         src={image.preview}
                         alt="Preview"
-                        className="w-full h-32 object-cover rounded border"
+                        className="w-full h-32 object-cover rounded-lg border"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(image.id)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 touch-manipulation"
                       >
                         ×
                       </button>
@@ -348,8 +352,8 @@ export default function WritePage() {
 
           {/* 주의사항 */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-yellow-800 mb-2">📌 작성 시 주의사항</h4>
-            <ul className="text-xs text-yellow-700 space-y-1">
+            <h4 className="text-sm font-medium text-yellow-800 mb-3">📌 작성 시 주의사항</h4>
+            <ul className="text-xs md:text-sm text-yellow-700 space-y-2">
               <li>• 개인정보(실명, 전화번호, 주소 등)를 포함하지 마세요.</li>
               <li>• 특정 업체나 개인에 대한 비방, 욕설은 삭제될 수 있습니다.</li>
               <li>• 도박, 대출업체 홍보 등은 금지됩니다.</li>
@@ -359,18 +363,18 @@ export default function WritePage() {
           </div>
 
           {/* 제출 버튼 */}
-          <div className="flex justify-end space-x-4">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:justify-end">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-3 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              className="w-full md:w-auto px-6 py-4 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-base font-medium touch-manipulation"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full md:w-auto px-6 py-4 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-base font-medium touch-manipulation"
             >
               {isSubmitting ? '등록 중...' : '글 등록'}
             </button>
