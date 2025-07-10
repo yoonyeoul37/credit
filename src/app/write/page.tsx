@@ -114,34 +114,61 @@ export default function WritePage() {
     setIsSubmitting(true);
 
     try {
-      // 여기에 실제 서버 제출 로직 추가
-      // 현재는 시뮬레이션
+      // 임시: 더미 모드 (실제 API 호출 없이 성공 시뮬레이션)
+      console.log('🚧 글쓰기 더미 모드:', {
+        title: formData.title,
+        content: formData.content,
+        author: formData.nickname,
+        category: formData.category
+      });
+      
+      // 성공 시뮬레이션 (1초 대기)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // const postId = Math.floor(Math.random() * 1000) + 1; // 나중에 사용할 수 있음
-      
-      alert('글이 성공적으로 등록되었습니다!');
+      alert('✅ 글이 성공적으로 등록되었습니다!\n(더미 모드: Supabase 연결 후 실제 저장됩니다)');
       
       // 해당 카테고리 페이지로 이동
-      if (formData.category === 'credit') {
-        router.push('/credit');
-      } else if (formData.category === 'personal') {
-        router.push('/personal');
-      } else if (formData.category === 'corporate') {
-        router.push('/corporate');
-      } else if (formData.category === 'workout') {
-        router.push('/workout');
-      } else if (formData.category === 'card') {
-        router.push('/card');
-      } else if (formData.category === 'loan') {
-        router.push('/loan');
+      const categoryRoutes = {
+        'credit': '/credit',
+        'personal': '/personal',
+        'corporate': '/corporate',
+        'workout': '/workout',
+        'card': '/card',
+        'loan': '/loan'
+      };
+      
+      router.push(categoryRoutes[formData.category] || '/');
+
+      /*
+      // 실제 API 호출 (Supabase 설정 후 활성화)
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          author: formData.nickname,
+          password: formData.password,
+          category: formData.category,
+          images: formData.images.map(img => img.preview)
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('글이 성공적으로 등록되었습니다!');
+        router.push(categoryRoutes[formData.category] || '/');
       } else {
-        router.push('/');
+        throw new Error(result.error || '글 등록에 실패했습니다.');
       }
+      */
       
     } catch (error) {
       console.error('Error submitting post:', error);
-      alert('글 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+      alert(error.message || '글 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
