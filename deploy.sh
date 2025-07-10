@@ -20,17 +20,27 @@ npm install
 echo "🏗️ 프로덕션 빌드..."
 npm run build
 
-# 5. 환경변수 설정
+# 5. 환경변수 설정 및 검증
 echo "🔧 환경변수 설정..."
 export NODE_ENV=production
-export PORT=3000
+
+# 포트 검증 및 기본값 설정
+if [ -z "$PORT" ] || [ "$PORT" = "" ]; then
+    echo "PORT 환경 변수가 설정되지 않았습니다. 기본값 3000을 사용합니다."
+    export PORT=3000
+fi
+
+echo "✅ 설정된 포트: $PORT"
+echo "✅ NODE_ENV: $NODE_ENV"
+
+# Supabase 환경 변수 설정
 export NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im
 p3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp
 5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
 
 # 6. 서버 시작 (PM2 없이)
-echo "🚀 서버 시작..."
+echo "🚀 서버 시작 (포트: $PORT)..."
 nohup npm start > /tmp/nextjs.log 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > /tmp/nextjs.pid
