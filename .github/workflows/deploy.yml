@@ -9,21 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build application
-      run: npm run build
-    
-    - name: Deploy to Cafe24
+    - name: Deploy to Cafe24 Server
       uses: appleboy/ssh-action@v0.1.5
       with:
         host: ${{ secrets.CAFE24_HOST }}
@@ -34,21 +20,27 @@ jobs:
           cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
           echo "🚀 크레딧스토리 배포 시작..."
           
-          # 기존 프로세스 종료
-          echo "🔄 기존 프로세스 종료..."
-          pm2 stop all 2>/dev/null || echo "실행 중인 PM2 프로세스가 없습니다."
-          pkill -f "next" 2>/dev/null || echo "실행 중인 Next.js가 없습니다."
+          # 모든 프로세스 정리
+          echo "🔄 기존 프로세스 정리..."
+          pkill -f "node" 2>/dev/null || true
+          pkill -f "next" 2>/dev/null || true
+          pkill -f "npm" 2>/dev/null || true
+          pm2 kill 2>/dev/null || true
+          
+          # Docker 프로세스도 정리 (혹시 모르니)
+          docker stop $(docker ps -q) 2>/dev/null || true
+          docker rm $(docker ps -aq) 2>/dev/null || true
           
           # 최신 코드 업데이트
-          echo "📥 최신 코드 업데이트..."
+          echo "📥 코드 업데이트..."
           git pull origin main
           
-          # 의존성 설치
+          # Node.js 의존성 설치
           echo "📦 의존성 설치..."
-          npm ci --production=false
+          npm install
           
-          # 빌드
-          echo "🏗️ 애플리케이션 빌드..."
+          # 애플리케이션 빌드
+          echo "🏗️ 빌드..."
           npm run build
           
           # 환경 변수 설정
@@ -57,21 +49,18 @@ jobs:
           export PORT=3000
           export HOSTNAME=0.0.0.0
           
-          # 서버 시작 (PM2 없이 직접 실행)
+          # 서버 시작
           echo "🚀 서버 시작..."
-          nohup npm start > /tmp/creditstory.log 2>&1 &
-          SERVER_PID=$!
-          echo $SERVER_PID > /tmp/creditstory.pid
+          nohup npm start > app.log 2>&1 &
           
-          # 서버 시작 확인
-          sleep 3
-          if ps -p $SERVER_PID > /dev/null 2>&1; then
-            echo "✅ 서버가 성공적으로 시작되었습니다!"
-            echo "📋 PID: $SERVER_PID"
+          # 잠시 대기 후 확인
+          sleep 5
+          
+          # 프로세스 확인
+          if pgrep -f "next" > /dev/null; then
+            echo "✅ 배포 성공!"
+            echo "📋 프로세스 ID: $(pgrep -f "next")"
           else
-            echo "❌ 서버 시작 실패. 로그 확인:"
-            tail -20 /tmp/creditstory.log
-            exit 1
-          fi
-          
-          echo "🎉 배포 완료!" 
+            echo "❌ 배포 실패. 로그:"
+            tail -20 app.log
+          fi 

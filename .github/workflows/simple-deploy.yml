@@ -1,0 +1,36 @@
+name: Simple Deploy Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Simple SSH Deploy
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        script: |
+          cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
+          echo "🧪 간단한 배포 테스트..."
+          
+          # 프로세스 정리
+          pkill -f "node" 2>/dev/null || true
+          
+          # 코드 업데이트
+          git pull origin main
+          
+          # 설치 및 빌드
+          npm install
+          npm run build
+          
+          # 서버 시작
+          NODE_ENV=production PORT=3000 nohup npm start > simple.log 2>&1 &
+          
+          sleep 3
+          echo "✅ 테스트 완료" 
