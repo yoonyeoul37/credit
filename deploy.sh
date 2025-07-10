@@ -5,8 +5,8 @@ echo "🚀 크레딧스토리 배포 시작..."
 
 # 1. 기존 프로세스 종료
 echo "🔄 기존 프로세스 종료..."
-pm2 stop credit-story || true
-pm2 delete credit-story || true
+pm2 stop credit-story 2>/dev/null || echo "프로세스가 실행중이 아닙니다."
+pm2 delete credit-story 2>/dev/null || echo "삭제할 프로세스가 없습니다."
 
 # 2. 최신 코드 업데이트 (git pull)
 echo "📥 최신 코드 업데이트..."
@@ -28,15 +28,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 p3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp
 5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
 NODE_ENV=production
+PORT=3000
 EOF
 
 # 6. PM2로 서버 시작
 echo "🚀 서버 시작..."
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.js --env production
 
 # 7. PM2 상태 확인
 echo "✅ 배포 완료! PM2 상태:"
 pm2 list
+pm2 logs credit-story --lines 10
 
 echo "🎉 배포가 완료되었습니다!"
 echo "🌐 사이트 URL: http://your-domain.com" 
