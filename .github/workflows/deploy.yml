@@ -1,0 +1,38 @@
+name: Deploy to Cafe24
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Deploy to Cafe24
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        script: |
+          cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
+          git pull origin main
+          npm ci
+          npm run build
+          pm2 restart all || pm2 start npm --name "credit-site" -- start 
