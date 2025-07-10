@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function Home() {
+export default function PersonalPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
@@ -10,8 +10,8 @@ export default function Home() {
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
   const [premiumAd, setPremiumAd] = useState({
     isActive: true,
-    title: '신용회복 전문 상담센터 - 프리미엄 광고',
-    content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
+    title: '개인회생 전문 프리미엄 광고',
+    content: '728 × 90 (리더보드)'
   });
   
   const [listAd, setListAd] = useState({
@@ -20,213 +20,111 @@ export default function Home() {
     content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
   });
   
-  // 임시 데이터 (더 많은 데이터로 확장)
-  const allPosts = [
+  // 개인회생 관련 글들 (임시 데이터)
+  const allPersonalPosts = [
     {
-      id: 1,
-      title: "개인회생 신청 후 신용 회복 과정 질문드립니다",
-      category: "개인회생",
+      id: 21,
+      title: "개인회생 신청 후 3년 경과 후기",
+      author: "익명",
+      createdAt: "30분 전",
+      commentCount: 28,
+      views: 442
+    },
+    {
+      id: 22,
+      title: "개인회생 변제계획 수립 팁",
       author: "익명",
       createdAt: "2시간 전",
-      commentCount: 12,
-      views: 89
+      commentCount: 15,
+      views: 189
     },
     {
-      id: 2,
-      title: "신용카드 연체 상황에서 대출 가능한 곳이 있을까요?",
-      category: "신용카드",
+      id: 23,
+      title: "개인회생 중 생활비 관리 방법",
       author: "익명",
       createdAt: "4시간 전",
-      commentCount: 8,
-      views: 156
+      commentCount: 22,
+      views: 334
     },
     {
-      id: 3,
-      title: "워크아웃 진행 중인데 추가 대출이 필요합니다",
-      category: "워크아웃",
+      id: 24,
+      title: "개인회생 신청 시 필요한 서류 리스트",
       author: "익명",
       createdAt: "6시간 전",
-      commentCount: 15,
-      views: 203
+      commentCount: 31,
+      views: 567
     },
     {
-      id: 4,
-      title: "법인회생 절차 관련 경험담 공유합니다",
-      category: "법인회생",
+      id: 25,
+      title: "개인회생 면책 후 신용회복 과정",
       author: "익명",
       createdAt: "8시간 전",
-      commentCount: 5,
-      views: 67
-    },
-    {
-      id: 5,
-      title: "신용등급 상승을 위한 실질적인 방법들",
-      category: "신용이야기",
-      author: "익명",
-      createdAt: "10시간 전",
-      commentCount: 23,
-      views: 301
-    },
-    {
-      id: 6,
-      title: "개인회생 변제계획 승인 후기",
-      category: "개인회생",
-      author: "익명",
-      createdAt: "12시간 전",
-      commentCount: 7,
-      views: 125
-    },
-    {
-      id: 7,
-      title: "신용카드 채무통합 경험담",
-      category: "신용카드",
-      author: "익명",
-      createdAt: "14시간 전",
       commentCount: 19,
       views: 278
     },
     {
-      id: 8,
-      title: "대출 한도 상향 조정 방법",
-      category: "대출",
+      id: 26,
+      title: "개인회생 변제율 30%로 확정된 후기",
       author: "익명",
-      createdAt: "16시간 전",
-      commentCount: 11,
-      views: 189
+      createdAt: "10시간 전",
+      commentCount: 25,
+      views: 389
     },
     {
-      id: 9,
-      title: "워크아웃 신청 전 준비사항",
-      category: "워크아웃",
+      id: 27,
+      title: "개인회생 중 취업 성공 사례",
       author: "익명",
-      createdAt: "18시간 전",
-      commentCount: 14,
-      views: 234
-    },
-    {
-      id: 10,
-      title: "법인회생 신청 후 직원 관리 방법",
-      category: "법인회생",
-      author: "익명",
-      createdAt: "20시간 전",
-      commentCount: 6,
-      views: 98
-    },
-    {
-      id: 11,
-      title: "신용등급 7등급에서 3등급으로 올린 후기",
-      category: "신용이야기",
-      author: "익명",
-      createdAt: "22시간 전",
-      commentCount: 31,
-      views: 456
-    },
-    {
-      id: 12,
-      title: "개인회생 중 신용카드 사용 가능한가요?",
-      category: "개인회생",
-      author: "익명",
-      createdAt: "1일 전",
-      commentCount: 9,
-      views: 167
-    },
-    {
-      id: 13,
-      title: "저금리 대출 갈아타기 성공 사례",
-      category: "대출",
-      author: "익명",
-      createdAt: "1일 전",
-      commentCount: 16,
-      views: 312
-    },
-    {
-      id: 14,
-      title: "신용카드 연체금 협상 팁",
-      category: "신용카드",
-      author: "익명",
-      createdAt: "1일 전",
-      commentCount: 22,
-      views: 398
-    },
-    {
-      id: 15,
-      title: "워크아웃과 개인회생 차이점 정리",
-      category: "워크아웃",
-      author: "익명",
-      createdAt: "1일 전",
+      createdAt: "12시간 전",
       commentCount: 18,
       views: 267
     },
     {
-      id: 16,
-      title: "법인회생 절차 진행 중 주의사항",
-      category: "법인회생",
+      id: 28,
+      title: "개인회생 신청 전 주의사항",
       author: "익명",
-      createdAt: "1일 전",
-      commentCount: 4,
-      views: 89
-    },
-    {
-      id: 17,
-      title: "신용회복위원회 채무조정 후기",
-      category: "신용이야기",
-      author: "익명",
-      createdAt: "2일 전",
-      commentCount: 25,
-      views: 421
-    },
-    {
-      id: 18,
-      title: "개인회생 변제금 감액 방법",
-      category: "개인회생",
-      author: "익명",
-      createdAt: "2일 전",
-      commentCount: 13,
-      views: 234
-    },
-    {
-      id: 19,
-      title: "카드대출 vs 신용대출 비교",
-      category: "대출",
-      author: "익명",
-      createdAt: "2일 전",
-      commentCount: 8,
-      views: 178
-    },
-    {
-      id: 20,
-      title: "연체자도 발급 가능한 신용카드",
-      category: "신용카드",
-      author: "익명",
-      createdAt: "2일 전",
-      commentCount: 27,
+      createdAt: "14시간 전",
+      commentCount: 33,
       views: 512
     },
     {
-      id: 21,
-      title: "워크아웃 신청 자격 조건",
-      category: "워크아웃",
+      id: 29,
+      title: "개인회생 변제계획 변경 신청 방법",
       author: "익명",
-      createdAt: "2일 전",
-      commentCount: 12,
-      views: 198
+      createdAt: "16시간 전",
+      commentCount: 21,
+      views: 345
     },
     {
-      id: 22,
-      title: "법인회생 신청 비용 정리",
-      category: "법인회생",
+      id: 30,
+      title: "개인회생 후 신용카드 발급 가능한 곳",
       author: "익명",
-      createdAt: "3일 전",
-      commentCount: 7,
-      views: 134
+      createdAt: "18시간 전",
+      commentCount: 27,
+      views: 423
+    },
+    {
+      id: 31,
+      title: "개인회생 기각 사유와 대응 방법",
+      author: "익명",
+      createdAt: "20시간 전",
+      commentCount: 16,
+      views: 298
+    },
+    {
+      id: 32,
+      title: "개인회생 완료 후 주택 구매 경험담",
+      author: "익명",
+      createdAt: "22시간 전",
+      commentCount: 29,
+      views: 456
     }
   ];
 
   // 페이징 계산
-  const totalPages = Math.ceil(allPosts.length / postsPerPage);
+  const totalPages = Math.ceil(allPersonalPosts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const currentPosts = allPosts.slice(startIndex, endIndex);
+  const personalPosts = allPersonalPosts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -255,7 +153,7 @@ export default function Home() {
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                   <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
                   <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                  <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
+                  <a href="/personal" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200">개인회생</a>
                   <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
                   <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
                   <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
@@ -274,19 +172,19 @@ export default function Home() {
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* 페이지 제목 */}
+        {/* 카테고리 제목 */}
         <div className="mb-6">
-          <h2 className="text-2xl font-normal text-black mb-2">전체 게시글</h2>
-          <p className="text-sm text-gray-600">모든 카테고리의 최신 글을 확인하세요</p>
+          <h2 className="text-2xl font-normal text-black mb-2">개인회생</h2>
+          <p className="text-sm text-gray-600">개인회생 절차와 경험을 나누는 공간입니다</p>
         </div>
 
-        {/* 상단 배너 광고 - 조건부 렌더링 */}
+        {/* 프리미엄 광고 - 조건부 렌더링 */}
         {premiumAd?.isActive && (
           <div className="mb-6 flex justify-center">
-            <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
+            <div className="w-[728px] h-[90px] bg-blue-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
               <div className="text-center">
                 <div className="text-lg mb-1">{premiumAd.title}</div>
-                <div className="text-xs text-blue-500">{premiumAd.content}</div>
+                <div className="text-xs text-blue-400">{premiumAd.content}</div>
               </div>
             </div>
           </div>
@@ -305,9 +203,9 @@ export default function Home() {
         </div>
         
         <div className="space-y-1">
-          {currentPosts.map((post, index) => (
+          {personalPosts.map((post, index) => (
             <div key={post.id}>
-              {/* 광고 배너 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
+              {/* 리스트 광고 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
               {index === 5 && listAd?.isActive && (
                 <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
                   <div className="flex-shrink-0 w-8 text-right">
@@ -341,8 +239,8 @@ export default function Home() {
                     <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
                       {post.title}
                     </a>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                      {post.category}
+                    <span className="text-xs text-gray-500 bg-blue-100 px-2 py-0.5 rounded">
+                      개인회생
                     </span>
                   </div>
                   <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
@@ -400,7 +298,7 @@ export default function Home() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {allPersonalPosts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 
@@ -489,10 +387,10 @@ export default function Home() {
             <div className="flex items-center space-x-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  신용회복 전문 상담센터 - 24시간 무료 상담
+                  개인회생 전문 법무사 - 15년 경력, 성공률 95%
                 </p>
                 <p className="text-xs text-blue-100 truncate">
-                  성공률 95% | 맞춤 솔루션 | 전국 지점 운영
+                  무료 상담 | 성공 시 수수료 | 전국 지점 운영
                 </p>
               </div>
             </div>
@@ -515,4 +413,4 @@ export default function Home() {
       )}
     </div>
   );
-}
+} 
