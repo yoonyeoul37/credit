@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function CalculatorPage() {
   const [showStickyAd, setShowStickyAd] = useState(true);
@@ -12,7 +13,7 @@ export default function CalculatorPage() {
   const [loanPeriod, setLoanPeriod] = useState('');
   const [repaymentType, setRepaymentType] = useState('equal-payment'); // 상환방식
   const [gracePeriod, setGracePeriod] = useState(''); // 거치기간
-  const [loanResult, setLoanResult] = useState(null);
+  const [loanResult, setLoanResult] = useState<any>(null);
   
   // 개인회생 변제금 계산기 상태
   const [totalDebt, setTotalDebt] = useState('');
@@ -26,23 +27,23 @@ export default function CalculatorPage() {
   const [isBasicLivelihood, setIsBasicLivelihood] = useState(false);
   const [hasChronicDisease, setHasChronicDisease] = useState(false);
   const [dependents, setDependents] = useState('');
-  const [recoveryResult, setRecoveryResult] = useState(null);
+  const [recoveryResult, setRecoveryResult] = useState<any>(null);
 
   // 숫자 포맷팅 함수 (콤마 추가)
-  const formatNumber = (value) => {
+  const formatNumber = (value: string | number): string => {
     if (!value) return '';
     const number = value.toString().replace(/,/g, '');
-    if (isNaN(number)) return value;
+    if (isNaN(Number(number))) return value.toString();
     return parseInt(number).toLocaleString();
   };
 
   // 숫자 값 추출 함수 (콤마 제거)
-  const parseNumber = (value) => {
+  const parseNumber = (value: string | number) => {
     return parseFloat(value.toString().replace(/,/g, '')) || 0;
   };
 
   // 금액 입력 핸들러
-  const handleAmountChange = (value, setter) => {
+  const handleAmountChange = (value: string, setter: (value: string) => void) => {
     const formatted = formatNumber(value);
     setter(formatted);
   };
@@ -55,7 +56,7 @@ export default function CalculatorPage() {
     const graceMonths = parseInt(gracePeriod) || 0;
     
     if (principal && rate && totalMonths) {
-      let result = {};
+      const result: any = {};
       
       if (repaymentType === 'equal-payment') {
         // 원리금균등상환
@@ -150,7 +151,7 @@ export default function CalculatorPage() {
       }
 
       // 최저생계비 계산 (2024년 기준)
-      const baseLivingCost = {
+      const baseLivingCost: { [key: number]: number } = {
         1: 1200000,
         2: 1800000,
         3: 2200000,
@@ -187,7 +188,7 @@ export default function CalculatorPage() {
       const totalRepaymentCapacity = (disposableIncome * repaymentPeriod) + liquidationValue;
       
       // 기본 변제율 계산
-      let baseRepaymentRate = Math.min(100, (totalRepaymentCapacity / debt) * 100);
+      const baseRepaymentRate = Math.min(100, (totalRepaymentCapacity / debt) * 100);
       
       // 부채 원인별 조정
       let adjustmentFactor = 1.0;
@@ -267,21 +268,21 @@ export default function CalculatorPage() {
             <div className="flex items-center space-x-8">
               <div>
                 <h1 className="text-xl font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
               </div>
               <nav className="hidden md:block">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                  <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
-                  <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                  <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
-                  <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
-                  <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
-                  <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
-                  <a href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</a>
-                  <a href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</a>
-                  <a href="/calculator" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200">계산기</a>
+                  <Link href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</Link>
+                  <Link href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</Link>
+                  <Link href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</Link>
+                  <Link href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</Link>
+                  <Link href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</Link>
+                  <Link href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</Link>
+                  <Link href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</Link>
+                  <Link href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</Link>
+                  <Link href="/calculator" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200">계산기</Link>
                 </div>
               </nav>
             </div>
@@ -837,7 +838,7 @@ export default function CalculatorPage() {
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h3>
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>

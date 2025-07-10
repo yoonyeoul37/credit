@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -8,13 +9,13 @@ export default function Home() {
   const [showStickyAd, setShowStickyAd] = useState(true);
   
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
-  const [premiumAd, setPremiumAd] = useState({
+  const [premiumAd] = useState({
     isActive: true,
     title: '신용회복 전문 상담센터 - 프리미엄 광고',
     content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
   });
   
-  const [listAd, setListAd] = useState({
+  const [listAd] = useState({
     isActive: true,
     title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
     content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
@@ -233,7 +234,7 @@ export default function Home() {
   const startPage = (pageGroup - 1) * 10 + 1;
   const endPage = Math.min(startPage + 9, totalPages);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -247,21 +248,21 @@ export default function Home() {
             <div className="flex items-center space-x-8">
               <div>
                 <h1 className="text-xl font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
               </div>
               <nav className="hidden md:block">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                  <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
-                  <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                  <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
-                  <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
-                  <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
-                  <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
-                  <a href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</a>
-                  <a href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</a>
-                  <a href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</a>
+                  <Link href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</Link>
+                  <Link href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</Link>
+                  <Link href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</Link>
+                  <Link href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</Link>
+                  <Link href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</Link>
+                  <Link href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</Link>
+                  <Link href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</Link>
+                  <Link href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</Link>
+                  <Link href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</Link>
                 </div>
               </nav>
             </div>
@@ -295,12 +296,12 @@ export default function Home() {
         {/* 글쓰기 버튼 */}
         <div className="flex justify-center mb-6">
           <div className="w-[728px] flex justify-end">
-            <a 
+            <Link 
               href="/write" 
               className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
             >
               작성하기
-            </a>
+            </Link>
           </div>
         </div>
         
@@ -338,9 +339,9 @@ export default function Home() {
                 </div>
                 <div className="flex-1 ml-4">
                   <div className="flex items-center space-x-2">
-                    <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                    <Link href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
                       {post.title}
-                    </a>
+                    </Link>
                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                       {post.category}
                     </span>
@@ -437,7 +438,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h3>
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>
@@ -454,22 +455,22 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-medium text-black mb-4">커뮤니티</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/credit" className="hover:text-blue-600">신용이야기</a></li>
-                <li><a href="/personal" className="hover:text-blue-600">개인회생</a></li>
-                <li><a href="/corporate" className="hover:text-blue-600">법인회생</a></li>
-                <li><a href="/workout" className="hover:text-blue-600">워크아웃</a></li>
-                <li><a href="/card" className="hover:text-blue-600">신용카드</a></li>
-                <li><a href="/loan" className="hover:text-blue-600">대출</a></li>
-                <li><a href="/news" className="hover:text-blue-600">뉴스정보</a></li>
-                <li><a href="/calculator" className="hover:text-blue-600">계산기</a></li>
+                <li><Link href="/credit" className="hover:text-blue-600">신용이야기</Link></li>
+                <li><Link href="/personal" className="hover:text-blue-600">개인회생</Link></li>
+                <li><Link href="/corporate" className="hover:text-blue-600">법인회생</Link></li>
+                <li><Link href="/workout" className="hover:text-blue-600">워크아웃</Link></li>
+                <li><Link href="/card" className="hover:text-blue-600">신용카드</Link></li>
+                <li><Link href="/loan" className="hover:text-blue-600">대출</Link></li>
+                <li><Link href="/news" className="hover:text-blue-600">뉴스정보</Link></li>
+                <li><Link href="/calculator" className="hover:text-blue-600">계산기</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-black mb-4">정보</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/ad" className="hover:text-blue-600">광고문의</a></li>
-                <li><a href="/admin" className="hover:text-red-600 text-gray-500">관리자</a></li>
+                <li><Link href="/ad" className="hover:text-blue-600">광고문의</Link></li>
+                <li><Link href="/admin" className="hover:text-red-600 text-gray-500">관리자</Link></li>
               </ul>
             </div>
           </div>

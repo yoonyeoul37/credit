@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function NewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -123,12 +124,12 @@ export default function NewsPage() {
   const startPage = (pageGroup - 1) * 10 + 1;
   const endPage = Math.min(startPage + 9, totalPages);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const categoryColors = {
+  const categoryColors: { [key: string]: string } = {
     "정책": "bg-red-100 text-red-800",
     "신용": "bg-blue-100 text-blue-800", 
     "금리": "bg-green-100 text-green-800",
@@ -145,21 +146,21 @@ export default function NewsPage() {
             <div className="flex items-center space-x-8">
               <div>
                 <h1 className="text-xl font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
               </div>
               <nav className="hidden md:block">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                  <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
-                  <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                  <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
-                  <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
-                  <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
-                  <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
-                  <a href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</a>
-                  <a href="/news" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200">뉴스정보</a>
-                  <a href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</a>
+                  <Link href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</Link>
+                  <Link href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</Link>
+                  <Link href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</Link>
+                  <Link href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</Link>
+                  <Link href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</Link>
+                  <Link href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</Link>
+                  <Link href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</Link>
+                  <Link href="/news" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200">뉴스정보</Link>
+                  <Link href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</Link>
                 </div>
               </nav>
             </div>
@@ -353,7 +354,7 @@ export default function NewsPage() {
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h3>
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>

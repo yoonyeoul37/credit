@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function PostDetailPage() {
@@ -10,13 +11,13 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null);
   
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
-  const [premiumAd, setPremiumAd] = useState({
+  const [premiumAd] = useState({
     isActive: true,
     title: '신용회복 전문 상담센터 - 프리미엄 광고',
     content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
   });
   
-  const [listAd, setListAd] = useState({
+  const [listAd] = useState({
     isActive: true,
     title: '저금리 대출 비교 플랫폼',
     content: 'AI 맞춤 대출 상품 추천 | 즉시 심사'
@@ -320,29 +321,29 @@ export default function PostDetailPage() {
             <div className="flex items-center space-x-8">
               <div>
                 <h1 className="text-xl font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
               </div>
               <nav className="hidden md:flex space-x-6">
-                <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
-                <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
-                <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
-                <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
-                <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
-                <a href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</a>
-                <a href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</a>
-                <a href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</a>
+                <Link href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</Link>
+                <Link href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</Link>
+                <Link href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</Link>
+                <Link href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</Link>
+                <Link href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</Link>
+                <Link href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</Link>
+                <Link href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</Link>
+                <Link href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</Link>
+                <Link href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <a 
+              <Link 
                 href="/write" 
                 className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
               >
                 ✏️ 글쓰기
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -765,7 +766,7 @@ export default function PostDetailPage() {
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h3>
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>

@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('ads');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
-  const [selectedAds, setSelectedAds] = useState([]);
-  const [selectedNews, setSelectedNews] = useState([]);
+  const [selectedAds, setSelectedAds] = useState<number[]>([]);
+  const [selectedNews, setSelectedNews] = useState<number[]>([]);
   const [adForm, setAdForm] = useState({
     type: 'premium',
     title: '',
@@ -143,7 +145,7 @@ export default function AdminPage() {
     }
   ]);
 
-  const handleAdSubmit = (e) => {
+  const handleAdSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newAd = {
       id: ads.length + 1,
@@ -165,35 +167,35 @@ export default function AdminPage() {
     alert('광고가 등록되었습니다.');
   };
 
-  const handleDeleteAd = (id) => {
+  const handleDeleteAd = (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
       setAds(ads.filter(ad => ad.id !== id));
       alert('광고가 삭제되었습니다.');
     }
   };
 
-  const handleDeletePost = (id) => {
+  const handleDeletePost = (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
       setPosts(posts.filter(post => post.id !== id));
       alert('게시물이 삭제되었습니다.');
     }
   };
 
-  const handleDeleteComment = (id) => {
+  const handleDeleteComment = (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
       setComments(comments.filter(comment => comment.id !== id));
       alert('댓글이 삭제되었습니다.');
     }
   };
 
-  const handleDeleteReport = (id) => {
+  const handleDeleteReport = (id: number) => {
     if (confirm('신고를 처리하시겠습니까?')) {
       setReports(reports.filter(report => report.id !== id));
       alert('신고가 처리되었습니다.');
     }
   };
 
-  const handleNewsSubmit = (e) => {
+  const handleNewsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newNews = {
       id: newsItems.length + 1,
@@ -215,35 +217,38 @@ export default function AdminPage() {
     alert('뉴스가 등록되었습니다.');
   };
 
-  const handleDeleteNews = (id) => {
+  const handleDeleteNews = (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
       setNewsItems(newsItems.filter(news => news.id !== id));
       alert('뉴스가 삭제되었습니다.');
     }
   };
 
-  const openModal = (type) => {
+  const openModal = (type: string) => {
     setModalType(type);
     setShowModal(true);
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       // 파일을 읽어서 임시 URL 생성
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAdForm({...adForm, imageUrl: e.target.result});
+        setAdForm({...adForm, imageUrl: e.target?.result as string});
       };
       reader.readAsDataURL(file);
     }
   };
 
   const triggerFileInput = () => {
-    document.getElementById('imageFileInput').click();
+    const fileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
   };
 
-  const handleAdSelect = (adId) => {
+  const handleAdSelect = (adId: number) => {
     setSelectedAds(prev => 
       prev.includes(adId) 
         ? prev.filter(id => id !== adId)
@@ -251,7 +256,7 @@ export default function AdminPage() {
     );
   };
 
-  const handleSelectAllAds = (checked) => {
+  const handleSelectAllAds = (checked: boolean) => {
     if (checked) {
       setSelectedAds(ads.map(ad => ad.id));
     } else {
@@ -272,7 +277,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleNewsSelect = (newsId) => {
+  const handleNewsSelect = (newsId: number) => {
     setSelectedNews(prev => 
       prev.includes(newsId) 
         ? prev.filter(id => id !== newsId)
@@ -280,7 +285,7 @@ export default function AdminPage() {
     );
   };
 
-  const handleSelectAllNews = (checked) => {
+  const handleSelectAllNews = (checked: boolean) => {
     if (checked) {
       setSelectedNews(newsItems.map(news => news.id));
     } else {
@@ -310,20 +315,20 @@ export default function AdminPage() {
             <div className="flex items-center space-x-8">
               <div>
                 <h1 className="text-xl font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 text-right">Credit Story</p>
               </div>
               <nav className="hidden md:flex space-x-6">
-                <a href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</a>
-                <a href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</a>
-                <a href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</a>
-                <a href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</a>
-                <a href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</a>
-                <a href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</a>
-                <a href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</a>
-                <a href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</a>
-                <a href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</a>
+                <Link href="/" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">전체</Link>
+                <Link href="/credit" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용이야기</Link>
+                <Link href="/personal" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">개인회생</Link>
+                <Link href="/corporate" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">법인회생</Link>
+                <Link href="/workout" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">워크아웃</Link>
+                <Link href="/card" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">신용카드</Link>
+                <Link href="/loan" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">대출</Link>
+                <Link href="/news" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">뉴스정보</Link>
+                <Link href="/calculator" className="text-gray-700 hover:text-blue-600 text-sm transition-colors duration-200">계산기</Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -893,7 +898,7 @@ export default function AdminPage() {
             <div className="md:col-span-2">
               <div className="mb-4">
                 <h3 className="text-lg font-normal text-black">
-                  <a href="/" className="hover:text-blue-600">크레딧스토리</a>
+                  <Link href="/" className="hover:text-blue-600">크레딧스토리</Link>
                 </h3>
                 <p className="text-xs text-gray-500 -mt-1">Credit Story</p>
               </div>
