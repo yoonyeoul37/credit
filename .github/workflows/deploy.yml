@@ -110,32 +110,51 @@ jobs:
             # Node.js 버전 확인
             NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
             echo "Node.js 주 버전: $NODE_VERSION"
+            echo "메모리 상태: $(free -m | grep Mem | awk '{print $3"/"$2" MB"}')"
+            echo "디스크 공간: $(df -h . | tail -1 | awk '{print $4" 사용가능"}')"
             
-            # 서버 시작 시도
-            echo "🚀 서버 시작 시도..."
+            # 포트 3000 말고 다른 포트로 시도
+            echo "🔄 다른 포트(3001)로 Next.js 서버 시작 시도..."
+            
+            # 환경 변수를 3001 포트로 변경
+            cat > .env.local << 'EOF'
+            NODE_ENV=production
+            PORT=3001
+            HOSTNAME=0.0.0.0
+            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+            EOF
+            
+            echo "✅ 포트 3001로 환경 변수 변경 완료"
+            
+            # Next.js 서버 시작
+            echo "🚀 포트 3001에서 Next.js 서버 시작..."
             npm start > /tmp/credit-app.log 2>&1 &
             NPM_PID=$!
             echo "npm start PID: $NPM_PID"
             
             # 서버 시작 확인
             sleep 5
-            echo "📝 서버 로그:"
-            tail -10 /tmp/credit-app.log
+            if [ ! -z "$NPM_PID" ]; then
+              echo "📝 Next.js 서버 로그:"
+              tail -10 /tmp/credit-app.log
+            fi
             
             # 프로세스 상태 확인
             echo "🔍 프로세스 확인:"
             ps aux | grep -E "(node|npm)" | grep -v grep || echo "프로세스 없음"
             
             # 포트 상태 확인 (간단하게)
-            echo "🌐 포트 상태 확인..."
+            echo "🌐 포트 3001 상태 확인..."
             sleep 2
             
             # 최종 확인
-            if pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
+            if pgrep -f "node.*3001" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
               echo "✅ 배포 성공!"
               echo "🌐 서버가 실행 중입니다."
-              echo "📍 접속 주소: http://도메인:3000"
+              echo "📍 접속 주소: http://도메인:3001"
               echo "💡 도메인 연결은 카페24 관리자 페이지에서 설정 가능합니다."
+              echo "🔧 포트 3000 대신 3001 사용 (기존 사이트와 충돌 방지)"
             else
               echo "❌ 서버 시작 실패"
               echo "📝 전체 로그:"
@@ -143,6 +162,8 @@ jobs:
               echo "🔍 디버깅 정보:"
               echo "디스크 공간: $(df -h . | tail -1)"
               echo "메모리 사용량: $(free -h | grep Mem)"
+              echo "💡 포트 3000이 차단되어 3001로 시도했지만 실패"
+              echo "💡 기존 사이트나 카페24 설정 문제일 수 있습니다"
               exit 1
             fi
             
