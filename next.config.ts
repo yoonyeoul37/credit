@@ -1,24 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 일반 Next.js 서버 모드로 복원
-  // output: 'export', // 제거
-  // trailingSlash: true, // 제거
-  // skipTrailingSlashRedirect: true, // 제거
-  // distDir: 'out', // 제거
+  output: 'export',
+  trailingSlash: true,
   images: {
     unoptimized: true
   },
-  // 빌드 시 에러 체크 비활성화 (배포용)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // 카페24 서버 최적화
-  poweredByHeader: false,
-  compress: true,
+  basePath: '',
+  assetPrefix: '',
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  }
 };
 
-module.exports = nextConfig
+export default nextConfig;
