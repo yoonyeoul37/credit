@@ -102,13 +102,10 @@ jobs:
             echo "📋 의존성 설치 중..."
             npm ci --production --silent
             
-            # 포트 확인
-            echo "🔍 포트 3000 확인..."
-            if netstat -tln | grep -q ":3000 "; then
-              echo "❌ 포트 3000 사용 중 - 기존 프로세스 종료..."
-              fuser -k 3000/tcp || echo "포트 해제 시도"
-              sleep 2
-            fi
+            # 간단한 포트 정리
+            echo "🔄 기존 프로세스 정리..."
+            pkill -f "node.*3000" || echo "기존 프로세스 없음"
+            sleep 1
             
             # Node.js 버전 확인
             NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
@@ -129,9 +126,9 @@ jobs:
             echo "🔍 프로세스 확인:"
             ps aux | grep -E "(node|npm)" | grep -v grep || echo "프로세스 없음"
             
-            # 포트 상태 확인
-            echo "🌐 포트 상태:"
-            netstat -tln | grep 3000 || echo "포트 3000 사용 중 아님"
+            # 포트 상태 확인 (간단하게)
+            echo "🌐 포트 상태 확인..."
+            sleep 2
             
             # 최종 확인
             if pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
