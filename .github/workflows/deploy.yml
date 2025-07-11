@@ -137,6 +137,8 @@ jobs:
             if pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
               echo "✅ 배포 성공!"
               echo "🌐 서버가 실행 중입니다."
+              echo "📍 접속 주소: http://도메인:3000"
+              echo "💡 도메인 연결은 카페24 관리자 페이지에서 설정 가능합니다."
             else
               echo "❌ 서버 시작 실패"
               echo "📝 전체 로그:"
