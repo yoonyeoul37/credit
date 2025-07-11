@@ -59,19 +59,23 @@ jobs:
             echo "📊 시스템 정보:"
             node --version || echo "Node.js 없음"
             npm --version || echo "npm 없음"
-            whoami
-            pwd
+            echo "현재 사용자: $(whoami)"
+            echo "현재 위치: $(pwd)"
+            echo "홈 디렉토리: $HOME"
             
             # 기존 프로세스 정리
             echo "🔄 기존 프로세스 정리..."
             pkill -f "node.*3000" || echo "기존 node 프로세스 없음"
             pkill -f "npm.*start" || echo "기존 npm 프로세스 없음"
             
-            # 배포 디렉토리 준비
+            # 배포 디렉토리 준비 (동적 경로 사용)
             echo "📁 배포 디렉토리 준비..."
-            mkdir -p /home/${{ secrets.CAFE24_USERNAME }}/credit-app
-            cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
+            DEPLOY_DIR="$HOME/credit-app"
+            echo "배포 디렉토리: $DEPLOY_DIR"
+            mkdir -p "$DEPLOY_DIR"
+            cd "$DEPLOY_DIR"
             echo "현재 위치: $(pwd)"
+            echo "디렉토리 권한: $(ls -ld .)"
             
             # 기존 파일 백업
             if [ -d ".next" ]; then
