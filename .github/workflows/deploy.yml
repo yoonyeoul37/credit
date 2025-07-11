@@ -15,7 +15,7 @@ jobs:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
+          port: 22
           script: |
             echo "🔍 웹 루트 디렉토리 탐지 중..."
             
