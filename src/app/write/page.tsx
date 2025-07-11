@@ -115,18 +115,8 @@ export default function WritePage() {
     setIsSubmitting(true);
 
     try {
-      // 임시: 더미 모드 (실제 API 호출 없이 성공 시뮬레이션)
-      console.log('🚧 글쓰기 더미 모드:', {
-        title: formData.title,
-        content: formData.content,
-        author: formData.nickname,
-        category: formData.category
-      });
-      
-      // 성공 시뮬레이션 (1초 대기)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('✅ 글이 성공적으로 등록되었습니다!\n(더미 모드: Supabase 연결 후 실제 저장됩니다)');
+      // 환경에 따른 분기 처리
+      const isProduction = process.env.NODE_ENV === 'production';
       
       // 해당 카테고리 페이지로 이동
       const categoryRoutes = {
@@ -138,34 +128,49 @@ export default function WritePage() {
         'loan': '/loan'
       };
       
-      router.push(categoryRoutes[formData.category] || '/');
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        console.log('🌐 프로덕션 모드: 실제 API 호출 중...');
+        
+        const response = await fetch('/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            content: formData.content,
+            author: formData.nickname,
+            password: formData.password,
+            category: formData.category,
+            images: formData.images.map(img => img.preview)
+          }),
+        });
 
-      /*
-      // 실제 API 호출 (Supabase 설정 후 활성화)
-      const response = await fetch('/api/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('글이 성공적으로 등록되었습니다!');
+          router.push(categoryRoutes[formData.category] || '/');
+        } else {
+          throw new Error(result.error || '글 등록에 실패했습니다.');
+        }
+      } else {
+        // 개발환경: 더미 모드
+        console.log('🚧 개발 모드: 더미 모드 글쓰기:', {
           title: formData.title,
           content: formData.content,
           author: formData.nickname,
-          password: formData.password,
-          category: formData.category,
-          images: formData.images.map(img => img.preview)
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('글이 성공적으로 등록되었습니다!');
+          category: formData.category
+        });
+        
+        // 성공 시뮬레이션 (1초 대기)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        alert('✅ 글이 성공적으로 등록되었습니다!\n(개발 모드: 더미 저장)');
+        
         router.push(categoryRoutes[formData.category] || '/');
-      } else {
-        throw new Error(result.error || '글 등록에 실패했습니다.');
       }
-      */
       
     } catch (error) {
       console.error('Error submitting post:', error);

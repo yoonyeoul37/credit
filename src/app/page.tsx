@@ -12,6 +12,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // 시간 포맷 함수
+  const getTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return '방금 전';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}분 전`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}일 전`;
+    return date.toLocaleDateString();
+  };
+  
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
   const [premiumAd] = useState({
     isActive: true,
@@ -31,10 +44,55 @@ export default function Home() {
       try {
         setLoading(true);
         
-        // 임시: 항상 더미 데이터 사용 (Supabase 설정 전까지)
-        console.log('🚧 더미 데이터 모드: 개발 중');
+        // 환경에 따른 분기 처리
+        const isProduction = process.env.NODE_ENV === 'production';
+        
+        if (isProduction) {
+          // 프로덕션: 실제 API 호출 시도
+          console.log('🌐 프로덕션 모드: 실제 API 호출 중...');
           
-          // 더미 데이터
+          // 실제 API 호출 (Supabase 설정 후 활성화)
+          const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&sort=created_at`);
+          
+          if (!response.ok) {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+
+          const data = await response.json();
+          
+          // 데이터 포맷 변환 (기존 UI에 맞게)
+          const formattedPosts = data.posts.map(post => {
+            const categoryMap = {
+              'credit': '신용이야기',
+              'personal': '개인회생', 
+              'corporate': '법인회생',
+              'workout': '워크아웃',
+              'card': '신용카드',
+              'loan': '대출',
+              'news': '뉴스정보'
+            };
+
+            const timeAgo = getTimeAgo(post.created_at);
+
+            return {
+              id: post.id,
+              title: post.title,
+              category: categoryMap[post.category] || post.category,
+              author: post.author,
+              createdAt: timeAgo,
+              commentCount: 0, // 댓글 수는 별도 계산 필요
+              views: post.views
+            };
+          });
+
+          setPosts(formattedPosts);
+          setError(null);
+          setLoading(false);
+          return;
+        } else {
+          // 개발환경: 더미 데이터 사용
+          console.log('🚧 개발 모드: 더미 데이터 사용');
+          
           const dummyPosts = [
             {
               id: 1,
@@ -83,10 +141,11 @@ export default function Home() {
             }
           ];
           
-                     setPosts(dummyPosts);
+          setPosts(dummyPosts);
           setError(null);
           setLoading(false);
           return;
+        }
 
         /* 
         // 실제 API 호출 (Supabase 설정 후 활성화)
