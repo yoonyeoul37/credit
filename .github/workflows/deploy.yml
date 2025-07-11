@@ -17,8 +17,8 @@ jobs:
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
         script: |
-          cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
-          echo "🚀 크레딧스토리 순수 Node.js 배포 시작..."
+         cd /var/www/html
+echo "🚀 크레딧스토리 순수 Node.js 배포 시작..."
           
           # Node.js 프로세스만 정리 (Docker 명령어 완전 제거)
           echo "🔄 기존 Node.js 프로세스 정리..."
