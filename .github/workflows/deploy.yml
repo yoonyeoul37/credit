@@ -17,53 +17,15 @@ jobs:
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: 22
           script: |
-            echo "🔍 웹서버 설정에서 웹 루트 탐지 중..."
+            echo "🔍 현재 위치를 웹 루트로 사용합니다..."
+            echo "📂 현재 위치: $(pwd)"
+            echo "📂 홈 디렉토리: $HOME"
+            echo "📋 디렉토리 목록:"
+            ls -la
             
-            # 웹서버 설정에서 DocumentRoot/root 경로 찾기
-            if command -v apache2 >/dev/null 2>&1 || command -v httpd >/dev/null 2>&1; then
-              echo "📡 Apache 서버 감지됨"
-              # Apache DocumentRoot 찾기
-              if [ -f "/etc/apache2/sites-available/000-default.conf" ]; then
-                WEB_ROOT=$(grep -i "documentroot" /etc/apache2/sites-available/000-default.conf | awk '{print $2}' | head -1)
-              elif [ -f "/etc/httpd/conf/httpd.conf" ]; then
-                WEB_ROOT=$(grep -i "documentroot" /etc/httpd/conf/httpd.conf | awk '{print $2}' | head -1)
-              fi
-            elif command -v nginx >/dev/null 2>&1; then
-              echo "📡 Nginx 서버 감지됨"
-              # Nginx root 찾기
-              if [ -f "/etc/nginx/sites-available/default" ]; then
-                WEB_ROOT=$(grep -E "^\s*root\s+" /etc/nginx/sites-available/default | awk '{print $2}' | sed 's/;//' | head -1)
-              elif [ -f "/etc/nginx/nginx.conf" ]; then
-                WEB_ROOT=$(grep -E "^\s*root\s+" /etc/nginx/nginx.conf | awk '{print $2}' | sed 's/;//' | head -1)
-              fi
-            fi
-            
-            # 설정에서 찾은 경로가 없거나 존재하지 않으면 기본 경로들 확인
-            if [ -z "$WEB_ROOT" ] || [ ! -d "$WEB_ROOT" ]; then
-              echo "⚠️ 웹서버 설정에서 웹 루트를 찾을 수 없음. 기본 경로들 확인 중..."
-              if [ -d "/var/www/html" ]; then
-                WEB_ROOT="/var/www/html"
-              elif [ -d "/home/${{ secrets.CAFE24_USERNAME }}/www" ]; then
-                WEB_ROOT="/home/${{ secrets.CAFE24_USERNAME }}/www"
-              elif [ -d "/home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www" ]; then
-                WEB_ROOT="/home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www"
-              elif [ -d "/srv/www" ]; then
-                WEB_ROOT="/srv/www"
-              else
-                echo "❌ 웹 루트 디렉토리를 찾을 수 없습니다."
-                echo "현재 위치: $(pwd)"
-                echo "홈 디렉토리 확인: $HOME"
-                echo "디렉토리 목록:"
-                ls -la
-                echo "웹서버 프로세스 확인:"
-                ps aux | grep -E "(apache|nginx|httpd)" | grep -v grep
-                exit 1
-              fi
-            fi
-            
-            echo "✅ 웹 루트 발견: $WEB_ROOT"
-            
-            cd $WEB_ROOT
+            # 현재 위치를 웹 루트로 사용
+            WEB_ROOT=$(pwd)
+            echo "✅ 웹 루트 설정: $WEB_ROOT"
             echo "🚀 크레딧스토리 순수 Node.js 배포 시작..."
             echo "📂 작업 디렉토리: $(pwd)"
 
