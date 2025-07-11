@@ -55,24 +55,38 @@ jobs:
           script: |
             echo "🚀 배포 시작..."
             
+            # 시스템 정보 확인
+            echo "📊 시스템 정보:"
+            node --version || echo "Node.js 없음"
+            npm --version || echo "npm 없음"
+            whoami
+            pwd
+            
             # 기존 프로세스 정리
-            pkill -f "node.*3000" || true
-            pkill -f "npm.*start" || true
+            echo "🔄 기존 프로세스 정리..."
+            pkill -f "node.*3000" || echo "기존 node 프로세스 없음"
+            pkill -f "npm.*start" || echo "기존 npm 프로세스 없음"
             
             # 배포 디렉토리 준비
+            echo "📁 배포 디렉토리 준비..."
             mkdir -p /home/${{ secrets.CAFE24_USERNAME }}/credit-app
             cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
+            echo "현재 위치: $(pwd)"
             
             # 기존 파일 백업
             if [ -d ".next" ]; then
+              echo "🔄 기존 파일 백업..."
               mv .next .next.backup.$(date +%Y%m%d_%H%M%S) || true
             fi
             
             # 새 파일 압축 해제
             echo "📦 새 버전 설치 중..."
             tar -xzf /tmp/deploy.tar.gz
+            echo "압축 해제 완료. 파일 목록:"
+            ls -la
             
             # 환경 변수 설정
+            echo "🔧 환경 변수 설정..."
             cat > .env.local << 'EOF'
             NODE_ENV=production
             PORT=3000
@@ -80,24 +94,57 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
             NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
             EOF
+            echo "환경 변수 파일 생성 완료"
             
             # 의존성 설치
             echo "📋 의존성 설치 중..."
             npm ci --production --silent
+            echo "의존성 설치 완료"
+            
+            # package.json 확인
+            echo "📄 package.json 확인:"
+            cat package.json | grep -A 5 "scripts"
+            
+            # 서버 시작 전 테스트
+            echo "🧪 서버 시작 전 테스트..."
+            npm list --depth=0 || echo "의존성 목록 출력 실패"
             
             # 서버 시작
             echo "🎯 서버 시작 중..."
+            echo "명령: npm start"
             nohup npm start > /tmp/credit-app.log 2>&1 &
+            SERVER_PID=$!
+            echo "서버 PID: $SERVER_PID"
             
-            # 시작 확인
-            sleep 10
-            if pgrep -f "node.*3000" > /dev/null; then
+            # 서버 로그 초기 확인
+            echo "📝 서버 시작 로그 (5초 후):"
+            sleep 5
+            tail -10 /tmp/credit-app.log
+            
+            # 서버 프로세스 확인
+            echo "🔍 서버 프로세스 확인..."
+            ps aux | grep node || echo "node 프로세스 없음"
+            
+            # 포트 확인
+            echo "🌐 포트 3000 확인..."
+            netstat -tln | grep 3000 || echo "포트 3000 사용 중 아님"
+            
+            # 최종 확인
+            sleep 5
+            if pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
               echo "✅ 배포 성공!"
-              echo "🌐 서버가 포트 3000에서 실행 중입니다."
+              echo "🌐 서버가 실행 중입니다."
+              echo "📝 최종 로그:"
+              tail -5 /tmp/credit-app.log
             else
               echo "❌ 서버 시작 실패"
-              echo "로그:"
-              tail -20 /tmp/credit-app.log
+              echo "📝 전체 로그:"
+              cat /tmp/credit-app.log
+              echo "🔍 디버깅 정보:"
+              echo "현재 프로세스:"
+              ps aux | grep -E "(node|npm)"
+              echo "포트 상태:"
+              netstat -tln | grep 3000
               exit 1
             fi
             
