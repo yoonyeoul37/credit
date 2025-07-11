@@ -259,23 +259,7 @@ export default function Home() {
     fetchPosts();
   }, [currentPage, postsPerPage]);
 
-  // 시간 계산 함수
-  const getTimeAgo = (dateString) => {
-    const now = new Date();
-    const postDate = new Date(dateString);
-    const diffMs = now - postDate;
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMinutes < 60) {
-      return `${diffMinutes}분 전`;
-    } else if (diffHours < 24) {
-      return `${diffHours}시간 전`;
-    } else {
-      return `${diffDays}일 전`;
-    }
-  };
 
   // 페이징 계산 (API에서 페이징 처리되므로 간소화)
   const totalPages = Math.ceil(posts.length / postsPerPage);
