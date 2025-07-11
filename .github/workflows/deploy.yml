@@ -1,4 +1,4 @@
-name: Deploy to Cafe24
+name: Deploy to Cafe24 Static
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Build Next.js
+      - name: Build Next.js static site
         run: npm run build
         env:
           NODE_ENV: production
@@ -30,21 +30,22 @@ jobs:
           
       - name: Create deployment package
         run: |
-          echo "📦 배포 패키지 생성 중..."
-          tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts
-          ls -la deploy.tar.gz
+          echo "📦 정적 사이트 패키지 생성 중..."
+          tar -czf static-site.tar.gz out/
+          ls -la static-site.tar.gz
+          ls -la out/
           
-      - name: Upload deployment package
+      - name: Upload static site to server
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: ${{ secrets.CAFE24_PORT }}
-          source: "deploy.tar.gz"
+          source: "static-site.tar.gz"
           target: "/tmp/"
           
-      - name: Deploy on server
+      - name: Deploy static site
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.CAFE24_HOST }}
@@ -53,120 +54,55 @@ jobs:
           port: ${{ secrets.CAFE24_PORT }}
           timeout: 300s
           script: |
-            echo "🚀 배포 시작..."
+            echo "🚀 정적 사이트 배포 시작..."
             
             # 시스템 정보 확인
             echo "📊 시스템 정보:"
-            node --version || echo "Node.js 없음"
-            npm --version || echo "npm 없음"
-            echo "현재 사용자: $(whoami)"
-            echo "현재 위치: $(pwd)"
+            whoami
+            pwd
             echo "홈 디렉토리: $HOME"
             
-            # 기존 프로세스 정리
-            echo "🔄 기존 프로세스 정리..."
-            pkill -f "node.*3000" || echo "기존 node 프로세스 없음"
-            pkill -f "npm.*start" || echo "기존 npm 프로세스 없음"
+            # 웹 루트 디렉토리 찾기
+            if [ -d "$HOME/public_html" ]; then
+              WEB_ROOT="$HOME/public_html"
+            elif [ -d "$HOME/www" ]; then
+              WEB_ROOT="$HOME/www"
+            elif [ -d "$HOME/htdocs" ]; then
+              WEB_ROOT="$HOME/htdocs"
+            else
+              WEB_ROOT="$HOME/public_html"
+              mkdir -p "$WEB_ROOT"
+            fi
             
-            # 배포 디렉토리 준비
-            echo "📁 배포 디렉토리 준비..."
-            DEPLOY_DIR="$HOME/credit-app"
-            echo "배포 디렉토리: $DEPLOY_DIR"
-            mkdir -p "$DEPLOY_DIR"
-            cd "$DEPLOY_DIR"
-            echo "현재 위치: $(pwd)"
+            echo "웹 루트 디렉토리: $WEB_ROOT"
             
             # 기존 파일 백업
-            if [ -d ".next" ]; then
-              echo "🔄 기존 파일 백업..."
-              mv .next .next.backup.$(date +%Y%m%d_%H%M%S) || true
+            if [ -f "$WEB_ROOT/index.html" ]; then
+              echo "🔄 기존 사이트 백업..."
+              mv "$WEB_ROOT" "$WEB_ROOT.backup.$(date +%Y%m%d_%H%M%S)" || true
+              mkdir -p "$WEB_ROOT"
             fi
             
-            # 새 파일 압축 해제
-            echo "📦 새 버전 설치 중..."
-            tar -xzf /tmp/deploy.tar.gz
-            echo "파일 목록:"
-            ls -la
+            # 정적 사이트 압축 해제
+            echo "📦 정적 사이트 설치 중..."
+            cd /tmp
+            tar -xzf static-site.tar.gz
             
-            # 환경 변수 설정
-            echo "🔧 환경 변수 설정..."
-            cat > .env.local << 'EOF'
-            NODE_ENV=production
-            PORT=3000
-            HOSTNAME=0.0.0.0
-            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
-            EOF
+            # 파일 복사
+            echo "📁 파일 복사 중..."
+            cp -r out/* "$WEB_ROOT/"
             
-            # 의존성 설치
-            echo "📋 의존성 설치 중..."
-            npm ci --production --silent
+            # 권한 설정
+            chmod -R 755 "$WEB_ROOT"
             
-            # 간단한 포트 정리
-            echo "🔄 기존 프로세스 정리..."
-            pkill -f "node.*3000" || echo "기존 프로세스 없음"
-            sleep 1
-            
-            # Node.js 버전 확인
-            NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
-            echo "Node.js 주 버전: $NODE_VERSION"
-            echo "메모리 상태: $(free -m | grep Mem | awk '{print $3"/"$2" MB"}')"
-            echo "디스크 공간: $(df -h . | tail -1 | awk '{print $4" 사용가능"}')"
-            
-            # 포트 3000 말고 다른 포트로 시도
-            echo "🔄 다른 포트(3001)로 Next.js 서버 시작 시도..."
-            
-            # 환경 변수를 3001 포트로 변경
-            cat > .env.local << 'EOF'
-            NODE_ENV=production
-            PORT=3001
-            HOSTNAME=0.0.0.0
-            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
-            EOF
-            
-            echo "✅ 포트 3001로 환경 변수 변경 완료"
-            
-            # Next.js 서버 시작
-            echo "🚀 포트 3001에서 Next.js 서버 시작..."
-            npm start > /tmp/credit-app.log 2>&1 &
-            NPM_PID=$!
-            echo "npm start PID: $NPM_PID"
-            
-            # 서버 시작 확인
-            sleep 5
-            if [ ! -z "$NPM_PID" ]; then
-              echo "📝 Next.js 서버 로그:"
-              tail -10 /tmp/credit-app.log
-            fi
-            
-            # 프로세스 상태 확인
-            echo "🔍 프로세스 확인:"
-            ps aux | grep -E "(node|npm)" | grep -v grep || echo "프로세스 없음"
-            
-            # 포트 상태 확인 (간단하게)
-            echo "🌐 포트 3001 상태 확인..."
-            sleep 2
-            
-            # 최종 확인
-            if pgrep -f "node.*3001" > /dev/null || pgrep -f "npm.*start" > /dev/null; then
-              echo "✅ 배포 성공!"
-              echo "🌐 서버가 실행 중입니다."
-              echo "📍 접속 주소: http://도메인:3001"
-              echo "💡 도메인 연결은 카페24 관리자 페이지에서 설정 가능합니다."
-              echo "🔧 포트 3000 대신 3001 사용 (기존 사이트와 충돌 방지)"
-            else
-              echo "❌ 서버 시작 실패"
-              echo "📝 전체 로그:"
-              cat /tmp/credit-app.log
-              echo "🔍 디버깅 정보:"
-              echo "디스크 공간: $(df -h . | tail -1)"
-              echo "메모리 사용량: $(free -h | grep Mem)"
-              echo "💡 포트 3000이 차단되어 3001로 시도했지만 실패"
-              echo "💡 기존 사이트나 카페24 설정 문제일 수 있습니다"
-              exit 1
-            fi
+            # 결과 확인
+            echo "✅ 배포 완료!"
+            echo "📁 웹 루트: $WEB_ROOT"
+            echo "📄 파일 목록:"
+            ls -la "$WEB_ROOT"
+            echo "🌐 접속 주소: http://도메인/"
+            echo "🎉 정적 사이트 배포 성공! Node.js 서버 없이 바로 접속 가능합니다."
             
             # 정리
-            rm -f /tmp/deploy.tar.gz
-            echo "🎉 배포 완료!"
+            rm -f /tmp/static-site.tar.gz
+            rm -rf /tmp/out
