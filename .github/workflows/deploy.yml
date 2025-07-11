@@ -111,7 +111,7 @@ jobs:
             # 서버 시작 함수 정의
             check_server() {
               local port=$1
-              local max_attempts=30
+              local max_attempts=20
               local attempt=1
               
               echo "🔍 포트 $port 서버 확인 중..."
@@ -119,23 +119,38 @@ jobs:
               while [ $attempt -le $max_attempts ]; do
                 echo "  시도 $attempt/$max_attempts..."
                 
-                # HTTP 응답 확인
-                if curl -s -I http://localhost:$port | grep -q "HTTP"; then
-                  echo "✅ 포트 $port에서 HTTP 응답 확인!"
-                  return 0
-                fi
-                
                 # 포트 바인딩 확인
                 if netstat -an | grep ":$port" | grep -q "LISTEN"; then
                   echo "✅ 포트 $port에서 LISTEN 상태 확인!"
-                  return 0
+                  
+                  # 서버 로그 확인
+                  echo "📝 서버 로그 (마지막 5줄):"
+                  tail -5 /tmp/credit-app-$port.log
+                  
+                  # HTTP 응답 확인 (더 자세히)
+                  echo "🌐 HTTP 응답 테스트..."
+                  HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null --max-time 10 http://localhost:$port 2>&1)
+                  echo "HTTP 응답 코드: $HTTP_RESPONSE"
+                  
+                  if [ "$HTTP_RESPONSE" = "200" ] || [ "$HTTP_RESPONSE" = "404" ] || [ "$HTTP_RESPONSE" = "500" ]; then
+                    echo "✅ HTTP 응답 확인! (코드: $HTTP_RESPONSE)"
+                    return 0
+                  else
+                    echo "⚠️ HTTP 응답 비정상 (코드: $HTTP_RESPONSE)"
+                    echo "📝 자세한 curl 결과:"
+                    curl -v http://localhost:$port --max-time 5 2>&1 | head -10
+                  fi
+                else
+                  echo "⚠️ 포트 $port LISTEN 상태 아님"
                 fi
                 
-                sleep 2
+                sleep 5
                 attempt=$((attempt + 1))
               done
               
               echo "❌ 포트 $port 서버 확인 실패"
+              echo "📝 최종 서버 로그:"
+              cat /tmp/credit-app-$port.log
               return 1
             }
             
@@ -164,6 +179,10 @@ jobs:
               SERVER_PID=$!
               echo "서버 PID: $SERVER_PID"
               
+              # 서버 시작 대기
+              echo "⏳ 서버 초기화 대기 중..."
+              sleep 10
+              
               # 서버 확인
               if check_server $port; then
                 SERVER_PORT=$port
@@ -171,8 +190,8 @@ jobs:
                 break
               else
                 echo "❌ 포트 $port에서 서버 시작 실패"
-                echo "📝 로그 내용:"
-                cat /tmp/credit-app-$port.log
+                echo "📝 프로세스 상태:"
+                ps aux | grep -E "(node|npm|next)" | grep -v grep
                 kill $SERVER_PID 2>/dev/null || true
               fi
             done
@@ -180,24 +199,33 @@ jobs:
             # 최종 결과 확인
             if [ -z "$SERVER_PORT" ]; then
               echo "❌ 모든 포트에서 서버 시작 실패"
-              echo "📝 시스템 상태:"
+              echo "📝 최종 시스템 상태:"
               echo "프로세스 목록:"
               ps aux | grep -E "(node|npm|next)" | head -10
               echo "포트 상태:"
               netstat -tlnp | grep -E "(3000|8080|8081)"
               echo "메모리 사용량:"
               free -h
+              echo "📝 모든 로그 파일:"
+              for logfile in /tmp/credit-app-*.log; do
+                if [ -f "$logfile" ]; then
+                  echo "=== $logfile ==="
+                  cat "$logfile"
+                  echo ""
+                fi
+              done
               exit 1
             fi
             
             echo "🎉 서버 시작 성공! 포트: $SERVER_PORT"
             echo "🌐 접속 주소: http://도메인:$SERVER_PORT"
             
+            # 최종 서버 테스트
+            echo "📝 최종 서버 테스트:"
+            curl -s -I http://localhost:$SERVER_PORT | head -3
+            
             # 리다이렉트 페이지 생성
             echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>신용회복 커뮤니티</title><meta http-equiv=\"refresh\" content=\"1; url=:$SERVER_PORT\"><script>setTimeout(() => { window.location.href = window.location.protocol + \"//\" + window.location.hostname + \":$SERVER_PORT\"; }, 1000);</script></head><body style=\"font-family: Arial, sans-serif; text-align: center; padding: 50px;\"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=\":$SERVER_PORT\" style=\"color: #007bff;\">바로 이동하기</a></p></body></html>" > "$WEB_ROOT/index.html"
-            
-            echo "📝 최종 서버 상태:"
-            curl -s -I http://localhost:$SERVER_PORT | head -3
             
             echo "🎉 사이트 교체 완료!"
             echo "📝 서버 로그 (마지막 5줄):"
