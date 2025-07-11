@@ -1,118 +1,118 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function CreditPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  // 신용이야기 관련 글들 (임시 데이터)
-  const allCreditPosts = [
-    {
-      id: 11,
-      title: "신용등급 7등급에서 2등급까지 올린 후기",
-      author: "익명",
-      createdAt: "1시간 전",
-      commentCount: 34,
-      views: 567
-    },
-    {
-      id: 12,
-      title: "신용카드 연체 후 신용회복 과정 공유",
-      author: "익명",
-      createdAt: "3시간 전",
-      commentCount: 18,
-      views: 234
-    },
-    {
-      id: 13,
-      title: "NICE 신용평가 vs KCB 신용평가 차이점",
-      author: "익명",
-      createdAt: "5시간 전",
-      commentCount: 11,
-      views: 189
-    },
-    {
-      id: 14,
-      title: "신용회복위원회 프로그램 이용 후기",
-      author: "익명",
-      createdAt: "7시간 전",
-      commentCount: 26,
-      views: 345
-    },
-    {
-      id: 15,
-      title: "신용 관리 앱 추천 및 사용법",
-      author: "익명",
-      createdAt: "9시간 전",
-      commentCount: 8,
-      views: 156
-    },
-    {
-      id: 16,
-      title: "부실 채권 매각 후 신용등급 변화",
-      author: "익명",
-      createdAt: "11시간 전",
-      commentCount: 15,
-      views: 289
-    },
-    {
-      id: 17,
-      title: "신용보증재단 대출 후기",
-      author: "익명",
-      createdAt: "13시간 전",
-      commentCount: 22,
-      views: 401
-    },
-    {
-      id: 18,
-      title: "개인신용정보 무료 조회 방법",
-      author: "익명",
-      createdAt: "15시간 전",
-      commentCount: 19,
-      views: 325
-    },
-    {
-      id: 19,
-      title: "신용등급 상승을 위한 5가지 방법",
-      author: "익명",
-      createdAt: "17시간 전",
-      commentCount: 31,
-      views: 478
-    },
-    {
-      id: 20,
-      title: "연체 이력 삭제 신청 방법",
-      author: "익명",
-      createdAt: "19시간 전",
-      commentCount: 12,
-      views: 203
-    },
-    {
-      id: 21,
-      title: "신용카드 한도 증액 성공 후기",
-      author: "익명",
-      createdAt: "21시간 전",
-      commentCount: 17,
-      views: 356
-    },
-    {
-      id: 22,
-      title: "마이너스 통장 정리 후 신용개선",
-      author: "익명",
-      createdAt: "23시간 전",
-      commentCount: 24,
-      views: 412
-    }
-  ];
-
+  // 신용이야기 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=credit');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allCreditPosts = [
+          {
+            id: 11,
+            title: "신용등급 7등급에서 2등급까지 올린 후기",
+            author: "익명",
+            createdAt: "1시간 전",
+            commentCount: 34,
+            views: 567
+          },
+          {
+            id: 12,
+            title: "신용카드 연체 후 신용회복 과정 공유",
+            author: "익명",
+            createdAt: "3시간 전",
+            commentCount: 18,
+            views: 234
+          },
+          {
+            id: 13,
+            title: "NICE 신용평가 vs KCB 신용평가 차이점",
+            author: "익명",
+            createdAt: "5시간 전",
+            commentCount: 11,
+            views: 189
+          },
+          {
+            id: 14,
+            title: "신용회복위원회 프로그램 이용 후기",
+            author: "익명",
+            createdAt: "7시간 전",
+            commentCount: 26,
+            views: 345
+          },
+          {
+            id: 15,
+            title: "신용 관리 앱 추천 및 사용법",
+            author: "익명",
+            createdAt: "9시간 전",
+            commentCount: 8,
+            views: 156
+          },
+          {
+            id: 16,
+            title: "부실 채권 매각 후 신용등급 변화",
+            author: "익명",
+            createdAt: "11시간 전",
+            commentCount: 15,
+            views: 289
+          },
+          {
+            id: 17,
+            title: "신용보증재단 대출 후기",
+            author: "익명",
+            createdAt: "13시간 전",
+            commentCount: 22,
+            views: 401
+          },
+          {
+            id: 18,
+            title: "개인신용정보 무료 조회 방법",
+            author: "익명",
+            createdAt: "15시간 전",
+            commentCount: 19,
+            views: 325
+          }
+        ];
+        
+        setPosts(allCreditPosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allCreditPosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const creditPosts = allCreditPosts.slice(startIndex, endIndex);
+  const creditPosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -285,7 +285,7 @@ export default function CreditPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allCreditPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 

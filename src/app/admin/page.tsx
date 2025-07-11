@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import React from 'react';
 import Link from 'next/link';
 import MobileNavigation from '../components/MobileNavigation';
@@ -33,118 +33,177 @@ export default function AdminPage() {
   });
 
   // 샘플 데이터
-  const [ads, setAds] = useState([
-    {
-      id: 1,
-      type: 'premium',
-      title: '신용회복 전문 상담센터',
-      content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공',
-      url: '#',
-      imageUrl: '',
-      startDate: '2024-01-15',
-      endDate: '2024-12-31',
-      isActive: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: 2,
-      type: 'list',
-      title: '저금리 대출 비교 플랫폼',
-      content: 'AI 맞춤 대출 상품 추천 | 즉시 심사',
-      url: '#',
-      imageUrl: '',
-      startDate: '2024-01-14',
-      endDate: '2024-06-30',
-      isActive: true,
-      createdAt: '2024-01-14'
-    }
-  ]);
+  const [ads, setAds] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [newsItems, setNewsItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      title: '개인회생 신청 후 3년간의 경험담',
-      author: '희망이',
-      category: '개인회생',
-      createdAt: '2024-01-15',
-      views: 1234,
-      reports: 2
-    },
-    {
-      id: 2,
-      title: '법인회생 절차 중 궁금한 점들',
-      author: '사장님',
-      category: '법인회생',
-      createdAt: '2024-01-14',
-      views: 856,
-      reports: 0
-    }
-  ]);
+  // 관리자 데이터 가져오기
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const [adsResponse, postsResponse, commentsResponse, reportsResponse, newsResponse] = await Promise.all([
+            fetch('/api/admin/ads'),
+            fetch('/api/admin/posts'),
+            fetch('/api/admin/comments'),
+            fetch('/api/admin/reports'),
+            fetch('/api/admin/news')
+          ]);
+          
+          if (adsResponse.ok) {
+            const adsData = await adsResponse.json();
+            setAds(adsData.ads || []);
+          }
+          
+          if (postsResponse.ok) {
+            const postsData = await postsResponse.json();
+            setPosts(postsData.posts || []);
+          }
+          
+          if (commentsResponse.ok) {
+            const commentsData = await commentsResponse.json();
+            setComments(commentsData.comments || []);
+          }
+          
+          if (reportsResponse.ok) {
+            const reportsData = await reportsResponse.json();
+            setReports(reportsData.reports || []);
+          }
+          
+          if (newsResponse.ok) {
+            const newsData = await newsResponse.json();
+            setNewsItems(newsData.news || []);
+          }
+        } catch (error) {
+          console.error('관리자 데이터 로딩 실패:', error);
+        }
+      } else {
+        // 개발환경: 샘플 데이터
+        setAds([
+          {
+            id: 1,
+            type: 'premium',
+            title: '신용회복 전문 상담센터',
+            content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공',
+            url: '#',
+            imageUrl: '',
+            startDate: '2024-01-15',
+            endDate: '2024-12-31',
+            isActive: true,
+            createdAt: '2024-01-15'
+          },
+          {
+            id: 2,
+            type: 'list',
+            title: '저금리 대출 비교 플랫폼',
+            content: 'AI 맞춤 대출 상품 추천 | 즉시 심사',
+            url: '#',
+            imageUrl: '',
+            startDate: '2024-01-14',
+            endDate: '2024-06-30',
+            isActive: true,
+            createdAt: '2024-01-14'
+          }
+        ]);
 
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      postId: 1,
-      author: '응원합니다',
-      content: '좋은 정보 감사합니다.',
-      createdAt: '2024-01-15',
-      reports: 1
-    },
-    {
-      id: 2,
-      postId: 1,
-      author: '질문있어요',
-      content: '변호사 선임은 필수인가요?',
-      createdAt: '2024-01-15',
-      reports: 0
-    }
-  ]);
+        setPosts([
+          {
+            id: 1,
+            title: '개인회생 신청 후 3년간의 경험담',
+            author: '희망이',
+            category: '개인회생',
+            createdAt: '2024-01-15',
+            views: 1234,
+            reports: 2
+          },
+          {
+            id: 2,
+            title: '법인회생 절차 중 궁금한 점들',
+            author: '사장님',
+            category: '법인회생',
+            createdAt: '2024-01-14',
+            views: 856,
+            reports: 0
+          }
+        ]);
 
-  const [reports, setReports] = useState([
-    {
-      id: 1,
-      type: 'post',
-      targetId: 1,
-      reason: '스팸/광고',
-      reporter: '신고자1',
-      createdAt: '2024-01-15'
-    },
-    {
-      id: 2,
-      type: 'comment',
-      targetId: 1,
-      reason: '부적절한 언어',
-      reporter: '신고자2',
-      createdAt: '2024-01-15'
-    }
-  ]);
+        setComments([
+          {
+            id: 1,
+            postId: 1,
+            author: '응원합니다',
+            content: '좋은 정보 감사합니다.',
+            createdAt: '2024-01-15',
+            reports: 1
+          },
+          {
+            id: 2,
+            postId: 1,
+            author: '질문있어요',
+            content: '변호사 선임은 필수인가요?',
+            createdAt: '2024-01-15',
+            reports: 0
+          }
+        ]);
 
-  const [newsItems, setNewsItems] = useState([
-    {
-      id: 1,
-      title: "2024년 개인회생 신청 절차 변경사항 발표",
-      summary: "법원 접수 서류 간소화 및 온라인 신청 확대",
-      source: "금융감독원",
-      url: "https://www.fss.or.kr",
-      publishedAt: "2024-01-15",
-      category: "정책",
-      isImportant: true,
-      isActive: true,
-      createdAt: "2024-01-15"
-    },
-    {
-      id: 2,
-      title: "신용등급 평가기준 개편, 무엇이 달라지나?",
-      summary: "소득 대비 부채비율 반영 비중 확대",
-      source: "한국경제신문",
-      url: "https://www.hankyung.com",
-      publishedAt: "2024-01-14",
-      category: "신용",
-      isImportant: false,
-      isActive: true,
-      createdAt: "2024-01-14"
-    }
-  ]);
+        setReports([
+          {
+            id: 1,
+            type: 'post',
+            targetId: 1,
+            reason: '스팸/광고',
+            reporter: '신고자1',
+            createdAt: '2024-01-15'
+          },
+          {
+            id: 2,
+            type: 'comment',
+            targetId: 1,
+            reason: '부적절한 언어',
+            reporter: '신고자2',
+            createdAt: '2024-01-15'
+          }
+        ]);
+
+        setNewsItems([
+          {
+            id: 1,
+            title: "2024년 개인회생 신청 절차 변경사항 발표",
+            summary: "법원 접수 서류 간소화 및 온라인 신청 확대",
+            source: "금융감독원",
+            url: "https://www.fss.or.kr",
+            publishedAt: "2024-01-15",
+            category: "정책",
+            isImportant: true,
+            isActive: true,
+            createdAt: "2024-01-15"
+          },
+          {
+            id: 2,
+            title: "신용등급 평가기준 개편, 무엇이 달라지나?",
+            summary: "소득 대비 부채비율 반영 비중 확대",
+            source: "한국경제신문",
+            url: "https://www.hankyung.com",
+            publishedAt: "2024-01-14",
+            category: "신용",
+            isImportant: false,
+            isActive: true,
+            createdAt: "2024-01-14"
+          }
+        ]);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchAdminData();
+  }, []);
 
   const handleAdSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

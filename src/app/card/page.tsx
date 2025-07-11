@@ -1,101 +1,118 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function CardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const allCardPosts = [
-    {
-      id: 51,
-      title: "신용카드 연체 후 회복 과정 후기",
-      author: "익명",
-      createdAt: "1시간 전",
-      commentCount: 24,
-      views: 456
-    },
-    {
-      id: 52,
-      title: "연체자도 발급 가능한 신용카드 정리",
-      author: "익명",
-      createdAt: "3시간 전",
-      commentCount: 31,
-      views: 678
-    },
-    {
-      id: 53,
-      title: "신용카드 정리 vs 개인회생 선택 기준",
-      author: "익명",
-      createdAt: "5시간 전",
-      commentCount: 17,
-      views: 298
-    },
-    {
-      id: 54,
-      title: "신용카드 현금서비스 줄이는 방법",
-      author: "익명",
-      createdAt: "7시간 전",
-      commentCount: 22,
-      views: 389
-    },
-    {
-      id: 55,
-      title: "카드 대금 연체 시 대처 방법",
-      author: "익명",
-      createdAt: "9시간 전",
-      commentCount: 19,
-      views: 334
-    },
-    {
-      id: 56,
-      title: "신용카드 부채 통합 성공 후기",
-      author: "익명",
-      createdAt: "11시간 전",
-      commentCount: 26,
-      views: 467
-    },
-    {
-      id: 57,
-      title: "카드론 vs 신용대출 비교",
-      author: "익명",
-      createdAt: "13시간 전",
-      commentCount: 15,
-      views: 278
-    },
-    {
-      id: 58,
-      title: "신용카드 한도 감액 후 복구 방법",
-      author: "익명",
-      createdAt: "15시간 전",
-      commentCount: 28,
-      views: 412
-    },
-    {
-      id: 59,
-      title: "카드 연체금 협상 성공 사례",
-      author: "익명",
-      createdAt: "17시간 전",
-      commentCount: 23,
-      views: 356
-    },
-    {
-      id: 60,
-      title: "신용카드 해지 후 신용등급 변화",
-      author: "익명",
-      createdAt: "19시간 전",
-      commentCount: 18,
-      views: 289
-    }
-  ];
-
+  // 신용카드 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=card');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allCardPosts = [
+          {
+            id: 51,
+            title: "신용카드 연체 후 회복 과정 후기",
+            author: "익명",
+            createdAt: "1시간 전",
+            commentCount: 24,
+            views: 456
+          },
+          {
+            id: 52,
+            title: "연체자도 발급 가능한 신용카드 정리",
+            author: "익명",
+            createdAt: "3시간 전",
+            commentCount: 31,
+            views: 678
+          },
+          {
+            id: 53,
+            title: "신용카드 정리 vs 개인회생 선택 기준",
+            author: "익명",
+            createdAt: "5시간 전",
+            commentCount: 17,
+            views: 298
+          },
+          {
+            id: 54,
+            title: "신용카드 현금서비스 줄이는 방법",
+            author: "익명",
+            createdAt: "7시간 전",
+            commentCount: 22,
+            views: 389
+          },
+          {
+            id: 55,
+            title: "카드 대금 연체 시 대처 방법",
+            author: "익명",
+            createdAt: "9시간 전",
+            commentCount: 19,
+            views: 334
+          },
+          {
+            id: 56,
+            title: "신용카드 부채 통합 성공 후기",
+            author: "익명",
+            createdAt: "11시간 전",
+            commentCount: 26,
+            views: 467
+          },
+          {
+            id: 57,
+            title: "카드론 vs 신용대출 비교",
+            author: "익명",
+            createdAt: "13시간 전",
+            commentCount: 15,
+            views: 278
+          },
+          {
+            id: 58,
+            title: "신용카드 한도 감액 후 복구 방법",
+            author: "익명",
+            createdAt: "15시간 전",
+            commentCount: 28,
+            views: 412
+          }
+        ];
+        
+        setPosts(allCardPosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allCardPosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const cardPosts = allCardPosts.slice(startIndex, endIndex);
+  const cardPosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -263,7 +280,7 @@ export default function CardPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allCardPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 

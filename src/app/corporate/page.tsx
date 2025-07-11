@@ -1,101 +1,126 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function CorporatePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const allCorporatePosts = [
-    {
-      id: 31,
-      title: "법인회생 신청 절차 상세 가이드",
-      author: "익명",
-      createdAt: "1시간 전",
-      commentCount: 12,
-      views: 234
-    },
-    {
-      id: 32,
-      title: "법인회생 중 사업 운영 경험담",
-      author: "익명",
-      createdAt: "3시간 전",
-      commentCount: 8,
-      views: 167
-    },
-    {
-      id: 33,
-      title: "법인회생 vs 법인파산 선택 기준",
-      author: "익명",
-      createdAt: "5시간 전",
-      commentCount: 15,
-      views: 298
-    },
-    {
-      id: 34,
-      title: "법인회생 계획안 작성 노하우",
-      author: "익명",
-      createdAt: "7시간 전",
-      commentCount: 19,
-      views: 356
-    },
-    {
-      id: 35,
-      title: "법인회생 후 직원 재고용 사례",
-      author: "익명",
-      createdAt: "9시간 전",
-      commentCount: 11,
-      views: 203
-    },
-    {
-      id: 36,
-      title: "법인회생 채권자집회 준비사항",
-      author: "익명",
-      createdAt: "11시간 전",
-      commentCount: 22,
-      views: 411
-    },
-    {
-      id: 37,
-      title: "법인회생 성공률 높이는 방법",
-      author: "익명",
-      createdAt: "13시간 전",
-      commentCount: 27,
-      views: 487
-    },
-    {
-      id: 38,
-      title: "법인회생 중 자금조달 방법",
-      author: "익명",
-      createdAt: "15시간 전",
-      commentCount: 16,
-      views: 289
-    },
-    {
-      id: 39,
-      title: "법인회생 완료 후 사업 확장기",
-      author: "익명",
-      createdAt: "17시간 전",
-      commentCount: 24,
-      views: 423
-    },
-    {
-      id: 40,
-      title: "법인회생 신청 시 필요 서류",
-      author: "익명",
-      createdAt: "19시간 전",
-      commentCount: 13,
-      views: 267
-    }
-  ];
-
+  // 법인회생 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=corporate');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allCorporatePosts = [
+          {
+            id: 31,
+            title: "법인회생 신청 절차 상세 가이드",
+            author: "익명",
+            createdAt: "1시간 전",
+            commentCount: 12,
+            views: 234
+          },
+          {
+            id: 32,
+            title: "법인회생 중 사업 운영 경험담",
+            author: "익명",
+            createdAt: "3시간 전",
+            commentCount: 8,
+            views: 167
+          },
+          {
+            id: 33,
+            title: "법인회생 vs 법인파산 선택 기준",
+            author: "익명",
+            createdAt: "5시간 전",
+            commentCount: 15,
+            views: 298
+          },
+          {
+            id: 34,
+            title: "법인회생 계획안 작성 노하우",
+            author: "익명",
+            createdAt: "7시간 전",
+            commentCount: 19,
+            views: 356
+          },
+          {
+            id: 35,
+            title: "법인회생 후 직원 재고용 사례",
+            author: "익명",
+            createdAt: "9시간 전",
+            commentCount: 11,
+            views: 203
+          },
+          {
+            id: 36,
+            title: "법인회생 채권자집회 준비사항",
+            author: "익명",
+            createdAt: "11시간 전",
+            commentCount: 22,
+            views: 411
+          },
+          {
+            id: 37,
+            title: "법인회생 성공률 높이는 방법",
+            author: "익명",
+            createdAt: "13시간 전",
+            commentCount: 27,
+            views: 487
+          },
+          {
+            id: 38,
+            title: "법인회생 중 자금조달 방법",
+            author: "익명",
+            createdAt: "15시간 전",
+            commentCount: 16,
+            views: 289
+          },
+          {
+            id: 39,
+            title: "법인회생 완료 후 사업 확장기",
+            author: "익명",
+            createdAt: "17시간 전",
+            commentCount: 24,
+            views: 423
+          }
+        ];
+        
+        setPosts(allCorporatePosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allCorporatePosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const corporatePosts = allCorporatePosts.slice(startIndex, endIndex);
+  const corporatePosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -263,7 +288,7 @@ export default function CorporatePage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allCorporatePosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 

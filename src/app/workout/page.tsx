@@ -1,101 +1,126 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function WorkoutPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const allWorkoutPosts = [
-    {
-      id: 41,
-      title: "워크아웃 진행 과정 상세 후기",
-      author: "익명",
-      createdAt: "2시간 전",
-      commentCount: 19,
-      views: 345
-    },
-    {
-      id: 42,
-      title: "워크아웃 vs 개인회생 비교 분석",
-      author: "익명",
-      createdAt: "4시간 전",
-      commentCount: 13,
-      views: 234
-    },
-    {
-      id: 43,
-      title: "워크아웃 신청 자격 조건 정리",
-      author: "익명",
-      createdAt: "6시간 전",
-      commentCount: 21,
-      views: 387
-    },
-    {
-      id: 44,
-      title: "워크아웃 협상 성공 노하우",
-      author: "익명",
-      createdAt: "8시간 전",
-      commentCount: 25,
-      views: 412
-    },
-    {
-      id: 45,
-      title: "워크아웃 중 사업 운영 방법",
-      author: "익명",
-      createdAt: "10시간 전",
-      commentCount: 16,
-      views: 298
-    },
-    {
-      id: 46,
-      title: "워크아웃 완료 후 신용 회복",
-      author: "익명",
-      createdAt: "12시간 전",
-      commentCount: 28,
-      views: 456
-    },
-    {
-      id: 47,
-      title: "워크아웃 채무조정 협의 과정",
-      author: "익명",
-      createdAt: "14시간 전",
-      commentCount: 18,
-      views: 321
-    },
-    {
-      id: 48,
-      title: "워크아웃 신청 전 준비사항",
-      author: "익명",
-      createdAt: "16시간 전",
-      commentCount: 23,
-      views: 389
-    },
-    {
-      id: 49,
-      title: "워크아웃 이자 감면 받는 방법",
-      author: "익명",
-      createdAt: "18시간 전",
-      commentCount: 20,
-      views: 367
-    },
-    {
-      id: 50,
-      title: "워크아웃 프로그램 종류별 비교",
-      author: "익명",
-      createdAt: "20시간 전",
-      commentCount: 14,
-      views: 245
-    }
-  ];
-
+  // 워크아웃 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=workout');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allWorkoutPosts = [
+          {
+            id: 41,
+            title: "워크아웃 진행 과정 상세 후기",
+            author: "익명",
+            createdAt: "2시간 전",
+            commentCount: 19,
+            views: 345
+          },
+          {
+            id: 42,
+            title: "워크아웃 vs 개인회생 비교 분석",
+            author: "익명",
+            createdAt: "4시간 전",
+            commentCount: 13,
+            views: 234
+          },
+          {
+            id: 43,
+            title: "워크아웃 신청 자격 조건 정리",
+            author: "익명",
+            createdAt: "6시간 전",
+            commentCount: 21,
+            views: 387
+          },
+          {
+            id: 44,
+            title: "워크아웃 협상 성공 노하우",
+            author: "익명",
+            createdAt: "8시간 전",
+            commentCount: 25,
+            views: 412
+          },
+          {
+            id: 45,
+            title: "워크아웃 중 사업 운영 방법",
+            author: "익명",
+            createdAt: "10시간 전",
+            commentCount: 16,
+            views: 298
+          },
+          {
+            id: 46,
+            title: "워크아웃 완료 후 신용 회복",
+            author: "익명",
+            createdAt: "12시간 전",
+            commentCount: 28,
+            views: 456
+          },
+          {
+            id: 47,
+            title: "워크아웃 채무조정 협의 과정",
+            author: "익명",
+            createdAt: "14시간 전",
+            commentCount: 18,
+            views: 321
+          },
+          {
+            id: 48,
+            title: "워크아웃 신청 전 준비사항",
+            author: "익명",
+            createdAt: "16시간 전",
+            commentCount: 23,
+            views: 389
+          },
+          {
+            id: 49,
+            title: "워크아웃 이자 감면 받는 방법",
+            author: "익명",
+            createdAt: "18시간 전",
+            commentCount: 20,
+            views: 367
+          }
+        ];
+        
+        setPosts(allWorkoutPosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allWorkoutPosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const workoutPosts = allWorkoutPosts.slice(startIndex, endIndex);
+  const workoutPosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -263,7 +288,7 @@ export default function WorkoutPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allWorkoutPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 

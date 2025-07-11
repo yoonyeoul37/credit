@@ -45,12 +45,40 @@ export default function PostDetailPage() {
   const [commentAction, setCommentAction] = useState('');
   const [commentActionId, setCommentActionId] = useState(null);
 
-  // 샘플 데이터 (실제로는 API에서 가져옴)
-  const samplePosts = {
-    1: {
-      id: 1,
-      title: '개인회생 신청 후 3년간의 경험담',
-      content: `안녕하세요. 개인회생을 신청한 지 3년이 지나서 경험을 공유하려고 합니다.
+  // 게시글과 댓글 데이터 가져오기
+  useEffect(() => {
+    const fetchPostData = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const postId = parseInt(params.id);
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch(`/api/posts/${postId}`);
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPost(data.post);
+            setComments(data.comments || []);
+            setLikesCount(data.post.likes || 0);
+            
+            // 사용자의 좋아요 상태 확인
+            const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+            setIsLiked(likedPosts.includes(postId));
+          } else {
+            throw new Error('게시글을 찾을 수 없습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPost(null);
+        }
+      } else {
+        // 개발환경: 샘플 데이터
+        const samplePosts = {
+          1: {
+            id: 1,
+            title: '개인회생 신청 후 3년간의 경험담',
+            content: `안녕하세요. 개인회생을 신청한 지 3년이 지나서 경험을 공유하려고 합니다.
 
 처음에는 정말 막막했는데, 지금 돌이켜보니 개인회생이 제게는 새로운 시작이었습니다.
 
@@ -67,64 +95,64 @@ export default function PostDetailPage() {
 
 정말 힘들었지만, 이제는 안정적인 생활을 하고 있습니다. 
 질문 있으시면 답변 드리겠습니다.`,
-      nickname: '희망이',
-      category: 'personal',
-      categoryName: '개인회생',
-      createdAt: '2024-01-15 14:30',
-      views: 1234,
-      likes: 15,
-      images: []
-    },
-    2: {
-      id: 2,
-      title: '법인회생 절차 중 궁금한 점들',
-      content: `법인회생 절차를 진행하면서 겪었던 어려움들을 공유하고 싶습니다.
+            nickname: '희망이',
+            category: 'personal',
+            categoryName: '개인회생',
+            createdAt: '2024-01-15 14:30',
+            views: 1234,
+            likes: 15,
+            images: []
+          },
+          2: {
+            id: 2,
+            title: '법인회생 절차 중 궁금한 점들',
+            content: `법인회생 절차를 진행하면서 겪었던 어려움들을 공유하고 싶습니다.
 
 특히 직원들과의 소통이 가장 어려웠던 부분이었습니다...`,
-      nickname: '사장님',
-      category: 'corporate',
-      categoryName: '법인회생',
-      createdAt: '2024-01-14 10:15',
-      views: 856,
-      likes: 8,
-      images: []
-    }
-  };
+            nickname: '사장님',
+            category: 'corporate',
+            categoryName: '법인회생',
+            createdAt: '2024-01-14 10:15',
+            views: 856,
+            likes: 8,
+            images: []
+          }
+        };
 
-  const sampleComments = [
-    {
-      id: 1,
-      postId: 1,
-      nickname: '응원합니다',
-      content: '좋은 정보 감사합니다. 저도 개인회생 준비 중인데 많은 도움이 되었습니다.',
-      createdAt: '2024-01-15 15:20'
-    },
-    {
-      id: 2,
-      postId: 1,
-      nickname: '질문있어요',
-      content: '변호사 선임은 필수인가요? 본인신청도 가능한지 궁금합니다.',
-      createdAt: '2024-01-15 16:45'
-    }
-  ];
-
-  useEffect(() => {
-    // 실제로는 API에서 데이터를 가져옴
-    const postId = parseInt(params.id);
-    const postData = samplePosts[postId];
-    
-    if (postData) {
-      setPost(postData);
-      setComments(sampleComments.filter(comment => comment.postId === postId));
-      setLikesCount(postData.likes);
+        const sampleComments = [
+          {
+            id: 1,
+            postId: 1,
+            nickname: '응원합니다',
+            content: '좋은 정보 감사합니다. 저도 개인회생 준비 중인데 많은 도움이 되었습니다.',
+            createdAt: '2024-01-15 15:20'
+          },
+          {
+            id: 2,
+            postId: 1,
+            nickname: '질문있어요',
+            content: '변호사 선임은 필수인가요? 본인신청도 가능한지 궁금합니다.',
+            createdAt: '2024-01-15 16:45'
+          }
+        ];
+        
+        const postData = samplePosts[postId];
+        
+        if (postData) {
+          setPost(postData);
+          setComments(sampleComments.filter(comment => comment.postId === postId));
+          setLikesCount(postData.likes);
+          
+          // 사용자의 좋아요 상태 확인
+          const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+          setIsLiked(likedPosts.includes(postId));
+        }
+      }
       
-      // 실제로는 사용자의 좋아요 상태를 서버에서 가져옴
-      // 현재는 로컬 스토리지에서 확인
-      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
-      setIsLiked(likedPosts.includes(postId));
-    }
+      setIsLoading(false);
+    };
     
-    setIsLoading(false);
+    fetchPostData();
   }, [params.id]);
 
   const handleCommentSubmit = (e) => {

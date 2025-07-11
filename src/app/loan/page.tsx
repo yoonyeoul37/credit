@@ -1,101 +1,126 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function LoanPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const allLoanPosts = [
-    {
-      id: 61,
-      title: "신용불량자 대출 가능한 곳 정리",
-      author: "익명",
-      createdAt: "30분 전",
-      commentCount: 42,
-      views: 789
-    },
-    {
-      id: 62,
-      title: "대출 정리 후 신용 회복 과정",
-      author: "익명",
-      createdAt: "2시간 전",
-      commentCount: 28,
-      views: 456
-    },
-    {
-      id: 63,
-      title: "고금리 대출 저금리로 갈아타기 후기",
-      author: "익명",
-      createdAt: "4시간 전",
-      commentCount: 19,
-      views: 334
-    },
-    {
-      id: 64,
-      title: "대출 연체 시 대처 방법",
-      author: "익명",
-      createdAt: "6시간 전",
-      commentCount: 35,
-      views: 567
-    },
-    {
-      id: 65,
-      title: "저신용자 대출 승인 받는 방법",
-      author: "익명",
-      createdAt: "8시간 전",
-      commentCount: 31,
-      views: 498
-    },
-    {
-      id: 66,
-      title: "대출 중도상환 수수료 줄이는 팁",
-      author: "익명",
-      createdAt: "10시간 전",
-      commentCount: 23,
-      views: 367
-    },
-    {
-      id: 67,
-      title: "대환대출 신청 전 주의사항",
-      author: "익명",
-      createdAt: "12시간 전",
-      commentCount: 26,
-      views: 423
-    },
-    {
-      id: 68,
-      title: "담보대출 vs 신용대출 비교",
-      author: "익명",
-      createdAt: "14시간 전",
-      commentCount: 18,
-      views: 289
-    },
-    {
-      id: 69,
-      title: "대출 승인률 높이는 방법",
-      author: "익명",
-      createdAt: "16시간 전",
-      commentCount: 29,
-      views: 445
-    },
-    {
-      id: 70,
-      title: "대출 상환 연장 신청 후기",
-      author: "익명",
-      createdAt: "18시간 전",
-      commentCount: 21,
-      views: 312
-    }
-  ];
-
+  // 대출 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=loan');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allLoanPosts = [
+          {
+            id: 61,
+            title: "신용불량자 대출 가능한 곳 정리",
+            author: "익명",
+            createdAt: "30분 전",
+            commentCount: 42,
+            views: 789
+          },
+          {
+            id: 62,
+            title: "대출 정리 후 신용 회복 과정",
+            author: "익명",
+            createdAt: "2시간 전",
+            commentCount: 28,
+            views: 456
+          },
+          {
+            id: 63,
+            title: "고금리 대출 저금리로 갈아타기 후기",
+            author: "익명",
+            createdAt: "4시간 전",
+            commentCount: 19,
+            views: 334
+          },
+          {
+            id: 64,
+            title: "대출 연체 시 대처 방법",
+            author: "익명",
+            createdAt: "6시간 전",
+            commentCount: 35,
+            views: 567
+          },
+          {
+            id: 65,
+            title: "저신용자 대출 승인 받는 방법",
+            author: "익명",
+            createdAt: "8시간 전",
+            commentCount: 31,
+            views: 498
+          },
+          {
+            id: 66,
+            title: "대출 중도상환 수수료 줄이는 팁",
+            author: "익명",
+            createdAt: "10시간 전",
+            commentCount: 23,
+            views: 367
+          },
+          {
+            id: 67,
+            title: "대환대출 신청 전 주의사항",
+            author: "익명",
+            createdAt: "12시간 전",
+            commentCount: 26,
+            views: 423
+          },
+          {
+            id: 68,
+            title: "담보대출 vs 신용대출 비교",
+            author: "익명",
+            createdAt: "14시간 전",
+            commentCount: 18,
+            views: 289
+          },
+          {
+            id: 69,
+            title: "대출 승인률 높이는 방법",
+            author: "익명",
+            createdAt: "16시간 전",
+            commentCount: 29,
+            views: 445
+          }
+        ];
+        
+        setPosts(allLoanPosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allLoanPosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const loanPosts = allLoanPosts.slice(startIndex, endIndex);
+  const loanPosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -263,7 +288,7 @@ export default function LoanPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allLoanPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 

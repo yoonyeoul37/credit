@@ -26,17 +26,68 @@ export default function Home() {
   };
   
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
-  const [premiumAd] = useState({
-    isActive: true,
-    title: '신용회복 전문 상담센터 - 프리미엄 광고',
-    content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
+  const [premiumAd, setPremiumAd] = useState({
+    isActive: false,
+    title: '',
+    content: ''
   });
   
-  const [listAd] = useState({
-    isActive: true,
-    title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
-    content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
+  const [listAd, setListAd] = useState({
+    isActive: false,
+    title: '',
+    content: ''
   });
+  
+  // 광고 데이터 가져오기
+  useEffect(() => {
+    const fetchAds = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 광고 API 호출
+        try {
+          const response = await fetch('/api/ads?position=header');
+          const data = await response.json();
+          
+          if (data.ads && data.ads.length > 0) {
+            setPremiumAd({
+              isActive: true,
+              title: data.ads[0].title,
+              content: data.ads[0].description
+            });
+          }
+          
+          const listResponse = await fetch('/api/ads?position=sidebar');
+          const listData = await listResponse.json();
+          
+          if (listData.ads && listData.ads.length > 0) {
+            setListAd({
+              isActive: true,
+              title: listData.ads[0].title,
+              content: listData.ads[0].description
+            });
+          }
+        } catch (error) {
+          console.error('광고 데이터 가져오기 실패:', error);
+        }
+      } else {
+        // 개발환경: 더미 광고 데이터
+        setPremiumAd({
+          isActive: true,
+          title: '신용회복 전문 상담센터 - 프리미엄 광고',
+          content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
+        });
+        
+        setListAd({
+          isActive: true,
+          title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
+          content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
+        });
+      }
+    };
+    
+    fetchAds();
+  }, []);
   
   // API에서 게시글 데이터 가져오기 (Supabase 미설정 시 더미 데이터 사용)
   useEffect(() => {

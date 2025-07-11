@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function PersonalPage() {
@@ -21,111 +21,144 @@ export default function PersonalPage() {
     content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
   });
   
-  // 개인회생 관련 글들 (임시 데이터)
-  const allPersonalPosts = [
-    {
-      id: 21,
-      title: "개인회생 신청 후 3년 경과 후기",
-      author: "익명",
-      createdAt: "30분 전",
-      commentCount: 28,
-      views: 442
-    },
-    {
-      id: 22,
-      title: "개인회생 변제계획 수립 팁",
-      author: "익명",
-      createdAt: "2시간 전",
-      commentCount: 15,
-      views: 189
-    },
-    {
-      id: 23,
-      title: "개인회생 중 생활비 관리 방법",
-      author: "익명",
-      createdAt: "4시간 전",
-      commentCount: 22,
-      views: 334
-    },
-    {
-      id: 24,
-      title: "개인회생 신청 시 필요한 서류 리스트",
-      author: "익명",
-      createdAt: "6시간 전",
-      commentCount: 31,
-      views: 567
-    },
-    {
-      id: 25,
-      title: "개인회생 면책 후 신용회복 과정",
-      author: "익명",
-      createdAt: "8시간 전",
-      commentCount: 19,
-      views: 278
-    },
-    {
-      id: 26,
-      title: "개인회생 변제율 30%로 확정된 후기",
-      author: "익명",
-      createdAt: "10시간 전",
-      commentCount: 25,
-      views: 389
-    },
-    {
-      id: 27,
-      title: "개인회생 중 취업 성공 사례",
-      author: "익명",
-      createdAt: "12시간 전",
-      commentCount: 18,
-      views: 267
-    },
-    {
-      id: 28,
-      title: "개인회생 신청 전 주의사항",
-      author: "익명",
-      createdAt: "14시간 전",
-      commentCount: 33,
-      views: 512
-    },
-    {
-      id: 29,
-      title: "개인회생 변제계획 변경 신청 방법",
-      author: "익명",
-      createdAt: "16시간 전",
-      commentCount: 21,
-      views: 345
-    },
-    {
-      id: 30,
-      title: "개인회생 후 신용카드 발급 가능한 곳",
-      author: "익명",
-      createdAt: "18시간 전",
-      commentCount: 27,
-      views: 423
-    },
-    {
-      id: 31,
-      title: "개인회생 기각 사유와 대응 방법",
-      author: "익명",
-      createdAt: "20시간 전",
-      commentCount: 16,
-      views: 298
-    },
-    {
-      id: 32,
-      title: "개인회생 완료 후 주택 구매 경험담",
-      author: "익명",
-      createdAt: "22시간 전",
-      commentCount: 29,
-      views: 456
-    }
-  ];
-
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // 개인회생 관련 글들 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 API 호출
+        try {
+          const response = await fetch('/api/posts?category=personal');
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPosts(data.posts || []);
+          } else {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('게시글 로딩 실패:', error);
+          setPosts([]);
+        }
+      } else {
+        // 개발환경: 임시 데이터
+        const allPersonalPosts = [
+          {
+            id: 21,
+            title: "개인회생 신청 후 3년 경과 후기",
+            author: "익명",
+            createdAt: "30분 전",
+            commentCount: 28,
+            views: 442
+          },
+          {
+            id: 22,
+            title: "개인회생 변제계획 수립 팁",
+            author: "익명",
+            createdAt: "2시간 전",
+            commentCount: 15,
+            views: 189
+          },
+          {
+            id: 23,
+            title: "개인회생 중 생활비 관리 방법",
+            author: "익명",
+            createdAt: "4시간 전",
+            commentCount: 22,
+            views: 334
+          },
+          {
+            id: 24,
+            title: "개인회생 신청 시 필요한 서류 리스트",
+            author: "익명",
+            createdAt: "6시간 전",
+            commentCount: 31,
+            views: 567
+          },
+          {
+            id: 25,
+            title: "개인회생 면책 후 신용회복 과정",
+            author: "익명",
+            createdAt: "8시간 전",
+            commentCount: 19,
+            views: 278
+          },
+          {
+            id: 26,
+            title: "개인회생 변제율 30%로 확정된 후기",
+            author: "익명",
+            createdAt: "10시간 전",
+            commentCount: 25,
+            views: 389
+          },
+          {
+            id: 27,
+            title: "개인회생 중 취업 성공 사례",
+            author: "익명",
+            createdAt: "12시간 전",
+            commentCount: 18,
+            views: 267
+          },
+          {
+            id: 28,
+            title: "개인회생 신청 전 주의사항",
+            author: "익명",
+            createdAt: "14시간 전",
+            commentCount: 33,
+            views: 512
+          },
+          {
+            id: 29,
+            title: "개인회생 변제계획 변경 신청 방법",
+            author: "익명",
+            createdAt: "16시간 전",
+            commentCount: 21,
+            views: 345
+          },
+          {
+            id: 30,
+            title: "개인회생 후 신용카드 발급 가능한 곳",
+            author: "익명",
+            createdAt: "18시간 전",
+            commentCount: 27,
+            views: 423
+          },
+          {
+            id: 31,
+            title: "개인회생 기각 사유와 대응 방법",
+            author: "익명",
+            createdAt: "20시간 전",
+            commentCount: 16,
+            views: 298
+          },
+          {
+            id: 32,
+            title: "개인회생 완료 후 주택 구매 경험담",
+            author: "익명",
+            createdAt: "22시간 전",
+            commentCount: 29,
+            views: 456
+          }
+        ];
+        
+        setPosts(allPersonalPosts);
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchPosts();
+  }, []);
+  
   // 페이징 계산
-  const totalPages = Math.ceil(allPersonalPosts.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const personalPosts = allPersonalPosts.slice(startIndex, endIndex);
+  const personalPosts = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -299,7 +332,7 @@ export default function PersonalPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {allPersonalPosts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
 
