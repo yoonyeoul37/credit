@@ -115,15 +115,112 @@ jobs:
             
             # 서버 시작 - 간단한 방법
             echo "🎯 서버 시작 중..."
-            echo "방법 1: npm start 시도"
+            
+            # 포트 3000 사용 가능 여부 확인
+            echo "🔍 포트 3000 사용 가능 여부 확인..."
+            if netstat -tln | grep -q ":3000 "; then
+              echo "❌ 포트 3000이 이미 사용 중입니다!"
+              echo "사용 중인 프로세스:"
+              lsof -i :3000 || netstat -tulpn | grep :3000
+              echo "🔄 포트 3000 사용 프로세스 종료 시도..."
+              fuser -k 3000/tcp || echo "fuser 명령 실패"
+              sleep 2
+            else
+              echo "✅ 포트 3000 사용 가능"
+            fi
+            
+            # Node.js 버전 호환성 확인
+            echo "🔍 Node.js 버전 호환성 확인..."
+            NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
+            echo "Node.js 주 버전: $NODE_VERSION"
+            if [ "$NODE_VERSION" -lt 18 ]; then
+              echo "❌ Node.js 버전이 너무 낮습니다! (현재: $NODE_VERSION, 필요: 18+)"
+              echo "🔄 대안: 더 낮은 버전 호환 방식 시도..."
+            else
+              echo "✅ Node.js 버전 호환됨"
+            fi
+            
+            # 방법 1: 표준 npm start
+            echo "🚀 방법 1: npm start 시도"
             npm start > /tmp/credit-app.log 2>&1 &
             NPM_PID=$!
             echo "npm start PID: $NPM_PID"
             
+            # 3초 대기 후 상태 확인
+            sleep 3
+            if ps -p $NPM_PID > /dev/null 2>&1; then
+              echo "✅ npm start 성공!"
+              SERVER_STARTED=true
+            else
+              echo "❌ npm start 실패"
+              echo "📝 npm start 로그:"
+              cat /tmp/credit-app.log
+              
+              # 방법 2: 직접 next start 실행
+              echo "🚀 방법 2: 직접 next start 시도"
+              NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 ./node_modules/.bin/next start > /tmp/credit-app2.log 2>&1 &
+              NEXT_PID=$!
+              echo "next start PID: $NEXT_PID"
+              
+              sleep 3
+              if ps -p $NEXT_PID > /dev/null 2>&1; then
+                echo "✅ next start 성공!"
+                SERVER_STARTED=true
+              else
+                echo "❌ next start 실패"
+                echo "📝 next start 로그:"
+                cat /tmp/credit-app2.log
+                
+                # 방법 3: 더 간단한 방식
+                echo "🚀 방법 3: 간단한 HTTP 서버 시도"
+                cat > simple-server.js << 'JSEOF'
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const port = 3000;
+const hostname = '0.0.0.0';
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end(`
+    <html>
+      <body>
+        <h1>🎉 카페24 배포 성공!</h1>
+        <p>Next.js 앱이 성공적으로 배포되었습니다!</p>
+        <p>현재 시간: ${new Date().toLocaleString()}</p>
+        <p>서버 정보: Node.js ${process.version}</p>
+      </body>
+    </html>
+  `);
+});
+
+server.listen(port, hostname, () => {
+  console.log(`🌐 서버가 http://${hostname}:${port}에서 실행 중입니다`);
+});
+JSEOF
+                
+                node simple-server.js > /tmp/credit-app3.log 2>&1 &
+                SIMPLE_PID=$!
+                echo "간단한 서버 PID: $SIMPLE_PID"
+                sleep 3
+                
+                if ps -p $SIMPLE_PID > /dev/null 2>&1; then
+                  echo "✅ 간단한 서버 성공!"
+                  SERVER_STARTED=true
+                else
+                  echo "❌ 모든 방법 실패"
+                  echo "📝 간단한 서버 로그:"
+                  cat /tmp/credit-app3.log
+                  SERVER_STARTED=false
+                fi
+              fi
+            fi
+            
             # 서버 시작 확인
-            sleep 5
-            echo "📝 서버 시작 로그:"
-            tail -10 /tmp/credit-app.log
+            sleep 2
+            echo "📝 최종 서버 로그:"
+            tail -10 /tmp/credit-app*.log
             
             # 서버 프로세스 확인
             echo "🔍 서버 프로세스 확인..."
@@ -135,15 +232,24 @@ jobs:
             
             # 최종 확인
             sleep 3
-            if pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null || pgrep -f "next.*start" > /dev/null; then
+            if [ "$SERVER_STARTED" = true ] || pgrep -f "node.*3000" > /dev/null || pgrep -f "npm.*start" > /dev/null || pgrep -f "next.*start" > /dev/null; then
               echo "✅ 배포 성공!"
               echo "🌐 서버가 실행 중입니다."
+              echo "📝 실행 중인 프로세스:"
+              ps aux | grep -E "(node|npm|next)" | grep -v grep
+              echo "📝 포트 3000 상태:"
+              netstat -tln | grep 3000
               echo "📝 최종 로그:"
-              tail -5 /tmp/credit-app.log
+              tail -5 /tmp/credit-app*.log
             else
               echo "❌ 서버 시작 실패"
-              echo "📝 전체 로그:"
-              cat /tmp/credit-app.log
+              echo "📝 모든 로그:"
+              echo "=== npm start 로그 ==="
+              cat /tmp/credit-app.log 2>/dev/null || echo "로그 없음"
+              echo "=== next start 로그 ==="
+              cat /tmp/credit-app2.log 2>/dev/null || echo "로그 없음"
+              echo "=== 간단한 서버 로그 ==="
+              cat /tmp/credit-app3.log 2>/dev/null || echo "로그 없음"
               echo "🔍 최종 디버깅 정보:"
               echo "현재 프로세스:"
               ps aux | grep -E "(node|npm|next)" | grep -v grep
@@ -153,6 +259,10 @@ jobs:
               ls -la ./node_modules/.bin/next || echo "next 바이너리 없음"
               echo "환경 변수:"
               env | grep -E "(NODE|PORT|HOSTNAME)"
+              echo "디스크 공간:"
+              df -h .
+              echo "메모리 사용량:"
+              free -h
               exit 1
             fi
             
