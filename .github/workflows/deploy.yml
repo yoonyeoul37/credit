@@ -30,7 +30,7 @@ jobs:
           
       - name: Deploy built files to Cafe24
         uses: appleboy/ssh-action@v0.1.5
-                with:
+        with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
