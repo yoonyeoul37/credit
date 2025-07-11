@@ -41,19 +41,39 @@ jobs:
             rm -rf .git
             rm -rf *
             rm -rf .[^.]*
+            echo "✅ 기존 파일 삭제 완료"
             
             echo "📥 새 프로젝트 클론..."
-            git clone https://github.com/yoonyeoul37/credit-recovery-community.git .
+            if git clone https://github.com/yoonyeoul37/credit-recovery-community.git .; then
+              echo "✅ 프로젝트 클론 완료"
+            else
+              echo "❌ 프로젝트 클론 실패"
+              exit 1
+            fi
             
-            echo "✅ 프로젝트 클론 완료"
+            echo "📋 클론된 파일 확인:"
+            ls -la
 
-            # Node.js 의존성 설치
+                        # Node.js 의존성 설치
             echo "📦 의존성 설치..."
-            npm ci --production=false
-
+            if npm ci --production=false; then
+              echo "✅ 의존성 설치 완료"
+            else
+              echo "❌ 의존성 설치 실패"
+              echo "Node.js 버전: $(node --version 2>/dev/null || echo '없음')"
+              echo "npm 버전: $(npm --version 2>/dev/null || echo '없음')"
+              exit 1
+            fi
+            
             # 애플리케이션 빌드
             echo "🏗️ Next.js 빌드..."
-            npm run build
+            if npm run build; then
+              echo "✅ Next.js 빌드 완료"
+            else
+              echo "❌ Next.js 빌드 실패"
+              echo "빌드 로그 확인 중..."
+              exit 1
+            fi
 
             # 환경 변수 강제 설정
             echo "🔧 환경 변수 설정..."
@@ -70,23 +90,37 @@ jobs:
             echo "   PORT: $PORT"
             echo "   HOSTNAME: $HOSTNAME"
 
-            # 순수 Node.js로 서버 시작 (Docker 없음)
+                        # 순수 Node.js로 서버 시작 (Docker 없음)
             echo "🚀 순수 Node.js 서버 시작..."
+            echo "서버 시작 전 상태:"
+            echo "  - 현재 디렉토리: $(pwd)"
+            echo "  - package.json 존재: $([ -f package.json ] && echo 'YES' || echo 'NO')"
+            echo "  - .next 폴더 존재: $([ -d .next ] && echo 'YES' || echo 'NO')"
+            
+            # 로그 파일 초기화
+            > /tmp/creditstory.log
+            
+            # 서버 시작
             nohup npm start > /tmp/creditstory.log 2>&1 &
             SERVER_PID=$!
+            echo "서버 PID: $SERVER_PID"
             echo $SERVER_PID > /tmp/creditstory.pid
-
-            # 서버 시작 확인
-            sleep 5
-
+            
+            # 서버 시작 확인 (더 오래 기다림)
+            echo "서버 시작 대기 중... (10초)"
+            sleep 10
+            
             # 프로세스 확인
             if ps -p $SERVER_PID > /dev/null 2>&1; then
               echo "✅ 배포 성공!"
               echo "📋 서버 PID: $SERVER_PID"
-              echo "📝 로그: tail -f /tmp/creditstory.log"
+              echo "📝 최근 로그 (마지막 10줄):"
+              tail -10 /tmp/creditstory.log
             else
-              echo "❌ 배포 실패. 로그 확인:"
-              tail -20 /tmp/creditstory.log
+              echo "❌ 서버 시작 실패. 전체 로그 확인:"
+              cat /tmp/creditstory.log
+              echo "현재 실행 중인 Node.js 프로세스:"
+              ps aux | grep node | grep -v grep
               exit 1
             fi 
 
