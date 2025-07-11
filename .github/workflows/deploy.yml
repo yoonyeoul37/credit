@@ -42,6 +42,48 @@ jobs:
             echo "🌐 네트워크 연결 테스트:"
             ping -c 2 github.com 2>/dev/null || echo "❌ GitHub 연결 실패"
             
+            echo ""
+            echo "🔧 필수 도구 설치 중..."
+            
+            # Git 설치 확인 및 설치
+            if ! command -v git >/dev/null 2>&1; then
+              echo "📥 Git 설치 중..."
+              # CentOS/RHEL 계열
+              if command -v yum >/dev/null 2>&1; then
+                sudo yum install -y git
+              # Ubuntu/Debian 계열
+              elif command -v apt >/dev/null 2>&1; then
+                sudo apt update && sudo apt install -y git
+              else
+                echo "❌ 패키지 관리자를 찾을 수 없습니다."
+              fi
+            else
+              echo "✅ Git 이미 설치됨: $(git --version)"
+            fi
+            
+            # Node.js 설치 확인 및 설치
+            if ! command -v node >/dev/null 2>&1; then
+              echo "📥 Node.js 설치 중..."
+              # NodeSource 저장소 추가 및 Node.js 설치
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - 2>/dev/null || \
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - 2>/dev/null
+              
+              if command -v yum >/dev/null 2>&1; then
+                sudo yum install -y nodejs
+              elif command -v apt >/dev/null 2>&1; then
+                sudo apt install -y nodejs
+              fi
+            else
+              echo "✅ Node.js 이미 설치됨: $(node --version)"
+            fi
+            
+            # 설치 후 재확인
+            echo ""
+            echo "✅ 설치 완료 후 확인:"
+            echo "  - Git: $(git --version 2>/dev/null || echo '❌ 설치 실패')"
+            echo "  - Node.js: $(node --version 2>/dev/null || echo '❌ 설치 실패')"
+            echo "  - npm: $(npm --version 2>/dev/null || echo '❌ 설치 실패')"
+            
             # 현재 위치를 웹 루트로 사용
             WEB_ROOT=$(pwd)
             echo ""
