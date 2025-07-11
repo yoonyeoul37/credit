@@ -9,181 +9,99 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Deploy to Cafe24 Server
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci --production=false
+        
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: https://jwstrrxoyikjyafhaeyo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+          
+      - name: Deploy built files to Cafe24
+        uses: appleboy/ssh-action@v0.1.5
+                with:
+          host: ${{ secrets.CAFE24_HOST }}
+          username: ${{ secrets.CAFE24_USERNAME }}
+          password: ${{ secrets.CAFE24_PASSWORD }}
+          port: ${{ secrets.CAFE24_PORT }}
+          script: |
+            echo "🚀 빌드된 파일 배포 시작..."
+            echo "📂 현재 위치: $(pwd)"
+            
+            # 기존 프로세스 정리
+            echo "🔄 기존 Node.js 프로세스 정리..."
+            pkill -f "node" 2>/dev/null || true
+            pkill -f "next" 2>/dev/null || true
+            pkill -f "npm" 2>/dev/null || true
+            pm2 kill 2>/dev/null || true
+            
+            # 프로젝트 디렉토리 생성
+            mkdir -p /home/${{ secrets.CAFE24_USERNAME }}/credit-app
+            cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
+            
+            echo "✅ 배포 디렉토리 준비 완료: $(pwd)"
+            
+      - name: Copy built files to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.CAFE24_HOST }}
+          username: ${{ secrets.CAFE24_USERNAME }}
+          password: ${{ secrets.CAFE24_PASSWORD }}
+          port: ${{ secrets.CAFE24_PORT }}
+          source: ".next,package.json,package-lock.json,public,next.config.ts"
+          target: "/home/${{ secrets.CAFE24_USERNAME }}/credit-app/"
+          
+      - name: Start application
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: ${{ secrets.CAFE24_PORT }}
-          debug: true
           script: |
-            echo "🔍 서버 환경 확인 중..."
-            echo "📂 현재 위치: $(pwd)"
-            echo "📂 홈 디렉토리: $HOME"
-            echo "👤 현재 사용자: $(whoami)"
-            echo "💻 운영체제: $(uname -a)"
+            cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
             
-            echo ""
-            echo "📋 설치된 도구 확인:"
-            echo "  - Git: $(git --version 2>/dev/null || echo '❌ 설치 안됨')"
-            echo "  - Node.js: $(node --version 2>/dev/null || echo '❌ 설치 안됨')"
-            echo "  - npm: $(npm --version 2>/dev/null || echo '❌ 설치 안됨')"
+            echo "📦 프로덕션 의존성 설치..."
+            npm ci --production
             
-            echo ""
-            echo "💾 디스크 공간 확인:"
-            df -h
-            
-            echo ""
-            echo "📁 현재 디렉토리 내용:"
-            ls -la
-            
-            echo ""
-            echo "🌐 네트워크 연결 테스트:"
-            ping -c 2 github.com 2>/dev/null || echo "❌ GitHub 연결 실패"
-            
-            echo ""
-            echo "🔧 필수 도구 설치 중..."
-            
-            # Git 설치 확인 및 설치
-            if ! command -v git >/dev/null 2>&1; then
-              echo "📥 Git 설치 중..."
-              # CentOS/RHEL 계열
-              if command -v yum >/dev/null 2>&1; then
-                sudo yum install -y git
-              # Ubuntu/Debian 계열
-              elif command -v apt >/dev/null 2>&1; then
-                sudo apt update && sudo apt install -y git
-              else
-                echo "❌ 패키지 관리자를 찾을 수 없습니다."
-              fi
-            else
-              echo "✅ Git 이미 설치됨: $(git --version)"
-            fi
-            
-            # Node.js 설치 확인 및 설치
-            if ! command -v node >/dev/null 2>&1; then
-              echo "📥 Node.js 설치 중..."
-              # NodeSource 저장소 추가 및 Node.js 설치
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - 2>/dev/null || \
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - 2>/dev/null
-              
-              if command -v yum >/dev/null 2>&1; then
-                sudo yum install -y nodejs
-              elif command -v apt >/dev/null 2>&1; then
-                sudo apt install -y nodejs
-              fi
-            else
-              echo "✅ Node.js 이미 설치됨: $(node --version)"
-            fi
-            
-            # 설치 후 재확인
-            echo ""
-            echo "✅ 설치 완료 후 확인:"
-            echo "  - Git: $(git --version 2>/dev/null || echo '❌ 설치 실패')"
-            echo "  - Node.js: $(node --version 2>/dev/null || echo '❌ 설치 실패')"
-            echo "  - npm: $(npm --version 2>/dev/null || echo '❌ 설치 실패')"
-            
-            # 현재 위치를 웹 루트로 사용
-            WEB_ROOT=$(pwd)
-            echo ""
-            echo "✅ 웹 루트 설정: $WEB_ROOT"
-            echo "🚀 크레딧스토리 순수 Node.js 배포 시작..."
-            echo "📂 작업 디렉토리: $(pwd)"
-
-            # Node.js 프로세스만 정리 (Docker 명령어 완전 제거)
-            echo "🔄 기존 Node.js 프로세스 정리..."
-            pkill -f "node" 2>/dev/null || true
-            pkill -f "next" 2>/dev/null || true
-            pkill -f "npm" 2>/dev/null || true
-            pm2 kill 2>/dev/null || true
-
-            # 기존 파일 완전 삭제 및 새 프로젝트 클론
-            echo "🗑️ 기존 파일 완전 삭제..."
-            rm -rf .git
-            rm -rf *
-            rm -rf .[^.]*
-            echo "✅ 기존 파일 삭제 완료"
-            
-            echo "📥 새 프로젝트 클론..."
-            if git clone https://github.com/yoonyeoul37/credit-recovery-community.git .; then
-              echo "✅ 프로젝트 클론 완료"
-            else
-              echo "❌ 프로젝트 클론 실패"
-              exit 1
-            fi
-            
-            echo "📋 클론된 파일 확인:"
-            ls -la
-
-                        # Node.js 의존성 설치
-            echo "📦 의존성 설치..."
-            if npm ci --production=false; then
-              echo "✅ 의존성 설치 완료"
-            else
-              echo "❌ 의존성 설치 실패"
-              echo "Node.js 버전: $(node --version 2>/dev/null || echo '없음')"
-              echo "npm 버전: $(npm --version 2>/dev/null || echo '없음')"
-              exit 1
-            fi
-            
-            # 애플리케이션 빌드
-            echo "🏗️ Next.js 빌드..."
-            if npm run build; then
-              echo "✅ Next.js 빌드 완료"
-            else
-              echo "❌ Next.js 빌드 실패"
-              echo "빌드 로그 확인 중..."
-              exit 1
-            fi
-
-            # 환경 변수 강제 설정
+            # 환경 변수 설정
             echo "🔧 환경 변수 설정..."
             export NODE_ENV=production
             export PORT=3000
             export HOSTNAME=0.0.0.0
-
-            # Supabase 환경 변수 설정
             export NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
             export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
-
-            echo "✅ 환경 변수 설정 완료:"
-            echo "   NODE_ENV: $NODE_ENV"
-            echo "   PORT: $PORT"
-            echo "   HOSTNAME: $HOSTNAME"
-
-                        # 순수 Node.js로 서버 시작 (Docker 없음)
-            echo "🚀 순수 Node.js 서버 시작..."
-            echo "서버 시작 전 상태:"
-            echo "  - 현재 디렉토리: $(pwd)"
-            echo "  - package.json 존재: $([ -f package.json ] && echo 'YES' || echo 'NO')"
-            echo "  - .next 폴더 존재: $([ -d .next ] && echo 'YES' || echo 'NO')"
             
-            # 로그 파일 초기화
-            > /tmp/creditstory.log
+            echo "✅ 환경 변수 설정 완료"
             
             # 서버 시작
+            echo "🚀 Next.js 서버 시작..."
             nohup npm start > /tmp/creditstory.log 2>&1 &
             SERVER_PID=$!
-            echo "서버 PID: $SERVER_PID"
             echo $SERVER_PID > /tmp/creditstory.pid
+            echo "서버 PID: $SERVER_PID"
             
-            # 서버 시작 확인 (더 오래 기다림)
-            echo "서버 시작 대기 중... (10초)"
-            sleep 10
-            
-            # 프로세스 확인
+            # 서버 시작 확인
+            sleep 8
             if ps -p $SERVER_PID > /dev/null 2>&1; then
               echo "✅ 배포 성공!"
-              echo "📋 서버 PID: $SERVER_PID"
-              echo "📝 최근 로그 (마지막 10줄):"
-              tail -10 /tmp/creditstory.log
+              echo "📝 서버 로그 (마지막 5줄):"
+              tail -5 /tmp/creditstory.log
             else
-              echo "❌ 서버 시작 실패. 전체 로그 확인:"
+              echo "❌ 서버 시작 실패. 로그:"
               cat /tmp/creditstory.log
-              echo "현재 실행 중인 Node.js 프로세스:"
-              ps aux | grep node | grep -v grep
               exit 1
-            fi 
-
-            echo "✅ 순수 Node.js 배포 완료!"
+            fi
+            
+            echo "🎉 배포 완료!"
