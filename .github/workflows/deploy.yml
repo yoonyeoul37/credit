@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci --production=false
+        run: npm ci
         
       - name: Build Next.js
         run: npm run build
@@ -28,61 +28,51 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://jwstrrxoyikjyafhaeyo.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
           
-      - name: Deploy built files to Cafe24
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.CAFE24_HOST }}
-          username: ${{ secrets.CAFE24_USERNAME }}
-          password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
-          timeout: 60s
-          command_timeout: 120s
-          debug: true
-          script: |
-            echo "🚀 빌드된 파일 배포 시작..."
-            echo "📂 현재 위치: $(pwd)"
-            
-            # 기존 프로세스 정리 (간단하게)
-            echo "🔄 기존 Node.js 프로세스 정리..."
-            pkill -f "node.*3000" 2>/dev/null || echo "기존 node 프로세스 없음"
-            pkill -f "next.*start" 2>/dev/null || echo "기존 next 프로세스 없음"
-            
-            # 프로젝트 디렉토리 생성
-            echo "📁 프로젝트 디렉토리 생성..."
-            mkdir -p /home/${{ secrets.CAFE24_USERNAME }}/credit-app
-            cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
-            
-            echo "✅ 배포 디렉토리 준비 완료: $(pwd)"
-            
-      - name: Copy built files to server
+      - name: Create deployment package
+        run: |
+          echo "📦 배포 패키지 생성 중..."
+          tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts
+          ls -la deploy.tar.gz
+          
+      - name: Upload deployment package
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: ${{ secrets.CAFE24_PORT }}
-          timeout: 60s
-          source: ".next,package.json,package-lock.json,public,next.config.ts"
-          target: "/home/${{ secrets.CAFE24_USERNAME }}/credit-app/"
+          source: "deploy.tar.gz"
+          target: "/tmp/"
           
-      - name: Start application
+      - name: Deploy on server
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: ${{ secrets.CAFE24_PORT }}
-          timeout: 60s
-          command_timeout: 120s
-          debug: true
+          timeout: 300s
           script: |
+            echo "🚀 배포 시작..."
+            
+            # 기존 프로세스 정리
+            pkill -f "node.*3000" || true
+            pkill -f "npm.*start" || true
+            
+            # 배포 디렉토리 준비
+            mkdir -p /home/${{ secrets.CAFE24_USERNAME }}/credit-app
             cd /home/${{ secrets.CAFE24_USERNAME }}/credit-app
             
-            echo "📦 프로덕션 의존성 설치..."
-            npm ci --production --silent
+            # 기존 파일 백업
+            if [ -d ".next" ]; then
+              mv .next .next.backup.$(date +%Y%m%d_%H%M%S) || true
+            fi
             
-            # 환경 변수 파일 생성
-            echo "🔧 환경 변수 설정..."
+            # 새 파일 압축 해제
+            echo "📦 새 버전 설치 중..."
+            tar -xzf /tmp/deploy.tar.gz
+            
+            # 환경 변수 설정
             cat > .env.local << 'EOF'
             NODE_ENV=production
             PORT=3000
@@ -91,28 +81,26 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
             EOF
             
-            echo "✅ 환경 변수 파일 생성 완료"
+            # 의존성 설치
+            echo "📋 의존성 설치 중..."
+            npm ci --production --silent
             
             # 서버 시작
-            echo "🚀 Next.js 서버 시작..."
-            nohup npm start > /tmp/creditstory.log 2>&1 &
-            SERVER_PID=$!
-            echo $SERVER_PID > /tmp/creditstory.pid
-            echo "서버 PID: $SERVER_PID"
+            echo "🎯 서버 시작 중..."
+            nohup npm start > /tmp/credit-app.log 2>&1 &
             
-            # 서버 시작 확인
-            echo "⏳ 서버 시작 대기 중..."
-            sleep 5
-            if ps -p $SERVER_PID > /dev/null 2>&1; then
+            # 시작 확인
+            sleep 10
+            if pgrep -f "node.*3000" > /dev/null; then
               echo "✅ 배포 성공!"
-              echo "📝 서버 상태:"
-              echo "PID: $SERVER_PID"
-              echo "포트: 3000"
-              echo "로그 파일: /tmp/creditstory.log"
+              echo "🌐 서버가 포트 3000에서 실행 중입니다."
             else
-              echo "❌ 서버 시작 실패. 로그:"
-              cat /tmp/creditstory.log
+              echo "❌ 서버 시작 실패"
+              echo "로그:"
+              tail -20 /tmp/credit-app.log
               exit 1
             fi
             
+            # 임시 파일 정리
+            rm -f /tmp/deploy.tar.gz
             echo "🎉 배포 완료!"
