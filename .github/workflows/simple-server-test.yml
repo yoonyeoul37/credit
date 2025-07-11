@@ -1,0 +1,142 @@
+name: Simple Server Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Create simple test package
+        run: |
+          echo "📦 간단한 테스트 패키지 생성..."
+          tar -czf simple-test.tar.gz simple-server-test.js package.json package-lock.json
+          ls -la simple-test.tar.gz
+          
+      - name: Upload test package
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.CAFE24_HOST }}
+          username: ${{ secrets.CAFE24_USERNAME }}
+          password: ${{ secrets.CAFE24_PASSWORD }}
+          port: ${{ secrets.CAFE24_PORT }}
+          source: "simple-test.tar.gz"
+          target: "/tmp/"
+          
+      - name: Run simple server test
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.CAFE24_HOST }}
+          username: ${{ secrets.CAFE24_USERNAME }}
+          password: ${{ secrets.CAFE24_PASSWORD }}
+          port: ${{ secrets.CAFE24_PORT }}
+          timeout: 300s
+          script: |
+            echo "🧪 간단한 서버 테스트 시작..."
+            
+            # 기존 프로세스 정리
+            echo "🛑 기존 프로세스 정리..."
+            pkill -f "node" || echo "Node.js 프로세스 없음"
+            pkill -f "npm" || echo "npm 프로세스 없음"
+            
+            # 테스트 디렉토리 생성
+            echo "📁 테스트 디렉토리 생성..."
+            TEST_DIR="$HOME/simple-test"
+            mkdir -p "$TEST_DIR"
+            cd "$TEST_DIR"
+            
+            # 파일 압축 해제
+            echo "📦 파일 압축 해제..."
+            tar -xzf /tmp/simple-test.tar.gz
+            ls -la
+            
+            # 시스템 정보 확인
+            echo "🔍 시스템 정보..."
+            echo "Node.js 버전: $(node --version)"
+            echo "npm 버전: $(npm --version)"
+            echo "현재 디렉토리: $(pwd)"
+            
+            # Express 설치
+            echo "📋 Express 설치..."
+            npm install express --silent
+            
+            # 서버 시작 함수
+            test_simple_server() {
+              local port=$1
+              echo "🚀 포트 $port에서 간단한 서버 시작..."
+              
+              # 환경 변수 설정
+              export NODE_ENV=production
+              export PORT=$port
+              
+              # 서버 시작
+              nohup node simple-server-test.js > /tmp/simple-server-$port.log 2>&1 &
+              SERVER_PID=$!
+              echo "서버 PID: $SERVER_PID"
+              
+              # 서버 시작 대기
+              sleep 8
+              
+              # 서버 확인
+              echo "🔍 서버 확인 중..."
+              for i in {1..10}; do
+                echo "  시도 $i/10..."
+                
+                # 포트 확인
+                if netstat -an | grep ":$port" | grep -q "LISTEN"; then
+                  echo "✅ 포트 $port LISTEN 상태 확인!"
+                  
+                  # HTTP 응답 확인
+                  HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null --max-time 10 http://localhost:$port 2>&1)
+                  echo "HTTP 응답 코드: $HTTP_RESPONSE"
+                  
+                  if [ "$HTTP_RESPONSE" = "200" ]; then
+                    echo "✅ 간단한 서버 테스트 성공!"
+                    echo "🌐 서버 응답:"
+                    curl -s http://localhost:$port | head -10
+                    echo "📊 서버 상태 정보:"
+                    curl -s http://localhost:$port/status
+                    return 0
+                  else
+                    echo "⚠️ HTTP 응답 코드 비정상: $HTTP_RESPONSE"
+                    echo "📝 서버 로그:"
+                    cat /tmp/simple-server-$port.log
+                  fi
+                else
+                  echo "⚠️ 포트 $port 아직 LISTEN 안됨"
+                fi
+                
+                sleep 3
+              done
+              
+              echo "❌ 간단한 서버 테스트 실패"
+              echo "📝 최종 로그:"
+              cat /tmp/simple-server-$port.log
+              kill $SERVER_PID 2>/dev/null || true
+              return 1
+            }
+            
+            # 포트 3000부터 테스트
+            if test_simple_server 3000; then
+              echo "🎉 포트 3000에서 간단한 서버 테스트 성공!"
+            elif test_simple_server 8080; then
+              echo "🎉 포트 8080에서 간단한 서버 테스트 성공!"
+            elif test_simple_server 8081; then
+              echo "🎉 포트 8081에서 간단한 서버 테스트 성공!"
+            else
+              echo "❌ 모든 포트에서 간단한 서버 테스트 실패"
+              echo "📝 시스템 상태:"
+              ps aux | grep -E "(node|npm)" | head -10
+              netstat -tulpn | grep -E "(3000|8080|8081)"
+              exit 1
+            fi
+            
+            echo "🎉 간단한 서버 테스트 완료!"
+            echo "✅ 카페24 서버에서 Node.js 정상 동작 확인!"
+            
+            # 정리
+            rm -f /tmp/simple-test.tar.gz 
