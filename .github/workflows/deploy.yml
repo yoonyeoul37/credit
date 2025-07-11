@@ -18,18 +18,14 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         script: |
           cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
-          echo "🚀 크레딧스토리 배포 시작..."
+          echo "🚀 크레딧스토리 순수 Node.js 배포 시작..."
           
-          # 모든 프로세스 정리
-          echo "🔄 기존 프로세스 정리..."
+          # Node.js 프로세스만 정리 (Docker 명령어 완전 제거)
+          echo "🔄 기존 Node.js 프로세스 정리..."
           pkill -f "node" 2>/dev/null || true
           pkill -f "next" 2>/dev/null || true
           pkill -f "npm" 2>/dev/null || true
           pm2 kill 2>/dev/null || true
-          
-          # Docker 프로세스도 정리 (혹시 모르니)
-          docker stop $(docker ps -q) 2>/dev/null || true
-          docker rm $(docker ps -aq) 2>/dev/null || true
           
           # 최신 코드 업데이트
           echo "📥 코드 업데이트..."
@@ -37,30 +33,45 @@ jobs:
           
           # Node.js 의존성 설치
           echo "📦 의존성 설치..."
-          npm install
+          npm ci --production=false
           
           # 애플리케이션 빌드
-          echo "🏗️ 빌드..."
+          echo "🏗️ Next.js 빌드..."
           npm run build
           
-          # 환경 변수 설정
+          # 환경 변수 강제 설정
           echo "🔧 환경 변수 설정..."
           export NODE_ENV=production
           export PORT=3000
           export HOSTNAME=0.0.0.0
           
-          # 서버 시작
-          echo "🚀 서버 시작..."
-          nohup npm start > app.log 2>&1 &
+          # Supabase 환경 변수 설정
+          export NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
           
-          # 잠시 대기 후 확인
+          echo "✅ 환경 변수 설정 완료:"
+          echo "   NODE_ENV: $NODE_ENV"
+          echo "   PORT: $PORT"
+          echo "   HOSTNAME: $HOSTNAME"
+          
+          # 순수 Node.js로 서버 시작 (Docker 없음)
+          echo "🚀 순수 Node.js 서버 시작..."
+          nohup npm start > /tmp/creditstory.log 2>&1 &
+          SERVER_PID=$!
+          echo $SERVER_PID > /tmp/creditstory.pid
+          
+          # 서버 시작 확인
           sleep 5
           
           # 프로세스 확인
-          if pgrep -f "next" > /dev/null; then
+          if ps -p $SERVER_PID > /dev/null 2>&1; then
             echo "✅ 배포 성공!"
-            echo "📋 프로세스 ID: $(pgrep -f "next")"
+            echo "📋 서버 PID: $SERVER_PID"
+            echo "📝 로그: tail -f /tmp/creditstory.log"
           else
-            echo "❌ 배포 실패. 로그:"
-            tail -20 app.log
+            echo "❌ 배포 실패. 로그 확인:"
+            tail -20 /tmp/creditstory.log
+            exit 1
           fi 
+          
+          echo "�� 순수 Node.js 배포 완료!" 

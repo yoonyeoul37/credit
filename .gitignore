@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Docker 관련 파일들 (카페24 자동 감지 방지)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+docker-compose*.yaml
