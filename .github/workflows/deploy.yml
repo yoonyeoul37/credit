@@ -1,4 +1,4 @@
-name: Deploy to Cafe24 Static
+name: Complete Site Replacement
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Build Next.js static site
+      - name: Build Next.js
         run: npm run build
         env:
           NODE_ENV: production
@@ -30,22 +30,21 @@ jobs:
           
       - name: Create deployment package
         run: |
-          echo "📦 정적 사이트 패키지 생성 중..."
-          tar -czf static-site.tar.gz out/
-          ls -la static-site.tar.gz
-          ls -la out/
+          echo "📦 배포 패키지 생성..."
+          tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts
+          ls -la deploy.tar.gz
           
-      - name: Upload static site to server
+      - name: Upload deployment package
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
           port: ${{ secrets.CAFE24_PORT }}
-          source: "static-site.tar.gz"
+          source: "deploy.tar.gz"
           target: "/tmp/"
           
-      - name: Deploy static site
+      - name: Complete site replacement
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.CAFE24_HOST }}
@@ -54,55 +53,107 @@ jobs:
           port: ${{ secrets.CAFE24_PORT }}
           timeout: 300s
           script: |
-            echo "🚀 정적 사이트 배포 시작..."
+            echo "🔥 기존 사이트 완전 교체 시작..."
             
-            # 시스템 정보 확인
-            echo "📊 시스템 정보:"
-            whoami
-            pwd
-            echo "홈 디렉토리: $HOME"
+            # 1. 기존 프로세스 모두 정리
+            echo "🛑 모든 기존 프로세스 정리..."
+            pkill -f "node" || echo "Node.js 프로세스 없음"
+            pkill -f "npm" || echo "npm 프로세스 없음"
+            pkill -f "next" || echo "Next.js 프로세스 없음"
             
-            # 웹 루트 디렉토리 찾기
+            # 2. 기존 웹 파일 백업
+            echo "💾 기존 사이트 백업..."
+            BACKUP_DIR="$HOME/old-site-backup-$(date +%Y%m%d_%H%M%S)"
+            
             if [ -d "$HOME/public_html" ]; then
-              WEB_ROOT="$HOME/public_html"
+              mv "$HOME/public_html" "$BACKUP_DIR"
+              echo "✅ public_html 백업 완료: $BACKUP_DIR"
             elif [ -d "$HOME/www" ]; then
-              WEB_ROOT="$HOME/www"
-            elif [ -d "$HOME/htdocs" ]; then
-              WEB_ROOT="$HOME/htdocs"
+              mv "$HOME/www" "$BACKUP_DIR"
+              echo "✅ www 백업 완료: $BACKUP_DIR"
+            fi
+            
+            # 3. 새로운 웹 루트 생성
+            echo "🆕 새로운 웹 루트 생성..."
+            mkdir -p "$HOME/public_html"
+            WEB_ROOT="$HOME/public_html"
+            
+            # 4. Next.js 앱 배포
+            echo "🚀 Next.js 앱 배포..."
+            APP_DIR="$HOME/credit-app"
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+            
+            # 파일 압축 해제
+            tar -xzf /tmp/deploy.tar.gz
+            
+            # 환경 변수 설정
+            cat > .env.local << 'EOF'
+            NODE_ENV=production
+            PORT=80
+            HOSTNAME=0.0.0.0
+            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+            EOF
+            
+            # 의존성 설치
+            echo "📋 의존성 설치..."
+            npm ci --production --silent
+            
+            # 5. 포트 80에서 Next.js 서버 시작 시도
+            echo "🎯 포트 80에서 서버 시작 시도..."
+            sudo -u $USER nohup npm start > /tmp/credit-app.log 2>&1 &
+            sleep 5
+            
+            # 6. 서버 상태 확인
+            if pgrep -f "node.*80" > /dev/null; then
+              echo "✅ 포트 80에서 서버 시작 성공!"
+              echo "🌐 접속 주소: http://도메인/ (포트 80)"
             else
-              WEB_ROOT="$HOME/public_html"
-              mkdir -p "$WEB_ROOT"
+              echo "⚠️ 포트 80 실패, 포트 8080으로 재시도..."
+              
+              # 포트 8080으로 재시도
+              sed -i 's/PORT=80/PORT=8080/' .env.local
+              pkill -f "node" || true
+              nohup npm start > /tmp/credit-app.log 2>&1 &
+              sleep 5
+              
+              if pgrep -f "node.*8080" > /dev/null; then
+                echo "✅ 포트 8080에서 서버 시작 성공!"
+                echo "🌐 접속 주소: http://도메인:8080"
+                
+                # 포트 8080 리다이렉트 페이지 생성
+                cat > "$WEB_ROOT/index.html" << 'HTMLEOF'
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="UTF-8">
+                  <title>신용회복 커뮤니티</title>
+                  <meta http-equiv="refresh" content="1; url=:8080">
+                  <script>
+                    setTimeout(() => {
+                      window.location.href = window.location.protocol + '//' + window.location.hostname + ':8080';
+                    }, 1000);
+                  </script>
+                </head>
+                <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+                  <h1>🚀 신용회복 커뮤니티</h1>
+                  <p>새로운 사이트로 이동 중입니다...</p>
+                  <p><a href=":8080" style="color: #007bff;">바로 이동하기</a></p>
+                </body>
+                </html>
+                HTMLEOF
+              else
+                echo "❌ 서버 시작 완전 실패"
+                echo "📝 로그:"
+                cat /tmp/credit-app.log
+                exit 1
+              fi
             fi
             
-            echo "웹 루트 디렉토리: $WEB_ROOT"
-            
-            # 기존 파일 백업
-            if [ -f "$WEB_ROOT/index.html" ]; then
-              echo "🔄 기존 사이트 백업..."
-              mv "$WEB_ROOT" "$WEB_ROOT.backup.$(date +%Y%m%d_%H%M%S)" || true
-              mkdir -p "$WEB_ROOT"
-            fi
-            
-            # 정적 사이트 압축 해제
-            echo "📦 정적 사이트 설치 중..."
-            cd /tmp
-            tar -xzf static-site.tar.gz
-            
-            # 파일 복사
-            echo "📁 파일 복사 중..."
-            cp -r out/* "$WEB_ROOT/"
-            
-            # 권한 설정
-            chmod -R 755 "$WEB_ROOT"
-            
-            # 결과 확인
-            echo "✅ 배포 완료!"
-            echo "📁 웹 루트: $WEB_ROOT"
-            echo "📄 파일 목록:"
-            ls -la "$WEB_ROOT"
-            echo "🌐 접속 주소: http://도메인/"
-            echo "🎉 정적 사이트 배포 성공! Node.js 서버 없이 바로 접속 가능합니다."
+            echo "🎉 사이트 교체 완료!"
+            echo "📝 서버 로그:"
+            tail -5 /tmp/credit-app.log
             
             # 정리
-            rm -f /tmp/static-site.tar.gz
-            rm -rf /tmp/out
+            rm -f /tmp/deploy.tar.gz
