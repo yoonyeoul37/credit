@@ -337,7 +337,7 @@ export default function Home() {
           <div className="w-full max-w-[728px] flex justify-end">
             <Link 
               href="/write" 
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium touch-manipulation"
+              className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
             >
               작성하기
             </Link>
