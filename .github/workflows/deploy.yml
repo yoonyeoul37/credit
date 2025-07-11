@@ -87,7 +87,20 @@ jobs:
             # 파일 압축 해제
             tar -xzf /tmp/deploy.tar.gz
             
-            # 환경 변수 설정
+            # 시스템 정보 확인
+            echo "🔍 시스템 정보 확인..."
+            echo "Node.js 버전: $(node --version)"
+            echo "npm 버전: $(npm --version)"
+            echo "현재 디렉토리: $(pwd)"
+            echo "사용 가능한 메모리: $(free -h | grep Mem)"
+            
+            # 포트 사용 상황 확인
+            echo "🔌 포트 사용 상황 확인..."
+            echo "포트 3000: $(netstat -an | grep :3000 || echo '사용 안함')"
+            echo "포트 8080: $(netstat -an | grep :8080 || echo '사용 안함')"
+            echo "포트 8081: $(netstat -an | grep :8081 || echo '사용 안함')"
+            
+            # 환경 변수 설정 (포트 3000 먼저 시도)
             cat > .env.local << 'EOF'
             NODE_ENV=production
             PORT=3000
@@ -100,28 +113,67 @@ jobs:
             echo "📋 의존성 설치..."
             npm ci --production --silent
             
-            # 5. 포트 3000에서 Next.js 서버 시작
-            echo "🎯 포트 3000에서 서버 시작..."
-            nohup npm start > /tmp/credit-app.log 2>&1 &
-            sleep 8
+            # 설치 결과 확인
+            echo "📦 설치된 패키지 확인:"
+            ls -la node_modules/ | head -10
             
-            # 6. 서버 상태 확인
+            # 5. 포트 3000에서 Next.js 서버 시작 시도
+            echo "🎯 포트 3000에서 서버 시작 시도..."
+            nohup npm start > /tmp/credit-app.log 2>&1 &
+            sleep 10
+            
+            # 서버 상태 확인
             if pgrep -f "node.*3000" > /dev/null; then
               echo "✅ 포트 3000에서 서버 시작 성공!"
-              echo "🌐 접속 주소: http://도메인:3000"
-              
-              # 포트 3000 리다이렉트 페이지 생성
-              echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>신용회복 커뮤니티</title><meta http-equiv="refresh" content="1; url=:3000"><script>setTimeout(() => { window.location.href = window.location.protocol + "//" + window.location.hostname + ":3000"; }, 1000);</script></head><body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=":3000" style="color: #007bff;">바로 이동하기</a></p></body></html>' > "$WEB_ROOT/index.html"
+              SERVER_PORT=3000
             else
-              echo "❌ 서버 시작 실패"
-              echo "📝 로그:"
-              cat /tmp/credit-app.log
-              exit 1
+              echo "⚠️ 포트 3000 실패, 포트 8080 시도..."
+              
+              # 포트 8080으로 재시도
+              sed -i 's/PORT=3000/PORT=8080/' .env.local
+              pkill -f "node" || true
+              sleep 2
+              nohup npm start > /tmp/credit-app.log 2>&1 &
+              sleep 10
+              
+              if pgrep -f "node.*8080" > /dev/null; then
+                echo "✅ 포트 8080에서 서버 시작 성공!"
+                SERVER_PORT=8080
+              else
+                echo "⚠️ 포트 8080 실패, 포트 8081 시도..."
+                
+                # 포트 8081로 재시도
+                sed -i 's/PORT=8080/PORT=8081/' .env.local
+                pkill -f "node" || true
+                sleep 2
+                nohup npm start > /tmp/credit-app.log 2>&1 &
+                sleep 10
+                
+                if pgrep -f "node.*8081" > /dev/null; then
+                  echo "✅ 포트 8081에서 서버 시작 성공!"
+                  SERVER_PORT=8081
+                else
+                  echo "❌ 모든 포트에서 서버 시작 실패"
+                  echo "📝 상세 로그:"
+                  cat /tmp/credit-app.log
+                  echo "📝 프로세스 상태:"
+                  ps aux | grep node
+                  echo "📝 포트 상태:"
+                  netstat -tulpn
+                  exit 1
+                fi
+              fi
             fi
             
+            echo "✅ 서버 시작 성공! 포트: $SERVER_PORT"
+            echo "🌐 접속 주소: http://도메인:$SERVER_PORT"
+            
+            # 리다이렉트 페이지 생성
+            echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>신용회복 커뮤니티</title><meta http-equiv=\"refresh\" content=\"1; url=:$SERVER_PORT\"><script>setTimeout(() => { window.location.href = window.location.protocol + \"//\" + window.location.hostname + \":$SERVER_PORT\"; }, 1000);</script></head><body style=\"font-family: Arial, sans-serif; text-align: center; padding: 50px;\"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=\":$SERVER_PORT\" style=\"color: #007bff;\">바로 이동하기</a></p></body></html>" > "$WEB_ROOT/index.html"
+            
             echo "🎉 사이트 교체 완료!"
-            echo "📝 서버 로그:"
-            tail -5 /tmp/credit-app.log
+            echo "📝 서버 로그 (마지막 10줄):"
+            tail -10 /tmp/credit-app.log
             
             # 정리
             rm -f /tmp/deploy.tar.gz
