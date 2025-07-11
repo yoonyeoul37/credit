@@ -100,80 +100,108 @@ jobs:
             echo "포트 8080: $(netstat -an | grep :8080 || echo '사용 안함')"
             echo "포트 8081: $(netstat -an | grep :8081 || echo '사용 안함')"
             
-            # 환경 변수 설정 (포트 3000 먼저 시도)
-            cat > .env.local << 'EOF'
-            NODE_ENV=production
-            PORT=3000
-            HOSTNAME=0.0.0.0
-            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
-            EOF
-            
             # 의존성 설치
             echo "📋 의존성 설치..."
             npm ci --production --silent
             
             # 설치 결과 확인
             echo "📦 설치된 패키지 확인:"
-            ls -la node_modules/ | head -10
+            ls -la node_modules/ | head -5
             
-            # 5. 포트 3000에서 Next.js 서버 시작 시도
-            echo "🎯 포트 3000에서 서버 시작 시도..."
-            nohup npm start > /tmp/credit-app.log 2>&1 &
-            sleep 10
-            
-            # 서버 상태 확인
-            if pgrep -f "node.*3000" > /dev/null; then
-              echo "✅ 포트 3000에서 서버 시작 성공!"
-              SERVER_PORT=3000
-            else
-              echo "⚠️ 포트 3000 실패, 포트 8080 시도..."
+            # 서버 시작 함수 정의
+            check_server() {
+              local port=$1
+              local max_attempts=30
+              local attempt=1
               
-              # 포트 8080으로 재시도
-              sed -i 's/PORT=3000/PORT=8080/' .env.local
-              pkill -f "node" || true
-              sleep 2
-              nohup npm start > /tmp/credit-app.log 2>&1 &
-              sleep 10
+              echo "🔍 포트 $port 서버 확인 중..."
               
-              if pgrep -f "node.*8080" > /dev/null; then
-                echo "✅ 포트 8080에서 서버 시작 성공!"
-                SERVER_PORT=8080
-              else
-                echo "⚠️ 포트 8080 실패, 포트 8081 시도..."
+              while [ $attempt -le $max_attempts ]; do
+                echo "  시도 $attempt/$max_attempts..."
                 
-                # 포트 8081로 재시도
-                sed -i 's/PORT=8080/PORT=8081/' .env.local
-                pkill -f "node" || true
-                sleep 2
-                nohup npm start > /tmp/credit-app.log 2>&1 &
-                sleep 10
-                
-                if pgrep -f "node.*8081" > /dev/null; then
-                  echo "✅ 포트 8081에서 서버 시작 성공!"
-                  SERVER_PORT=8081
-                else
-                  echo "❌ 모든 포트에서 서버 시작 실패"
-                  echo "📝 상세 로그:"
-                  cat /tmp/credit-app.log
-                  echo "📝 프로세스 상태:"
-                  ps aux | grep node
-                  echo "📝 포트 상태:"
-                  netstat -tulpn
-                  exit 1
+                # HTTP 응답 확인
+                if curl -s -I http://localhost:$port | grep -q "HTTP"; then
+                  echo "✅ 포트 $port에서 HTTP 응답 확인!"
+                  return 0
                 fi
+                
+                # 포트 바인딩 확인
+                if netstat -an | grep ":$port" | grep -q "LISTEN"; then
+                  echo "✅ 포트 $port에서 LISTEN 상태 확인!"
+                  return 0
+                fi
+                
+                sleep 2
+                attempt=$((attempt + 1))
+              done
+              
+              echo "❌ 포트 $port 서버 확인 실패"
+              return 1
+            }
+            
+            # 환경 변수 설정 및 서버 시작
+            SERVER_PORT=""
+            
+            for port in 3000 8080 8081; do
+              echo "🎯 포트 $port에서 서버 시작 시도..."
+              
+              # 환경 변수 설정
+              cat > .env.local << EOF
+            NODE_ENV=production
+            PORT=$port
+            HOSTNAME=0.0.0.0
+            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+            EOF
+              
+              # 기존 프로세스 정리
+              pkill -f "node" || true
+              sleep 3
+              
+              # 서버 시작
+              echo "🚀 포트 $port에서 npm start 실행..."
+              nohup npm start > /tmp/credit-app-$port.log 2>&1 &
+              SERVER_PID=$!
+              echo "서버 PID: $SERVER_PID"
+              
+              # 서버 확인
+              if check_server $port; then
+                SERVER_PORT=$port
+                echo "✅ 포트 $port에서 서버 시작 성공!"
+                break
+              else
+                echo "❌ 포트 $port에서 서버 시작 실패"
+                echo "📝 로그 내용:"
+                cat /tmp/credit-app-$port.log
+                kill $SERVER_PID 2>/dev/null || true
               fi
+            done
+            
+            # 최종 결과 확인
+            if [ -z "$SERVER_PORT" ]; then
+              echo "❌ 모든 포트에서 서버 시작 실패"
+              echo "📝 시스템 상태:"
+              echo "프로세스 목록:"
+              ps aux | grep -E "(node|npm|next)" | head -10
+              echo "포트 상태:"
+              netstat -tlnp | grep -E "(3000|8080|8081)"
+              echo "메모리 사용량:"
+              free -h
+              exit 1
             fi
             
-            echo "✅ 서버 시작 성공! 포트: $SERVER_PORT"
+            echo "🎉 서버 시작 성공! 포트: $SERVER_PORT"
             echo "🌐 접속 주소: http://도메인:$SERVER_PORT"
             
             # 리다이렉트 페이지 생성
             echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>신용회복 커뮤니티</title><meta http-equiv=\"refresh\" content=\"1; url=:$SERVER_PORT\"><script>setTimeout(() => { window.location.href = window.location.protocol + \"//\" + window.location.hostname + \":$SERVER_PORT\"; }, 1000);</script></head><body style=\"font-family: Arial, sans-serif; text-align: center; padding: 50px;\"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=\":$SERVER_PORT\" style=\"color: #007bff;\">바로 이동하기</a></p></body></html>" > "$WEB_ROOT/index.html"
             
+            echo "📝 최종 서버 상태:"
+            curl -s -I http://localhost:$SERVER_PORT | head -3
+            
             echo "🎉 사이트 교체 완료!"
-            echo "📝 서버 로그 (마지막 10줄):"
-            tail -10 /tmp/credit-app.log
+            echo "📝 서버 로그 (마지막 5줄):"
+            tail -5 /tmp/credit-app-$SERVER_PORT.log
             
             # 정리
             rm -f /tmp/deploy.tar.gz
