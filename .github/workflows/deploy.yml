@@ -111,26 +111,7 @@ jobs:
               echo "🌐 접속 주소: http://도메인:3000"
               
               # 포트 3000 리다이렉트 페이지 생성
-              cat > "$WEB_ROOT/index.html" << 'HTMLEOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>신용회복 커뮤니티</title>
-  <meta http-equiv="refresh" content="1; url=:3000">
-  <script>
-    setTimeout(() => {
-      window.location.href = window.location.protocol + '//' + window.location.hostname + ':3000';
-    }, 1000);
-  </script>
-</head>
-<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-  <h1>🚀 신용회복 커뮤니티</h1>
-  <p>새로운 사이트로 이동 중입니다...</p>
-  <p><a href=":3000" style="color: #007bff;">바로 이동하기</a></p>
-</body>
-</html>
-HTMLEOF
+              echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>신용회복 커뮤니티</title><meta http-equiv="refresh" content="1; url=:3000"><script>setTimeout(() => { window.location.href = window.location.protocol + "//" + window.location.hostname + ":3000"; }, 1000);</script></head><body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=":3000" style="color: #007bff;">바로 이동하기</a></p></body></html>' > "$WEB_ROOT/index.html"
             else
               echo "❌ 서버 시작 실패"
               echo "📝 로그:"
