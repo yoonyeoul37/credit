@@ -90,7 +90,7 @@ jobs:
             # 환경 변수 설정
             cat > .env.local << 'EOF'
             NODE_ENV=production
-            PORT=80
+            PORT=3000
             HOSTNAME=0.0.0.0
             NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
             NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
@@ -100,55 +100,42 @@ jobs:
             echo "📋 의존성 설치..."
             npm ci --production --silent
             
-            # 5. 포트 80에서 Next.js 서버 시작 시도
-            echo "🎯 포트 80에서 서버 시작 시도..."
-            sudo -u $USER nohup npm start > /tmp/credit-app.log 2>&1 &
-            sleep 5
+            # 5. 포트 3000에서 Next.js 서버 시작
+            echo "🎯 포트 3000에서 서버 시작..."
+            nohup npm start > /tmp/credit-app.log 2>&1 &
+            sleep 8
             
             # 6. 서버 상태 확인
-            if pgrep -f "node.*80" > /dev/null; then
-              echo "✅ 포트 80에서 서버 시작 성공!"
-              echo "🌐 접속 주소: http://도메인/ (포트 80)"
+            if pgrep -f "node.*3000" > /dev/null; then
+              echo "✅ 포트 3000에서 서버 시작 성공!"
+              echo "🌐 접속 주소: http://도메인:3000"
+              
+              # 포트 3000 리다이렉트 페이지 생성
+              cat > "$WEB_ROOT/index.html" << 'HTMLEOF'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>신용회복 커뮤니티</title>
+  <meta http-equiv="refresh" content="1; url=:3000">
+  <script>
+    setTimeout(() => {
+      window.location.href = window.location.protocol + '//' + window.location.hostname + ':3000';
+    }, 1000);
+  </script>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+  <h1>🚀 신용회복 커뮤니티</h1>
+  <p>새로운 사이트로 이동 중입니다...</p>
+  <p><a href=":3000" style="color: #007bff;">바로 이동하기</a></p>
+</body>
+</html>
+HTMLEOF
             else
-              echo "⚠️ 포트 80 실패, 포트 8080으로 재시도..."
-              
-              # 포트 8080으로 재시도
-              sed -i 's/PORT=80/PORT=8080/' .env.local
-              pkill -f "node" || true
-              nohup npm start > /tmp/credit-app.log 2>&1 &
-              sleep 5
-              
-              if pgrep -f "node.*8080" > /dev/null; then
-                echo "✅ 포트 8080에서 서버 시작 성공!"
-                echo "🌐 접속 주소: http://도메인:8080"
-                
-                # 포트 8080 리다이렉트 페이지 생성
-                cat > "$WEB_ROOT/index.html" << 'HTMLEOF'
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta charset="UTF-8">
-                  <title>신용회복 커뮤니티</title>
-                  <meta http-equiv="refresh" content="1; url=:8080">
-                  <script>
-                    setTimeout(() => {
-                      window.location.href = window.location.protocol + '//' + window.location.hostname + ':8080';
-                    }, 1000);
-                  </script>
-                </head>
-                <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-                  <h1>🚀 신용회복 커뮤니티</h1>
-                  <p>새로운 사이트로 이동 중입니다...</p>
-                  <p><a href=":8080" style="color: #007bff;">바로 이동하기</a></p>
-                </body>
-                </html>
-                HTMLEOF
-              else
-                echo "❌ 서버 시작 완전 실패"
-                echo "📝 로그:"
-                cat /tmp/credit-app.log
-                exit 1
-              fi
+              echo "❌ 서버 시작 실패"
+              echo "📝 로그:"
+              cat /tmp/credit-app.log
+              exit 1
             fi
             
             echo "🎉 사이트 교체 완료!"
