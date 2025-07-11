@@ -15,7 +15,7 @@ jobs:
           host: ${{ secrets.CAFE24_HOST }}
           username: ${{ secrets.CAFE24_USERNAME }}
           password: ${{ secrets.CAFE24_PASSWORD }}
-          port: 22
+          port: ${{ secrets.CAFE24_PORT }}
           script: |
             echo "🔍 현재 위치를 웹 루트로 사용합니다..."
             echo "📂 현재 위치: $(pwd)"
