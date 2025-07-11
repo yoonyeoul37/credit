@@ -51,9 +51,16 @@ jobs:
             pkill -f "npm" 2>/dev/null || true
             pm2 kill 2>/dev/null || true
 
-            # 최신 코드 업데이트
-            echo "📥 코드 업데이트..."
-            git pull origin main
+            # 기존 파일 완전 삭제 및 새 프로젝트 클론
+            echo "🗑️ 기존 파일 완전 삭제..."
+            rm -rf .git
+            rm -rf *
+            rm -rf .[^.]*
+            
+            echo "📥 새 프로젝트 클론..."
+            git clone https://github.com/yoonyeoul37/credit-recovery-community.git .
+            
+            echo "✅ 프로젝트 클론 완료"
 
             # Node.js 의존성 설치
             echo "📦 의존성 설치..."
