@@ -7,7 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     
     steps:
     - name: 코드 가져오기
@@ -45,32 +45,47 @@ jobs:
         
         echo "🚀 배포 시작..."
         
-        # PM2 설치 확인
-        if ! command -v pm2 &> /dev/null; then
-          echo "PM2 설치 중..."
-          npm install -g pm2
-        fi
-        
         # 기존 프로세스 정리
         echo "기존 프로세스 정리..."
-        pm2 delete creditstory || true
-        pm2 kill || true
+        pkill -f "next start" || true
+        pkill -f "npm start" || true
         
         # 의존성 설치
         echo "의존성 설치..."
         npm ci --production --no-audit
         
-        # 앱 시작
+        # 백그라운드에서 앱 시작
         echo "앱 시작..."
-        pm2 start npm --name "creditstory" -- start
-        pm2 save
+        nohup npm start > app.log 2>&1 &
         
-        echo "✅ 배포 완료!"
-        pm2 status
+        # 잠시 대기 후 프로세스 확인
+        sleep 5
+        if pgrep -f "next start"; then
+          echo "✅ 배포 성공! 앱이 정상적으로 실행 중입니다."
+          pgrep -f "next start"
+        else
+          echo "❌ 배포 실패! 앱이 실행되지 않았습니다."
+          tail -20 app.log
+          exit 1
+        fi
         EOF
         
         chmod +x deploy/deploy.sh
         
+    - name: SSH 연결 테스트
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 60s
+        script: |
+          echo "SSH 연결 성공!"
+          whoami
+          pwd
+          ls -la
+          
     - name: 서버 배포
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -80,7 +95,8 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         timeout: 300s
         script: |
-          # 기존 앱 백업
+          echo "서버 배포 준비..."
+          # 백업 생성
           if [ -d "/home/creditstory-backup" ]; then
             rm -rf /home/creditstory-backup
           fi
@@ -113,5 +129,9 @@ jobs:
         timeout: 300s
         script: |
           cd /home/creditstory
+          echo "현재 디렉토리: $(pwd)"
+          echo "파일 목록:"
+          ls -la
+          echo "배포 스크립트 실행..."
           chmod +x deploy.sh
           ./deploy.sh 
