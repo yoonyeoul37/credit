@@ -25,8 +25,8 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_SUPABASE_URL: https://jwstrrxoyikjyafhaeyo.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           
       - name: Create deployment package
         run: |
@@ -96,9 +96,9 @@ jobs:
             
             # 포트 사용 상황 확인
             echo "🔌 포트 사용 상황 확인..."
-            echo "포트 3000: $(netstat -an | grep :3000 || echo '사용 안함')"
             echo "포트 8080: $(netstat -an | grep :8080 || echo '사용 안함')"
             echo "포트 8081: $(netstat -an | grep :8081 || echo '사용 안함')"
+            echo "포트 9000: $(netstat -an | grep :9000 || echo '사용 안함')"
             
             # 의존성 설치
             echo "📋 의존성 설치..."
@@ -157,7 +157,7 @@ jobs:
             # 환경 변수 설정 및 서버 시작
             SERVER_PORT=""
             
-            for port in 3000 8080 8081; do
+            for port in 8080 8081 9000; do
               echo "🎯 포트 $port에서 서버 시작 시도..."
               
               # 환경 변수 설정
@@ -165,8 +165,8 @@ jobs:
             NODE_ENV=production
             PORT=$port
             HOSTNAME=0.0.0.0
-            NEXT_PUBLIC_SUPABASE_URL=https://jwstrrxoyikjyafhaeyo.supabase.co
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             EOF
               
               # 기존 프로세스 정리
@@ -203,7 +203,7 @@ jobs:
               echo "프로세스 목록:"
               ps aux | grep -E "(node|npm|next)" | head -10
               echo "포트 상태:"
-              netstat -tlnp | grep -E "(3000|8080|8081)"
+              netstat -tlnp | grep -E "(8080|8081|9000)"
               echo "메모리 사용량:"
               free -h
               echo "📝 모든 로그 파일:"

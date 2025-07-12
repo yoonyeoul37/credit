@@ -1,0 +1,14 @@
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Server Configuration
+NODE_ENV=production
+PORT=3000
+HOSTNAME=0.0.0.0
+
+# 사용법:
+# 1. 이 파일을 .env.local로 복사하세요
+# 2. 실제 값으로 변경하세요
+# 3. .env.local은 절대로 Git에 커밋하지 마세요 

@@ -45,3 +45,19 @@ Dockerfile*
 .dockerignore
 docker-compose*.yml
 docker-compose*.yaml
+
+# Deployment scripts with sensitive info
+cafe24-deploy.sh
+manual-deploy.sh
+simple-deploy.sh
+deploy.sh
+manual-deploy.ps1
+vercel-deploy.md
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Test and connection files
+test-connection.ps1
