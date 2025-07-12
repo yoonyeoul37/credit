@@ -1,137 +1,47 @@
-name: SSH 기반 배포
+name: SSH 연결 테스트
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     
     steps:
-    - name: 코드 가져오기
-      uses: actions/checkout@v4
-      
-    - name: Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: 의존성 설치
-      run: npm ci --production
-      
-    - name: 빌드
-      run: npm run build
-      env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        
-    - name: 배포 패키지 생성
-      run: |
-        mkdir -p deploy
-        cp -r .next deploy/
-        cp package.json deploy/
-        cp package-lock.json deploy/
-        cp next.config.ts deploy/
-        cp -r public deploy/ 2>/dev/null || true
-        cp -r src deploy/
-        
-    - name: 배포 스크립트 생성
-      run: |
-        cat > deploy/deploy.sh << 'EOF'
-        #!/bin/bash
-        set -e
-        
-        echo "🚀 배포 시작..."
-        
-        # 기존 프로세스 정리
-        echo "기존 프로세스 정리..."
-        pkill -f "next start" || true
-        pkill -f "npm start" || true
-        
-        # 의존성 설치
-        echo "의존성 설치..."
-        npm ci --production --no-audit
-        
-        # 백그라운드에서 앱 시작
-        echo "앱 시작..."
-        nohup npm start > app.log 2>&1 &
-        
-        # 잠시 대기 후 프로세스 확인
-        sleep 5
-        if pgrep -f "next start"; then
-          echo "✅ 배포 성공! 앱이 정상적으로 실행 중입니다."
-          pgrep -f "next start"
-        else
-          echo "❌ 배포 실패! 앱이 실행되지 않았습니다."
-          tail -20 app.log
-          exit 1
-        fi
-        EOF
-        
-        chmod +x deploy/deploy.sh
-        
-    - name: SSH 연결 테스트
+    - name: SSH 연결 테스트 1 - 기본 정보
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CAFE24_HOST }}
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 60s
+        timeout: 30s
         script: |
-          echo "SSH 연결 성공!"
-          whoami
-          pwd
-          ls -la
-          
-    - name: 서버 배포
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.CAFE24_HOST }}
-        username: ${{ secrets.CAFE24_USERNAME }}
-        password: ${{ secrets.CAFE24_PASSWORD }}
-        port: ${{ secrets.CAFE24_PORT }}
-        timeout: 300s
-        script: |
-          echo "서버 배포 준비..."
-          # 백업 생성
-          if [ -d "/home/creditstory-backup" ]; then
-            rm -rf /home/creditstory-backup
-          fi
-          if [ -d "/home/creditstory" ]; then
-            cp -r /home/creditstory /home/creditstory-backup
-          fi
-          
-          # 새 앱 디렉토리 생성
-          mkdir -p /home/creditstory
-          
-    - name: 파일 업로드
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.CAFE24_HOST }}
-        username: ${{ secrets.CAFE24_USERNAME }}
-        password: ${{ secrets.CAFE24_PASSWORD }}
-        port: ${{ secrets.CAFE24_PORT }}
-        source: "deploy/*"
-        target: "/home/creditstory/"
-        strip_components: 1
-        timeout: 300s
-        
-    - name: 앱 실행
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.CAFE24_HOST }}
-        username: ${{ secrets.CAFE24_USERNAME }}
-        password: ${{ secrets.CAFE24_PASSWORD }}
-        port: ${{ secrets.CAFE24_PORT }}
-        timeout: 300s
-        script: |
-          cd /home/creditstory
+          echo "=== SSH 연결 성공 ==="
+          echo "현재 사용자: $(whoami)"
           echo "현재 디렉토리: $(pwd)"
-          echo "파일 목록:"
-          ls -la
-          echo "배포 스크립트 실행..."
-          chmod +x deploy.sh
-          ./deploy.sh 
+          echo "시스템 정보:"
+          uname -a
+          echo "메모리 사용량:"
+          free -h
+          echo "디스크 사용량:"
+          df -h
+          echo "=== 테스트 완료 ==="
+          
+    - name: SSH 연결 테스트 2 - Node.js 확인
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 30s
+        script: |
+          echo "=== Node.js 환경 확인 ==="
+          which node || echo "Node.js 없음"
+          node --version || echo "Node.js 버전 확인 실패"
+          which npm || echo "npm 없음"
+          npm --version || echo "npm 버전 확인 실패"
+          echo "=== 환경 확인 완료 ===" 
