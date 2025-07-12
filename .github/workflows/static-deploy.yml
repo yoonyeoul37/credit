@@ -1,122 +1,36 @@
-name: Static Site Deploy
+name: 정적 사이트 간단 배포
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 코드 가져오기
+      uses: actions/checkout@v4
+      
+    - name: Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
+    - name: 의존성 설치
+      run: npm ci
+      
+    - name: 정적 사이트 빌드
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-      - name: Build static site
-        run: npm run export
-        env:
-          NODE_ENV: production
-          NEXT_PUBLIC_SUPABASE_URL: https://jwstrrxoyikjyafhaeyo.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c3RycnhveWlranlhZmhhZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTIzMzMsImV4cCI6MjA2NzcyODMzM30.ZpfX0zp5pJ_pstXjRkYNg85FoFEIP4qV3Js4nhTeFDU
-          
-      - name: Create static deployment package
-        run: |
-          echo "📦 정적 사이트 패키지 생성..."
-          cd out
-          tar -czf ../static-site.tar.gz .
-          cd ..
-          ls -la static-site.tar.gz
-          echo "📁 정적 파일 내용 확인:"
-          ls -la out/ | head -10
-          
-      - name: Upload static site
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.CAFE24_HOST }}
-          username: ${{ secrets.CAFE24_USERNAME }}
-          password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
-          source: "static-site.tar.gz"
-          target: "/tmp/"
-          
-      - name: Deploy static site
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.CAFE24_HOST }}
-          username: ${{ secrets.CAFE24_USERNAME }}
-          password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
-          timeout: 300s
-          script: |
-            echo "🚀 정적 사이트 배포 시작..."
-            
-            # 기존 Node.js 프로세스 완전 정리
-            echo "🛑 모든 Node.js 프로세스 정리..."
-            pkill -f "node" || echo "Node.js 프로세스 없음"
-            pkill -f "npm" || echo "npm 프로세스 없음"
-            pkill -f "next" || echo "Next.js 프로세스 없음"
-            
-            # 기존 웹 파일 백업
-            echo "💾 기존 사이트 백업..."
-            BACKUP_DIR="$HOME/old-site-backup-$(date +%Y%m%d_%H%M%S)"
-            
-            if [ -d "$HOME/public_html" ]; then
-              mv "$HOME/public_html" "$BACKUP_DIR"
-              echo "✅ public_html 백업 완료: $BACKUP_DIR"
-            elif [ -d "$HOME/www" ]; then
-              mv "$HOME/www" "$BACKUP_DIR"
-              echo "✅ www 백업 완료: $BACKUP_DIR"
-            fi
-            
-            # 새로운 웹 루트 생성
-            echo "🆕 새로운 웹 루트 생성..."
-            mkdir -p "$HOME/public_html"
-            WEB_ROOT="$HOME/public_html"
-            
-            # 정적 파일 배포
-            echo "📁 정적 파일 배포..."
-            cd "$WEB_ROOT"
-            tar -xzf /tmp/static-site.tar.gz
-            
-            echo "📋 배포된 파일 확인:"
-            ls -la | head -20
-            
-            # index.html 확인
-            if [ -f "index.html" ]; then
-              echo "✅ index.html 파일 확인됨"
-              echo "📄 index.html 파일 크기: $(wc -c < index.html) bytes"
-              echo "📄 index.html 앞부분 미리보기:"
-              head -10 index.html
-            else
-              echo "❌ index.html 파일 없음"
-              echo "📁 현재 디렉토리 파일 목록:"
-              find . -name "*.html" | head -10
-            fi
-            
-            # 권한 설정
-            echo "🔐 파일 권한 설정..."
-            chmod -R 755 .
-            
-            # 도메인별 리다이렉트 페이지는 제거 (정적 사이트이므로 불필요)
-            
-            echo "🎉 정적 사이트 배포 완료!"
-            echo "📊 배포 정보:"
-            echo "  📁 총 파일 개수: $(find . -type f | wc -l)"
-            echo "  📄 HTML 파일 개수: $(find . -name "*.html" | wc -l)"
-            echo "  🎨 CSS 파일 개수: $(find . -name "*.css" | wc -l)"
-            echo "  ⚡ JS 파일 개수: $(find . -name "*.js" | wc -l)"
-            echo "  📊 총 크기: $(du -sh . | cut -f1)"
-            
-            echo "🌐 접속 주소: http://도메인/"
-            echo "✅ 정적 사이트 배포 성공! Node.js 서버 불필요!"
-            
-            # 정리
-            rm -f /tmp/static-site.tar.gz 
+    - name: FTP로 업로드
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        local-dir: ./out/
+        server-dir: /public_html/ 
