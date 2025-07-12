@@ -1,4 +1,4 @@
-name: SSH 연결 테스트
+name: 간단한 배포 테스트
 
 on:
   push:
@@ -7,9 +7,26 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     
     steps:
+    - name: 코드 가져오기
+      uses: actions/checkout@v4
+      
+    - name: Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: 의존성 설치
+      run: npm ci --production
+      
+    - name: 빌드
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        
     - name: SSH 연결 테스트 1 - 기본 정보
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -22,12 +39,6 @@ jobs:
           echo "=== SSH 연결 성공 ==="
           echo "현재 사용자: $(whoami)"
           echo "현재 디렉토리: $(pwd)"
-          echo "시스템 정보:"
-          uname -a
-          echo "메모리 사용량:"
-          free -h
-          echo "디스크 사용량:"
-          df -h
           echo "=== 테스트 완료 ==="
           
     - name: SSH 연결 테스트 2 - Node.js 확인
@@ -44,4 +55,28 @@ jobs:
           node --version || echo "Node.js 버전 확인 실패"
           which npm || echo "npm 없음"
           npm --version || echo "npm 버전 확인 실패"
-          echo "=== 환경 확인 완료 ===" 
+          echo "=== 환경 확인 완료 ==="
+          
+    - name: 간단한 배포 테스트
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        source: ".next/*,package.json,next.config.ts"
+        target: "/home/creditstory-test/"
+        timeout: 120s
+        
+    - name: 배포 완료 확인
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 30s
+        script: |
+          echo "=== 배포 완료 확인 ==="
+          ls -la /home/creditstory-test/
+          echo "=== 성공! ===" 
