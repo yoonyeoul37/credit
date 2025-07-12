@@ -1,4 +1,4 @@
-name: 정적 사이트 간단 배포
+name: SSH 기반 배포
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: 코드 가져오기
@@ -18,19 +19,99 @@ jobs:
         node-version: '20'
         
     - name: 의존성 설치
-      run: npm ci
+      run: npm ci --production
       
-    - name: 정적 사이트 빌드
+    - name: 빌드
       run: npm run build
       env:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-    - name: FTP로 업로드
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+    - name: 배포 패키지 생성
+      run: |
+        mkdir -p deploy
+        cp -r .next deploy/
+        cp package.json deploy/
+        cp package-lock.json deploy/
+        cp next.config.ts deploy/
+        cp -r public deploy/ 2>/dev/null || true
+        cp -r src deploy/
+        
+    - name: 배포 스크립트 생성
+      run: |
+        cat > deploy/deploy.sh << 'EOF'
+        #!/bin/bash
+        set -e
+        
+        echo "🚀 배포 시작..."
+        
+        # PM2 설치 확인
+        if ! command -v pm2 &> /dev/null; then
+          echo "PM2 설치 중..."
+          npm install -g pm2
+        fi
+        
+        # 기존 프로세스 정리
+        echo "기존 프로세스 정리..."
+        pm2 delete creditstory || true
+        pm2 kill || true
+        
+        # 의존성 설치
+        echo "의존성 설치..."
+        npm ci --production --no-audit
+        
+        # 앱 시작
+        echo "앱 시작..."
+        pm2 start npm --name "creditstory" -- start
+        pm2 save
+        
+        echo "✅ 배포 완료!"
+        pm2 status
+        EOF
+        
+        chmod +x deploy/deploy.sh
+        
+    - name: 서버 배포
+      uses: appleboy/ssh-action@v1.0.0
       with:
-        server: ${{ secrets.CAFE24_HOST }}
+        host: ${{ secrets.CAFE24_HOST }}
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
-        local-dir: ./out/
-        server-dir: /public_html/ 
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 300s
+        script: |
+          # 기존 앱 백업
+          if [ -d "/home/creditstory-backup" ]; then
+            rm -rf /home/creditstory-backup
+          fi
+          if [ -d "/home/creditstory" ]; then
+            cp -r /home/creditstory /home/creditstory-backup
+          fi
+          
+          # 새 앱 디렉토리 생성
+          mkdir -p /home/creditstory
+          
+    - name: 파일 업로드
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        source: "deploy/*"
+        target: "/home/creditstory/"
+        strip_components: 1
+        timeout: 300s
+        
+    - name: 앱 실행
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 300s
+        script: |
+          cd /home/creditstory
+          chmod +x deploy.sh
+          ./deploy.sh 

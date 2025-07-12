@@ -1,17 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 정적 사이트 export 활성화
-  output: 'export',
-  trailingSlash: true,
   // 빌드 시 에러 체크 비활성화 (배포용)
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true
   },
   // 환경 변수
   env: {
