@@ -1,4 +1,4 @@
-name: Complete Site Replacement
+name: 카페24 자동 배포
 
 on:
   push:
@@ -9,227 +9,79 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 코드 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
+    - name: 의존성 설치
+      run: npm ci
+      
+    - name: 프로덕션 빌드
+      run: npm run build
+      env:
+        NODE_ENV: production
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-      - name: Build Next.js
-        run: npm run build
-        env:
-          NODE_ENV: production
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    - name: 배포 패키지 생성
+      run: |
+        tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts src tsconfig.json
+        
+    - name: 서버에 파일 업로드
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        source: "deploy.tar.gz"
+        target: "/tmp/"
+        
+    - name: 서버에서 배포 실행
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        script: |
+          echo "🚀 카페24 자동 배포 시작..."
           
-      - name: Create deployment package
-        run: |
-          echo "📦 배포 패키지 생성..."
-          tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts
-          ls -la deploy.tar.gz
+          # 기존 프로세스 정리
+          sudo pkill -9 -f "node" || true
+          sudo pkill -9 -f "next" || true
           
-      - name: Upload deployment package
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.CAFE24_HOST }}
-          username: ${{ secrets.CAFE24_USERNAME }}
-          password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
-          source: "deploy.tar.gz"
-          target: "/tmp/"
+          # 배포 디렉토리 준비
+          cd /var/www/html
+          sudo rm -rf nextjs-app
+          sudo mkdir -p nextjs-app
+          cd nextjs-app
           
-      - name: Complete site replacement
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.CAFE24_HOST }}
-          username: ${{ secrets.CAFE24_USERNAME }}
-          password: ${{ secrets.CAFE24_PASSWORD }}
-          port: ${{ secrets.CAFE24_PORT }}
-          timeout: 300s
-          script: |
-            echo "🔥 기존 사이트 완전 교체 시작..."
-            
-            # 1. 기존 프로세스 모두 정리
-            echo "🛑 모든 기존 프로세스 정리..."
-            pkill -f "node" || echo "Node.js 프로세스 없음"
-            pkill -f "npm" || echo "npm 프로세스 없음"
-            pkill -f "next" || echo "Next.js 프로세스 없음"
-            
-            # 2. 기존 웹 파일 백업
-            echo "💾 기존 사이트 백업..."
-            BACKUP_DIR="$HOME/old-site-backup-$(date +%Y%m%d_%H%M%S)"
-            
-            if [ -d "$HOME/public_html" ]; then
-              mv "$HOME/public_html" "$BACKUP_DIR"
-              echo "✅ public_html 백업 완료: $BACKUP_DIR"
-            elif [ -d "$HOME/www" ]; then
-              mv "$HOME/www" "$BACKUP_DIR"
-              echo "✅ www 백업 완료: $BACKUP_DIR"
-            fi
-            
-            # 3. 새로운 웹 루트 생성
-            echo "🆕 새로운 웹 루트 생성..."
-            mkdir -p "$HOME/public_html"
-            WEB_ROOT="$HOME/public_html"
-            
-            # 4. Next.js 앱 배포
-            echo "🚀 Next.js 앱 배포..."
-            APP_DIR="$HOME/credit-app"
-            mkdir -p "$APP_DIR"
-            cd "$APP_DIR"
-            
-            # 파일 압축 해제
-            tar -xzf /tmp/deploy.tar.gz
-            
-            # 시스템 정보 확인
-            echo "🔍 시스템 정보 확인..."
-            echo "Node.js 버전: $(node --version)"
-            echo "npm 버전: $(npm --version)"
-            echo "현재 디렉토리: $(pwd)"
-            echo "사용 가능한 메모리: $(free -h | grep Mem)"
-            
-            # 포트 사용 상황 확인
-            echo "🔌 포트 사용 상황 확인..."
-            echo "포트 8080: $(netstat -an | grep :8080 || echo '사용 안함')"
-            echo "포트 8081: $(netstat -an | grep :8081 || echo '사용 안함')"
-            echo "포트 9000: $(netstat -an | grep :9000 || echo '사용 안함')"
-            
-            # 의존성 설치
-            echo "📋 의존성 설치..."
-            npm ci --production --silent
-            
-            # 설치 결과 확인
-            echo "📦 설치된 패키지 확인:"
-            ls -la node_modules/ | head -5
-            
-            # 서버 시작 함수 정의
-            check_server() {
-              local port=$1
-              local max_attempts=20
-              local attempt=1
-              
-              echo "🔍 포트 $port 서버 확인 중..."
-              
-              while [ $attempt -le $max_attempts ]; do
-                echo "  시도 $attempt/$max_attempts..."
-                
-                # 포트 바인딩 확인
-                if netstat -an | grep ":$port" | grep -q "LISTEN"; then
-                  echo "✅ 포트 $port에서 LISTEN 상태 확인!"
-                  
-                  # 서버 로그 확인
-                  echo "📝 서버 로그 (마지막 5줄):"
-                  tail -5 /tmp/credit-app-$port.log
-                  
-                  # HTTP 응답 확인 (더 자세히)
-                  echo "🌐 HTTP 응답 테스트..."
-                  HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null --max-time 10 http://localhost:$port 2>&1)
-                  echo "HTTP 응답 코드: $HTTP_RESPONSE"
-                  
-                  if [ "$HTTP_RESPONSE" = "200" ] || [ "$HTTP_RESPONSE" = "404" ] || [ "$HTTP_RESPONSE" = "500" ]; then
-                    echo "✅ HTTP 응답 확인! (코드: $HTTP_RESPONSE)"
-                    return 0
-                  else
-                    echo "⚠️ HTTP 응답 비정상 (코드: $HTTP_RESPONSE)"
-                    echo "📝 자세한 curl 결과:"
-                    curl -v http://localhost:$port --max-time 5 2>&1 | head -10
-                  fi
-                else
-                  echo "⚠️ 포트 $port LISTEN 상태 아님"
-                fi
-                
-                sleep 5
-                attempt=$((attempt + 1))
-              done
-              
-              echo "❌ 포트 $port 서버 확인 실패"
-              echo "📝 최종 서버 로그:"
-              cat /tmp/credit-app-$port.log
-              return 1
-            }
-            
-            # 환경 변수 설정 및 서버 시작
-            SERVER_PORT=""
-            
-            for port in 8080 8081 9000; do
-              echo "🎯 포트 $port에서 서버 시작 시도..."
-              
-              # 환경 변수 설정
-              cat > .env.local << EOF
-            NODE_ENV=production
-            PORT=$port
-            HOSTNAME=0.0.0.0
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            EOF
-              
-              # 기존 프로세스 정리
-              pkill -f "node" || true
-              sleep 3
-              
-              # 서버 시작
-              echo "🚀 포트 $port에서 npm start 실행..."
-              nohup npm start > /tmp/credit-app-$port.log 2>&1 &
-              SERVER_PID=$!
-              echo "서버 PID: $SERVER_PID"
-              
-              # 서버 시작 대기
-              echo "⏳ 서버 초기화 대기 중..."
-              sleep 10
-              
-              # 서버 확인
-              if check_server $port; then
-                SERVER_PORT=$port
-                echo "✅ 포트 $port에서 서버 시작 성공!"
-                break
-              else
-                echo "❌ 포트 $port에서 서버 시작 실패"
-                echo "📝 프로세스 상태:"
-                ps aux | grep -E "(node|npm|next)" | grep -v grep
-                kill $SERVER_PID 2>/dev/null || true
-              fi
-            done
-            
-            # 최종 결과 확인
-            if [ -z "$SERVER_PORT" ]; then
-              echo "❌ 모든 포트에서 서버 시작 실패"
-              echo "📝 최종 시스템 상태:"
-              echo "프로세스 목록:"
-              ps aux | grep -E "(node|npm|next)" | head -10
-              echo "포트 상태:"
-              netstat -tlnp | grep -E "(8080|8081|9000)"
-              echo "메모리 사용량:"
-              free -h
-              echo "📝 모든 로그 파일:"
-              for logfile in /tmp/credit-app-*.log; do
-                if [ -f "$logfile" ]; then
-                  echo "=== $logfile ==="
-                  cat "$logfile"
-                  echo ""
-                fi
-              done
-              exit 1
-            fi
-            
-            echo "🎉 서버 시작 성공! 포트: $SERVER_PORT"
-            echo "🌐 접속 주소: http://도메인:$SERVER_PORT"
-            
-            # 최종 서버 테스트
-            echo "📝 최종 서버 테스트:"
-            curl -s -I http://localhost:$SERVER_PORT | head -3
-            
-            # 리다이렉트 페이지 생성
-            echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>신용회복 커뮤니티</title><meta http-equiv=\"refresh\" content=\"1; url=:$SERVER_PORT\"><script>setTimeout(() => { window.location.href = window.location.protocol + \"//\" + window.location.hostname + \":$SERVER_PORT\"; }, 1000);</script></head><body style=\"font-family: Arial, sans-serif; text-align: center; padding: 50px;\"><h1>🚀 신용회복 커뮤니티</h1><p>새로운 사이트로 이동 중입니다...</p><p><a href=\":$SERVER_PORT\" style=\"color: #007bff;\">바로 이동하기</a></p></body></html>" > "$WEB_ROOT/index.html"
-            
-            echo "🎉 사이트 교체 완료!"
-            echo "📝 서버 로그 (마지막 5줄):"
-            tail -5 /tmp/credit-app-$SERVER_PORT.log
-            
-            # 정리
-            rm -f /tmp/deploy.tar.gz
+          # 파일 압축 해제
+          sudo tar -xzf /tmp/deploy.tar.gz
+          
+          # 의존성 설치
+          sudo npm install --production
+          
+          # 환경변수 설정
+          sudo tee .env.local > /dev/null <<EOF
+          NODE_ENV=production
+          PORT=80
+          HOSTNAME=0.0.0.0
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          EOF
+          
+          # 서버 시작
+          sudo nohup npm start > ~/credit-app.log 2>&1 &
+          
+          # 확인
+          sleep 5
+          ps aux | grep next
+          
+          echo "✅ 배포 완료!"
