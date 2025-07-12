@@ -61,3 +61,7 @@ vercel-deploy.md
 
 # Test and connection files
 test-connection.ps1
+
+# Complex deployment workflows
+.github/workflows/
+simple-cafe24-deploy.sh
