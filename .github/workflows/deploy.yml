@@ -30,9 +30,8 @@ jobs:
         
     - name: 배포 패키지 생성
       run: |
-        # 불필요한 파일 제거하고 압축
-        rm -rf node_modules/.cache
-        tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts src --exclude='*.log' --exclude='node_modules/.cache'
+        # 간단한 압축
+        tar -czf deploy.tar.gz .next package.json package-lock.json public next.config.ts src
         ls -lh deploy.tar.gz
         
     - name: 서버에 파일 업로드
