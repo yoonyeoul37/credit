@@ -85,9 +85,13 @@ jobs:
           echo "📁 업로드된 파일 목록:"
           ls -la
           
-          # PM2로 앱 실행
+          # 기존 웹서버 중지
+          sudo systemctl stop apache2 2>/dev/null || true
+          sudo systemctl stop nginx 2>/dev/null || true
+          
+          # PM2로 앱 실행 (포트 80 사용)
           echo "🚀 PM2로 앱 시작..."
-          NODE_ENV=production PORT=3000 pm2 start npm --name "credit-app" -- start
+          sudo NODE_ENV=production PORT=80 pm2 start npm --name "credit-app" -- start
           pm2 save
           
           # 앱 상태 확인
@@ -96,6 +100,12 @@ jobs:
           pm2 list
           pm2 logs credit-app --lines 10 || true
           
-          # 최종 확인
-          echo "🔍 포트 3000 상태 확인:"
+          # 포트 상태 확인
+          echo "🔍 포트 80 상태 확인:"
+          sudo lsof -i:80 || echo "포트 80이 사용되지 않고 있습니다"
+          echo "🔍 포트 3000 상태 확인:"  
           lsof -i:3000 || echo "포트 3000이 사용되지 않고 있습니다"
+          
+          # 도메인 연결 확인
+          echo "🌐 도메인 연결 테스트:"
+          curl -I http://localhost:80 || echo "포트 80 연결 실패"
