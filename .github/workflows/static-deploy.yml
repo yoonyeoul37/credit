@@ -39,9 +39,16 @@ jobs:
           echo "📦 기존 앱 중지 및 디렉토리 준비"
           which pm2 || npm install -g pm2
 
-          # 기존 pm2 앱 종료 및 삭제 (있을 경우)
-          pm2 delete app || true
+          # 기존 프로세스 강력 종료
+          pm2 delete all || true
           pm2 kill || true
+          pkill -f "npm start" 2>/dev/null || true
+          pkill -f "next start" 2>/dev/null || true
+          pkill -f "node" 2>/dev/null || true
+          
+          # 포트 3000 사용 중인 프로세스 강제 종료
+          lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+          sleep 3
 
           cd ~
           mkdir -p www
@@ -71,13 +78,24 @@ jobs:
           echo "🚀 앱 실행 시작"
           cd ~/www
           
-          # 의존성 설치
-          npm install --omit=dev
-
+          # 의존성 설치 (devDependencies 포함)
+          npm install
+          
+          # 파일 확인
+          echo "📁 업로드된 파일 목록:"
+          ls -la
+          
           # PM2로 앱 실행
-          pm2 start npm --name "app" -- start
+          echo "🚀 PM2로 앱 시작..."
+          NODE_ENV=production PORT=3000 pm2 start npm --name "credit-app" -- start
           pm2 save
-
+          
           # 앱 상태 확인
-          sleep 3
+          sleep 5
+          echo "📊 PM2 프로세스 상태:"
           pm2 list
+          pm2 logs credit-app --lines 10 || true
+          
+          # 최종 확인
+          echo "🔍 포트 3000 상태 확인:"
+          lsof -i:3000 || echo "포트 3000이 사용되지 않고 있습니다"
