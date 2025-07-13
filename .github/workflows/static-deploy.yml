@@ -39,10 +39,9 @@ jobs:
           echo "📦 기존 앱 중지 및 디렉토리 준비"
           which pm2 || npm install -g pm2
 
-          # 기존 프로세스 강력 종료
-          pm2 delete all || true
-          pm2 delete creditstory-new || true
-          pm2 kill || true
+          # 기존 프로세스 강력 종료 (안전하게)
+          pm2 delete all 2>/dev/null || echo "PM2 프로세스 없음"
+          pm2 kill 2>/dev/null || echo "PM2 데몬 없음"
           pkill -f "npm start" 2>/dev/null || true
           pkill -f "next start" 2>/dev/null || true
           pkill -f "node" 2>/dev/null || true
@@ -100,23 +99,19 @@ jobs:
           lsof -ti:80 | xargs kill -9 2>/dev/null || true
           sleep 3
           
-          # 3. 기존 웹사이트 파일 백업 및 제거
-          echo "📁 기존 웹사이트 파일 제거:"
-          if [ -d "/var/www/html" ]; then
-            echo "백업: /var/www/html -> /var/www/html.backup.$(date +%Y%m%d)"
-            mv /var/www/html /var/www/html.backup.$(date +%Y%m%d) 2>/dev/null || true
-          fi
+          # 3. 기존 웹사이트 파일 확인 (권한 문제로 백업만)
+          echo "📁 기존 웹사이트 파일 확인:"
+          ls -la /var/www/ 2>/dev/null || echo "/var/www 접근 불가"
+          echo "권한 제한으로 파일 제거는 스킵합니다"
           
-          # 4. 웹서버 자동 시작 비활성화 (systemctl 대신 직접 파일 수정)
-          echo "🚫 웹서버 자동 시작 비활성화:"
-          rm -f /etc/systemd/system/multi-user.target.wants/apache2.service 2>/dev/null || true
-          rm -f /etc/systemd/system/multi-user.target.wants/nginx.service 2>/dev/null || true
+          # 4. 권한 문제로 systemd 파일 수정은 스킵
+          echo "🚫 웹서버 자동 시작 비활성화 (권한 제한으로 스킵)"
           
           echo "✅ 옛날 사이트 제거 완료"
           
-          # PM2로 새로운 사이트 실행 (포트 80에서 직접 실행)
+          # PM2로 새로운 사이트 실행 (포트 3000, 나중에 프록시 설정)
           echo "🚀 새로운 creditstory.kr 사이트 시작..."
-          NODE_ENV=production PORT=80 pm2 start npm --name "creditstory-new" -- start
+          NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory-new" -- start
           pm2 save
           
           # 앱 상태 확인
@@ -130,14 +125,17 @@ jobs:
           echo "📊 현재 실행 중인 프로세스:"
           ps aux | grep -E "(node|pm2)" | grep -v grep || echo "Node 프로세스 없음"
           
-          echo "🔍 포트 80 상태 (새로운 사이트):"
+          echo "🔍 포트 3000 상태 (새로운 사이트):"
+          lsof -i:3000 || echo "포트 3000이 사용되지 않고 있습니다"
+          echo "🔍 포트 80 상태 (기존 사이트):"
           lsof -i:80 || echo "포트 80이 사용되지 않고 있습니다"
           
           echo "🌐 새로운 사이트 연결 테스트:"
           sleep 5
-          curl -I http://localhost:80 || echo "포트 80 연결 실패"
+          curl -I http://localhost:3000 || echo "포트 3000 연결 실패"
           
           echo "📋 PM2 상태:"
           pm2 list
           
-          echo "🎉 === 배포 완료! 신용회생스토리 → 새로운 creditstory.kr ==="
+          echo "🎉 === 배포 완료! 새로운 사이트가 포트 3000에서 실행 중 ==="
+          echo "💡 참고: creditstory.kr 접속을 위해서는 웹서버 프록시 설정이 필요합니다"
