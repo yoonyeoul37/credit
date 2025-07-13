@@ -27,7 +27,7 @@ jobs:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-    - name: 서버 디렉토리 준비
+    - name: 서버 디렉토리 준비 및 앱 중지
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CAFE24_HOST }}
@@ -36,25 +36,17 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         timeout: 180s
         script: |
-          # 기존 프로세스 종료 (더 안전하게)
-          pkill -f "npm start" 2>/dev/null || true
-          pkill -f "next start" 2>/dev/null || true
-          sleep 2
-          
-          # 현재 디렉토리 확인
-          pwd
-          whoami
-          
-          # 홈 디렉토리로 이동
+          echo "📦 기존 앱 중지 및 디렉토리 준비"
+          which pm2 || npm install -g pm2
+
+          # 기존 pm2 앱 종료 및 삭제 (있을 경우)
+          pm2 delete app || true
+          pm2 kill || true
+
           cd ~
-          
-          # 작업 디렉토리 생성 (더 안전한 경로)
           mkdir -p www
           cd www
-          
-          # 현재 위치 확인
-          pwd
-          echo "디렉토리 준비 완료"
+          echo "✅ 디렉토리 준비 완료"
           
     - name: 파일 업로드
       uses: appleboy/scp-action@v0.1.4
@@ -63,7 +55,7 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        source: ".next,package.json,next.config.ts,src"
+        source: ".next package.json next.config.ts public src"
         target: "~/www/"
         timeout: 180s
         
@@ -74,22 +66,18 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 120s
+        timeout: 180s
         script: |
+          echo "🚀 앱 실행 시작"
           cd ~/www
-          echo "현재 디렉토리: $(pwd)"
           
-          # 파일 확인
-          ls -la
-          
-          npm install
-          nohup npm start > app.log 2>&1 &
-          
-          # 3초 대기 후 프로세스 확인
+          # 의존성 설치
+          npm install --omit=dev
+
+          # PM2로 앱 실행
+          pm2 start npm --name "app" -- start
+          pm2 save
+
+          # 앱 상태 확인
           sleep 3
-          if pgrep -f "next start"; then
-            echo "✅ 배포 성공! 앱이 실행 중입니다."
-          else
-            echo "❌ 배포 실패! 로그 확인:"
-            tail -20 app.log
-          fi 
+          pm2 list
