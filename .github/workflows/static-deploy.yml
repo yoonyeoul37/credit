@@ -34,14 +34,27 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 60s
+        timeout: 180s
         script: |
-          # 기존 프로세스 종료
-          pkill -f "npm start" || true
-          pkill -f "next start" || true
+          # 기존 프로세스 종료 (더 안전하게)
+          pkill -f "npm start" 2>/dev/null || true
+          pkill -f "next start" 2>/dev/null || true
+          sleep 2
           
-          # 디렉토리 준비 (올바른 카페24 경로 사용)
-          mkdir -p /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
+          # 현재 디렉토리 확인
+          pwd
+          whoami
+          
+          # 홈 디렉토리로 이동
+          cd ~
+          
+          # 작업 디렉토리 생성 (더 안전한 경로)
+          mkdir -p www
+          cd www
+          
+          # 현재 위치 확인
+          pwd
+          echo "디렉토리 준비 완료"
           
     - name: 파일 업로드
       uses: appleboy/scp-action@v0.1.4
@@ -51,7 +64,7 @@ jobs:
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
         source: ".next,package.json,next.config.ts,src"
-        target: "/home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www/"
+        target: "~/www/"
         timeout: 180s
         
     - name: 앱 실행
@@ -63,7 +76,12 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         timeout: 120s
         script: |
-          cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
+          cd ~/www
+          echo "현재 디렉토리: $(pwd)"
+          
+          # 파일 확인
+          ls -la
+          
           npm install
           nohup npm start > app.log 2>&1 &
           
