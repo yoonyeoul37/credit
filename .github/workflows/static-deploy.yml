@@ -1,4 +1,4 @@
-name: 카페24 자동 배포
+name: 크레딧스토리 자동 배포
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     
     steps:
     - name: 코드 가져오기
@@ -27,7 +27,7 @@ jobs:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-    - name: 서버 디렉토리 준비 및 앱 중지
+    - name: 서버 배포
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CAFE24_HOST }}
@@ -36,24 +36,38 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         timeout: 300s
         script: |
-          echo "📦 기존 앱 중지 및 디렉토리 준비"
-          which pm2 || npm install -g pm2
-
-          # 기존 프로세스 강력 종료 (안전하게)
-          pm2 delete all 2>/dev/null || echo "PM2 프로세스 없음"
-          pm2 kill 2>/dev/null || echo "PM2 데몬 없음"
-          pkill -f "npm start" 2>/dev/null || true
-          pkill -f "next start" 2>/dev/null || true
-          pkill -f "node" 2>/dev/null || true
+          echo "🚀 크레딧스토리 배포 시작"
           
-          # 포트 3000 사용 중인 프로세스 강제 종료
-          lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-          sleep 3
-
-          cd ~
-          mkdir -p www
-          cd www
-          echo "✅ 디렉토리 준비 완료"
+          # 기존 프로세스 안전하게 종료
+          echo "🛑 기존 프로세스 종료"
+          pm2 stop all 2>/dev/null || true
+          pm2 delete all 2>/dev/null || true
+          
+          # 프로젝트 디렉토리로 이동
+          cd /var/www/html/credit
+          
+          # 최신 코드 업데이트
+          echo "📥 최신 코드 업데이트"
+          git pull origin main
+          
+          # 의존성 설치
+          echo "📦 의존성 설치"
+          npm install
+          
+          # 빌드
+          echo "🏗️ 빌드"
+          npm run build
+          
+          # PM2로 앱 시작
+          echo "🚀 앱 시작"
+          NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory" -- start
+          pm2 save
+          
+          # 상태 확인
+          echo "📊 배포 상태 확인"
+          pm2 list
+          
+          echo "✅ 배포 완료!"
           
     - name: 파일 업로드
       uses: appleboy/scp-action@v0.1.4
@@ -62,85 +76,6 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        source: ".next,package.json,next.config.ts,public,src"
-        target: "~/www/"
+        source: ".next,package.json,package-lock.json"
+        target: "/var/www/html/credit/"
         timeout: 300s
-        
-    - name: 앱 실행
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.CAFE24_HOST }}
-        username: ${{ secrets.CAFE24_USERNAME }}
-        password: ${{ secrets.CAFE24_PASSWORD }}
-        port: ${{ secrets.CAFE24_PORT }}
-        timeout: 300s
-        script: |
-          echo "🚀 앱 실행 시작"
-          cd ~/www
-          
-          # 의존성 설치 (devDependencies 포함)
-          npm install
-          
-          # 파일 확인
-          echo "📁 업로드된 파일 목록:"
-          ls -la
-          
-          # === 신용회생스토리 옛날 사이트 완전 제거 ===
-          echo "🗑️ === 옛날 사이트 제거 시작 ==="
-          
-          # 1. 모든 웹서버 프로세스 강제 종료
-          echo "🛑 웹서버 프로세스 강제 종료:"
-          pkill -f apache2 2>/dev/null || true
-          pkill -f nginx 2>/dev/null || true 
-          pkill -f httpd 2>/dev/null || true
-          
-          # 2. 포트 80 사용 프로세스 강제 종료
-          echo "🔥 포트 80 프로세스 강제 종료:"
-          lsof -ti:80 | xargs kill -9 2>/dev/null || true
-          sleep 3
-          
-          # 3. 기존 웹사이트 파일 확인 (권한 문제로 백업만)
-          echo "📁 기존 웹사이트 파일 확인:"
-          ls -la /var/www/ 2>/dev/null || echo "/var/www 접근 불가"
-          echo "권한 제한으로 파일 제거는 스킵합니다"
-          
-          # 4. 권한 문제로 systemd 파일 수정은 스킵
-          echo "🚫 웹서버 자동 시작 비활성화 (권한 제한으로 스킵)"
-          
-          echo "✅ 옛날 사이트 제거 완료"
-          
-          # 포트 80 권한 부여 시도
-          echo "🔑 Node.js에 포트 80 권한 부여 시도..."
-          which node
-          whereis node
-          
-          # PM2로 새로운 사이트 실행 (포트 80에서 직접)
-          echo "🚀 새로운 creditstory.kr 사이트 시작..."
-          NODE_ENV=production PORT=80 pm2 start npm --name "creditstory-new" -- start
-          pm2 save
-          
-          # 앱 상태 확인
-          sleep 5
-          echo "📊 PM2 프로세스 상태:"
-          pm2 list
-          pm2 logs creditstory-new --lines 10 || true
-          
-          # 최종 확인 및 테스트
-          echo "🔍 === 최종 상태 확인 ==="
-          echo "📊 현재 실행 중인 프로세스:"
-          ps aux | grep -E "(node|pm2)" | grep -v grep || echo "Node 프로세스 없음"
-          
-          echo "🔍 포트 3000 상태 (새로운 사이트):"
-          lsof -i:3000 || echo "포트 3000이 사용되지 않고 있습니다"
-          echo "🔍 포트 80 상태 (기존 사이트):"
-          lsof -i:80 || echo "포트 80이 사용되지 않고 있습니다"
-          
-          echo "🌐 새로운 사이트 연결 테스트:"
-          sleep 5
-          curl -I http://localhost:3000 || echo "포트 3000 연결 실패"
-          
-          echo "📋 PM2 상태:"
-          pm2 list
-          
-          echo "🎉 === 배포 완료! 새로운 사이트가 포트 3000에서 실행 중 ==="
-          echo "💡 참고: creditstory.kr 접속을 위해서는 웹서버 프록시 설정이 필요합니다"
