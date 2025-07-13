@@ -41,6 +41,7 @@ jobs:
 
           # 기존 프로세스 강력 종료
           pm2 delete all || true
+          pm2 delete creditstory-new || true
           pm2 kill || true
           pkill -f "npm start" 2>/dev/null || true
           pkill -f "next start" 2>/dev/null || true
@@ -85,38 +86,58 @@ jobs:
           echo "📁 업로드된 파일 목록:"
           ls -la
           
-          # 기존 웹서버 프로세스 찾기 및 중지 시도
-          echo "🔍 현재 실행 중인 웹서버 확인:"
-          ps aux | grep -E "(apache|nginx|httpd)" | grep -v grep || echo "웹서버 프로세스 없음"
+          # === 신용회생스토리 옛날 사이트 완전 제거 ===
+          echo "🗑️ === 옛날 사이트 제거 시작 ==="
           
-          # 포트 80 사용 중인 프로세스 확인
-          echo "🔍 포트 80 사용 프로세스:"
-          lsof -i:80 || echo "포트 80 사용 프로세스 없음"
+          # 1. 모든 웹서버 프로세스 강제 종료
+          echo "🛑 웹서버 프로세스 강제 종료:"
+          pkill -f apache2 2>/dev/null || true
+          pkill -f nginx 2>/dev/null || true 
+          pkill -f httpd 2>/dev/null || true
           
-          # PM2로 앱 실행 (포트 3000 사용, 나중에 프록시 설정)
-          echo "🚀 PM2로 앱 시작..."
-          NODE_ENV=production PORT=3000 pm2 start npm --name "credit-app" -- start
+          # 2. 포트 80 사용 프로세스 강제 종료
+          echo "🔥 포트 80 프로세스 강제 종료:"
+          lsof -ti:80 | xargs kill -9 2>/dev/null || true
+          sleep 3
+          
+          # 3. 기존 웹사이트 파일 백업 및 제거
+          echo "📁 기존 웹사이트 파일 제거:"
+          if [ -d "/var/www/html" ]; then
+            echo "백업: /var/www/html -> /var/www/html.backup.$(date +%Y%m%d)"
+            mv /var/www/html /var/www/html.backup.$(date +%Y%m%d) 2>/dev/null || true
+          fi
+          
+          # 4. 웹서버 자동 시작 비활성화 (systemctl 대신 직접 파일 수정)
+          echo "🚫 웹서버 자동 시작 비활성화:"
+          rm -f /etc/systemd/system/multi-user.target.wants/apache2.service 2>/dev/null || true
+          rm -f /etc/systemd/system/multi-user.target.wants/nginx.service 2>/dev/null || true
+          
+          echo "✅ 옛날 사이트 제거 완료"
+          
+          # PM2로 새로운 사이트 실행 (포트 80에서 직접 실행)
+          echo "🚀 새로운 creditstory.kr 사이트 시작..."
+          NODE_ENV=production PORT=80 pm2 start npm --name "creditstory-new" -- start
           pm2 save
           
           # 앱 상태 확인
           sleep 5
           echo "📊 PM2 프로세스 상태:"
           pm2 list
-          pm2 logs credit-app --lines 10 || true
+          pm2 logs creditstory-new --lines 10 || true
           
-          # 포트 상태 최종 확인
-          echo "🔍 포트 3000 상태 확인:"  
-          lsof -i:3000 || echo "포트 3000이 사용되지 않고 있습니다"
-          echo "🔍 포트 80 상태 확인:"
+          # 최종 확인 및 테스트
+          echo "🔍 === 최종 상태 확인 ==="
+          echo "📊 현재 실행 중인 프로세스:"
+          ps aux | grep -E "(node|pm2)" | grep -v grep || echo "Node 프로세스 없음"
+          
+          echo "🔍 포트 80 상태 (새로운 사이트):"
           lsof -i:80 || echo "포트 80이 사용되지 않고 있습니다"
           
-          # 앱 연결 테스트
-          echo "🌐 앱 연결 테스트:"
-          curl -I http://localhost:3000 || echo "포트 3000 연결 실패"
+          echo "🌐 새로운 사이트 연결 테스트:"
+          sleep 5
+          curl -I http://localhost:80 || echo "포트 80 연결 실패"
           
-          # 서버 설정 확인
-          echo "📋 서버 환경 정보:"
-          whoami
-          pwd
-          which node
-          node --version
+          echo "📋 PM2 상태:"
+          pm2 list
+          
+          echo "🎉 === 배포 완료! 신용회생스토리 → 새로운 creditstory.kr ==="
