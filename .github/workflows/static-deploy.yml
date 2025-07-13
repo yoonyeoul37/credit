@@ -19,7 +19,7 @@ jobs:
         node-version: '20'
         
     - name: 의존성 설치
-      run: npm ci --production
+      run: npm ci
       
     - name: 빌드
       run: npm run build
@@ -64,7 +64,7 @@ jobs:
         timeout: 120s
         script: |
           cd /home/creditstory
-          npm install --production
+          npm install
           nohup npm start > app.log 2>&1 &
           
           # 3초 대기 후 프로세스 확인
