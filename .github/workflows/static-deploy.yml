@@ -55,7 +55,7 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        source: ".next package.json next.config.ts public src"
+        source: ".next,package.json,next.config.ts,public,src"
         target: "~/www/"
         timeout: 180s
         
