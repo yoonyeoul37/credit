@@ -40,8 +40,8 @@ jobs:
           pkill -f "npm start" || true
           pkill -f "next start" || true
           
-          # 디렉토리 준비
-          mkdir -p /home/creditstory
+          # 디렉토리 준비 (올바른 카페24 경로 사용)
+          mkdir -p /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
           
     - name: 파일 업로드
       uses: appleboy/scp-action@v0.1.4
@@ -51,7 +51,7 @@ jobs:
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
         source: ".next,package.json,next.config.ts,src"
-        target: "/home/creditstory/"
+        target: "/home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www/"
         timeout: 180s
         
     - name: 앱 실행
@@ -63,7 +63,7 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         timeout: 120s
         script: |
-          cd /home/creditstory
+          cd /home/hosting_users/${{ secrets.CAFE24_USERNAME }}/www
           npm install
           nohup npm start > app.log 2>&1 &
           
