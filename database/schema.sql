@@ -1,106 +1,103 @@
--- 크레딧스토리 데이터베이스 스키마
--- 이 파일을 Supabase SQL 에디터에서 실행하세요
+-- Credit Community Database Schema
+-- Supabase에서 실행할 SQL 스크립트
 
--- 1. 게시글 테이블
+-- 1. 게시글 테이블 (posts)
 CREATE TABLE posts (
     id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    author VARCHAR(50) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    category VARCHAR(20) NOT NULL CHECK (category IN ('credit', 'personal', 'corporate', 'workout', 'card', 'loan', 'news')),
+    author VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL, -- 실제 운영에서는 해싱 필요
+    category VARCHAR(50) NOT NULL CHECK (category IN ('credit', 'personal', 'corporate', 'workout', 'card', 'loan', 'news')),
+    images JSONB DEFAULT '[]'::jsonb, -- 이미지 URL 배열
     views INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
-    is_hidden BOOLEAN DEFAULT false,
-    images TEXT[], -- 이미지 URL 배열
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    is_deleted BOOLEAN DEFAULT false,
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. 댓글 테이블
+-- 2. 댓글 테이블 (comments)
 CREATE TABLE comments (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE,
     parent_id BIGINT REFERENCES comments(id) ON DELETE CASCADE, -- 대댓글용
     content TEXT NOT NULL,
-    author VARCHAR(50) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    is_hidden BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    author VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL, -- 실제 운영에서는 해싱 필요
+    is_deleted BOOLEAN DEFAULT false,
+    is_hidden BOOLEAN DEFAULT false, -- 관리자가 숨길 수 있음
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. 관리자 테이블
-CREATE TABLE admins (
-    id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'admin' CHECK (role IN ('admin', 'super_admin')),
-    last_login TIMESTAMP WITH TIME ZONE,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 4. 광고 테이블
+-- 3. 광고 테이블 (ads)
 CREATE TABLE ads (
     id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    url VARCHAR(500),
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
     image_url VARCHAR(500),
-    position VARCHAR(50) NOT NULL CHECK (position IN ('header', 'sidebar', 'footer', 'content', 'sticky')),
-    priority INTEGER DEFAULT 1,
-    clicks INTEGER DEFAULT 0,
-    impressions INTEGER DEFAULT 0,
-    start_date DATE,
-    end_date DATE,
+    link_url VARCHAR(500),
+    position VARCHAR(50) NOT NULL CHECK (position IN ('header', 'sidebar', 'content', 'footer')),
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. 방문자 통계 테이블
-CREATE TABLE analytics (
+-- 4. 뉴스 테이블 (news)
+CREATE TABLE news (
     id BIGSERIAL PRIMARY KEY,
-    date DATE NOT NULL,
-    page_path VARCHAR(200) NOT NULL,
-    visits INTEGER DEFAULT 0,
-    unique_visits INTEGER DEFAULT 0,
-    bounce_rate DECIMAL(5,2) DEFAULT 0.0,
-    avg_session_duration INTEGER DEFAULT 0, -- 초 단위
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(date, page_path)
+    title VARCHAR(255) NOT NULL,
+    summary TEXT NOT NULL,
+    content TEXT,
+    source VARCHAR(100) NOT NULL,
+    url VARCHAR(500),
+    category VARCHAR(50) DEFAULT '일반' CHECK (category IN ('정책', '금융', '법률', '일반')),
+    is_important BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    published_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. 차단된 IP 테이블
-CREATE TABLE blocked_ips (
-    id BIGSERIAL PRIMARY KEY,
-    ip_address INET NOT NULL UNIQUE,
-    reason TEXT,
-    blocked_by VARCHAR(50), -- 관리자 이름
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 7. 신고 테이블
+-- 5. 신고 테이블 (reports)
 CREATE TABLE reports (
     id BIGSERIAL PRIMARY KEY,
-    post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE,
-    comment_id BIGINT REFERENCES comments(id) ON DELETE CASCADE,
-    reason VARCHAR(100) NOT NULL,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('post', 'comment')),
+    target_id BIGINT NOT NULL,
+    reporter_ip VARCHAR(45),
+    reason VARCHAR(50) NOT NULL CHECK (reason IN ('spam', 'inappropriate', 'advertising', 'other')),
     description TEXT,
-    reporter_ip INET,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'resolved', 'dismissed')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 인덱스 생성 (성능 최적화)
+-- 인덱스 생성
 CREATE INDEX idx_posts_category ON posts(category);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
-CREATE INDEX idx_posts_views ON posts(views DESC);
+CREATE INDEX idx_posts_is_deleted ON posts(is_deleted);
+
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_comments_parent_id ON comments(parent_id);
-CREATE INDEX idx_analytics_date ON analytics(date);
-CREATE INDEX idx_analytics_page_path ON analytics(page_path);
+CREATE INDEX idx_comments_created_at ON comments(created_at);
+CREATE INDEX idx_comments_is_deleted ON comments(is_deleted);
+CREATE INDEX idx_comments_is_hidden ON comments(is_hidden);
+
+CREATE INDEX idx_ads_position ON ads(position);
+CREATE INDEX idx_ads_active_dates ON ads(is_active, start_date, end_date);
+
+CREATE INDEX idx_news_category ON news(category);
+CREATE INDEX idx_news_published_at ON news(published_at DESC);
+CREATE INDEX idx_news_is_active ON news(is_active);
+CREATE INDEX idx_news_is_important ON news(is_important);
+
+CREATE INDEX idx_reports_target ON reports(target_type, target_id);
+CREATE INDEX idx_reports_status ON reports(status);
 
 -- 트리거 함수 생성 (updated_at 자동 업데이트)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -111,76 +108,50 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- 트리거 적용
+-- 트리거 생성
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 기본 관리자 계정 생성 (비밀번호: admin2024!)
-INSERT INTO admins (username, email, password_hash, role) VALUES 
-('admin', 'admin@creditstory.com', '-1292019687', 'super_admin');
+CREATE TRIGGER update_ads_updated_at BEFORE UPDATE ON ads
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 기본 광고 데이터 생성
-INSERT INTO ads (title, description, url, position, priority) VALUES
-('신용회복 전문 상담센터', '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공', 'https://example.com/consultation', 'header', 1),
-('개인회생 전문 법무법인', '개인회생 성공률 98% | 무료 상담 가능', 'https://example.com/personal-recovery', 'sidebar', 2),
-('신용카드 현금화 서비스', '안전하고 빠른 현금화 서비스 | 당일 처리 가능', 'https://example.com/card-cash', 'content', 3),
-('대출 상담 플랫폼', '저금리 대출 상담 | 신용점수 관계없이 상담 가능', 'https://example.com/loan', 'sticky', 4);
+CREATE TRIGGER update_news_updated_at BEFORE UPDATE ON news
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 샘플 게시글 생성
-INSERT INTO posts (title, content, author, password_hash, category, views) VALUES
-('개인회생 신청 후기 - 성공사례 공유', '안녕하세요. 개인회생을 성공적으로 마친 사람으로서 경험을 공유합니다. 총 부채 8천만원에서 2천만원으로 감액되었고, 현재 성실히 변제 중입니다. 포기하지 마시고 전문가와 상담해보세요.', '회생성공자', '123456789', 'personal', 1250),
-('신용카드 연체 후 신용회복 과정', '신용카드 연체로 인해 신용점수가 많이 떨어졌었는데, 차근차근 관리해서 회복했습니다. 연체금 정리 방법과 신용점수 올리는 팁을 공유합니다.', '신용회복중', '987654321', 'credit', 890),
-('법인회생 절차 및 필요서류 정리', '법인회생을 진행하면서 겪은 어려움과 필요한 서류들을 정리해봤습니다. 같은 상황에 있는 분들께 도움이 되길 바랍니다.', '법인대표', '555444333', 'corporate', 567),
-('워크아웃 vs 개인회생 어떤 것이 유리할까?', '두 제도의 장단점을 비교분석해봤습니다. 개인의 상황에 따라 선택이 달라질 수 있으니 전문가와 상담이 필요합니다.', '재정전문가', '111222333', 'workout', 720),
-('저금리 대출 받는 꿀팁 공유', '여러 금융기관을 비교해서 최적의 대출 조건을 찾는 방법을 알려드립니다. 신용점수별 대출 가능 금리도 함께 정리했어요.', '대출마스터', '777888999', 'loan', 445);
+CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON reports
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 샘플 댓글 생성
-INSERT INTO comments (post_id, content, author, password_hash) VALUES
-(1, '정말 유용한 정보네요! 저도 개인회생 준비 중인데 많은 도움이 됐습니다.', '준비중인사람', '123123123'),
-(1, '변제 계획은 어떻게 세우셨나요? 구체적인 팁이 있다면 알려주세요.', '궁금한사람', '456456456'),
-(2, '신용점수 회복에 얼마나 걸리셨나요?', '신용회복희망', '789789789'),
-(3, '법인회생 기간이 얼마나 걸리는지 궁금합니다.', '법인운영자', '321321321'),
-(4, '워크아웃 경험이 있으신가요? 실제 경험담이 듣고 싶습니다.', '고민중', '654654654');
+-- 샘플 데이터 삽입
+INSERT INTO posts (title, content, author, password, category) VALUES
+('개인회생 신청 후기', '개인회생 신청 과정을 공유합니다.', '익명', 'password123', 'personal'),
+('신용카드 현명한 사용법', '신용카드를 현명하게 사용하는 방법을 알려드립니다.', '익명', 'password123', 'card'),
+('대출 금리 비교 꿀팁', '대출 금리를 비교하는 방법을 설명합니다.', '익명', 'password123', 'loan');
 
--- Row Level Security (RLS) 정책 설정
+INSERT INTO ads (title, description, position, start_date, end_date) VALUES
+('신용회복 상담센터', '24시간 무료 상담 서비스', 'header', NOW(), NOW() + INTERVAL '30 days'),
+('대출 비교 플랫폼', '최저금리 대출 상품 비교', 'sidebar', NOW(), NOW() + INTERVAL '30 days');
+
+INSERT INTO news (title, summary, source, published_at, category) VALUES
+('신용회복 지원제도 개선', '정부에서 신용회복 지원제도를 개선한다고 발표했습니다.', '금융위원회', NOW(), '정책'),
+('개인회생 신청 절차 간소화', '개인회생 신청 절차가 간소화됩니다.', '법원행정처', NOW(), '법률');
+
+-- RLS (Row Level Security) 활성화 (선택사항)
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE news ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
--- 공개 읽기 정책 (모든 사용자가 읽을 수 있음)
-CREATE POLICY "Public posts are viewable by everyone" ON posts
-    FOR SELECT USING (NOT is_hidden);
+-- 기본 정책 (모든 사용자가 읽기 가능)
+CREATE POLICY "Anyone can view posts" ON posts FOR SELECT USING (is_deleted = false);
+CREATE POLICY "Anyone can view comments" ON comments FOR SELECT USING (is_deleted = false AND is_hidden = false);
+CREATE POLICY "Anyone can view active ads" ON ads FOR SELECT USING (is_active = true);
+CREATE POLICY "Anyone can view active news" ON news FOR SELECT USING (is_active = true);
 
-CREATE POLICY "Public comments are viewable by everyone" ON comments
-    FOR SELECT USING (NOT is_hidden);
-
-CREATE POLICY "Public ads are viewable by everyone" ON ads
-    FOR SELECT USING (is_active);
-
--- 익명 사용자 쓰기 정책 (게시글, 댓글)
-CREATE POLICY "Anyone can insert posts" ON posts
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Anyone can insert comments" ON comments
-    FOR INSERT WITH CHECK (true);
-
--- 관리자 전체 권한 정책
-CREATE POLICY "Admins can do everything" ON posts
-    FOR ALL USING (auth.role() = 'service_role');
-
-CREATE POLICY "Admins can do everything on comments" ON comments
-    FOR ALL USING (auth.role() = 'service_role');
-
-CREATE POLICY "Admins can manage ads" ON ads
-    FOR ALL USING (auth.role() = 'service_role');
-
-CREATE POLICY "Admins can view analytics" ON analytics
-    FOR SELECT USING (auth.role() = 'service_role');
-
--- 완료 메시지
-SELECT 'Database schema created successfully! 🎉' as message; 
+-- 삽입 정책 (익명 사용자도 게시글/댓글 작성 가능)
+CREATE POLICY "Anyone can create posts" ON posts FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can create comments" ON comments FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can create reports" ON reports FOR INSERT WITH CHECK (true); 
