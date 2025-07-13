@@ -1024,7 +1024,7 @@ export default function AdminPage() {
                     type="text"
                     value={newsForm.title}
                     onChange={(e) => setNewsForm({...newsForm, title: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -1036,7 +1036,7 @@ export default function AdminPage() {
                     value={newsForm.summary}
                     onChange={(e) => setNewsForm({...newsForm, summary: e.target.value})}
                     rows={3}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -1048,7 +1048,7 @@ export default function AdminPage() {
                     type="text"
                     value={newsForm.source}
                     onChange={(e) => setNewsForm({...newsForm, source: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -1060,7 +1060,7 @@ export default function AdminPage() {
                     type="url"
                     value={newsForm.url}
                     onChange={(e) => setNewsForm({...newsForm, url: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -1072,7 +1072,7 @@ export default function AdminPage() {
                     type="date"
                     value={newsForm.publishedAt}
                     onChange={(e) => setNewsForm({...newsForm, publishedAt: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -1083,7 +1083,7 @@ export default function AdminPage() {
                   <select
                     value={newsForm.category}
                     onChange={(e) => setNewsForm({...newsForm, category: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   >
                     <option value="정책">정책</option>
                     <option value="신용">신용</option>
@@ -1137,7 +1137,7 @@ export default function AdminPage() {
                 <select
                   value={adForm.type}
                   onChange={(e) => setAdForm({...adForm, type: e.target.value})}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 >
                   <option value="premium">프리미엄 광고</option>
                   <option value="list">리스트 광고</option>
@@ -1152,7 +1152,7 @@ export default function AdminPage() {
                   type="text"
                   value={adForm.title}
                   onChange={(e) => setAdForm({...adForm, title: e.target.value})}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   required
                 />
               </div>
@@ -1164,7 +1164,7 @@ export default function AdminPage() {
                   value={adForm.content}
                   onChange={(e) => setAdForm({...adForm, content: e.target.value})}
                   rows={3}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   required
                 />
               </div>
@@ -1176,7 +1176,7 @@ export default function AdminPage() {
                     type="url"
                     value={adForm.url}
                     onChange={(e) => setAdForm({...adForm, url: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -1188,7 +1188,7 @@ export default function AdminPage() {
                       type="url"
                       value={adForm.imageUrl}
                       onChange={(e) => setAdForm({...adForm, imageUrl: e.target.value})}
-                      className="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       placeholder="https://example.com/image.jpg"
                     />
                     <button
@@ -1225,7 +1225,7 @@ export default function AdminPage() {
                       type="date"
                       value={adForm.startDate}
                       onChange={(e) => setAdForm({...adForm, startDate: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       required
                     />
                   </div>
@@ -1237,7 +1237,7 @@ export default function AdminPage() {
                       type="date"
                       value={adForm.endDate}
                       onChange={(e) => setAdForm({...adForm, endDate: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       required
                     />
                   </div>

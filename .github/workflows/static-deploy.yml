@@ -109,9 +109,14 @@ jobs:
           
           echo "✅ 옛날 사이트 제거 완료"
           
-          # PM2로 새로운 사이트 실행 (포트 3000, 나중에 프록시 설정)
+          # 포트 80 권한 부여 시도
+          echo "🔑 Node.js에 포트 80 권한 부여 시도..."
+          which node
+          whereis node
+          
+          # PM2로 새로운 사이트 실행 (포트 80에서 직접)
           echo "🚀 새로운 creditstory.kr 사이트 시작..."
-          NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory-new" -- start
+          NODE_ENV=production PORT=80 pm2 start npm --name "creditstory-new" -- start
           pm2 save
           
           # 앱 상태 확인

@@ -236,7 +236,7 @@ export default function WritePage() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white"
                   placeholder="사용하실 닉네임을 입력하세요"
                   maxLength={20}
                 />
@@ -250,7 +250,7 @@ export default function WritePage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white"
                   placeholder="수정/삭제 시 사용할 비밀번호"
                   maxLength={20}
                 />
@@ -273,7 +273,7 @@ export default function WritePage() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base appearance-none bg-white"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white appearance-none"
                 >
                   <option value="">카테고리를 선택하세요</option>
                   {categories.map(category => (
@@ -293,7 +293,7 @@ export default function WritePage() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white"
                   placeholder="제목을 입력하세요"
                   maxLength={100}
                 />
@@ -308,7 +308,7 @@ export default function WritePage() {
                   value={formData.content}
                   onChange={handleInputChange}
                   rows={8}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-base min-h-[200px]"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-base text-gray-900 bg-white min-h-[200px]"
                   placeholder="내용을 입력하세요..."
                 />
               </div>
@@ -328,7 +328,7 @@ export default function WritePage() {
                   accept="image/*"
                   multiple
                   onChange={handleImageUpload}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
               </div>
               
