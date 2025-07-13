@@ -34,7 +34,7 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 180s
+        timeout: 300s
         script: |
           echo "📦 기존 앱 중지 및 디렉토리 준비"
           which pm2 || npm install -g pm2
@@ -64,7 +64,7 @@ jobs:
         port: ${{ secrets.CAFE24_PORT }}
         source: ".next,package.json,next.config.ts,public,src"
         target: "~/www/"
-        timeout: 180s
+        timeout: 300s
         
     - name: 앱 실행
       uses: appleboy/ssh-action@v1.0.0
@@ -73,7 +73,7 @@ jobs:
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 180s
+        timeout: 300s
         script: |
           echo "🚀 앱 실행 시작"
           cd ~/www
