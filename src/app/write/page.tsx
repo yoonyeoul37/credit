@@ -116,7 +116,7 @@ export default function WritePage() {
 
     try {
       // 환경에 따른 분기 처리
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 실제 웹사이트에서 게시글 저장
       
       // 해당 카테고리 페이지로 이동
       const categoryRoutes = {
@@ -156,8 +156,8 @@ export default function WritePage() {
           throw new Error(result.error || '글 등록에 실패했습니다.');
         }
       } else {
-        // 개발환경: 더미 모드
-        console.log('🚧 개발 모드: 더미 모드 글쓰기:', {
+        // 개발환경: 더미 모드 (현재 사용)
+        console.log('🚧 임시 모드: 글쓰기 시뮬레이션:', {
           title: formData.title,
           content: formData.content,
           author: formData.nickname,
@@ -167,7 +167,7 @@ export default function WritePage() {
         // 성공 시뮬레이션 (1초 대기)
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        alert('✅ 글이 성공적으로 등록되었습니다!\n(개발 모드: 더미 저장)');
+        alert('✅ 글이 성공적으로 등록되었습니다!\n(임시 모드: API 수정 중)');
         
         router.push(categoryRoutes[formData.category] || '/');
       }
