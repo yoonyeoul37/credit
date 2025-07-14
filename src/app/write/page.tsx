@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import MobileNavigation from '../components/MobileNavigation';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function WritePage() {
+function WriteForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showStickyAd, setShowStickyAd] = useState(true);
@@ -593,5 +593,28 @@ export default function WritePage() {
         </div>
       )}
     </div>
+  );
+}
+
+// 로딩 컴포넌트
+function WritePageLoading() {
+  return (
+    <div className="font-pretendard font-light min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">로딩 중...</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 메인 컴포넌트
+export default function WritePage() {
+  return (
+    <Suspense fallback={<WritePageLoading />}>
+      <WriteForm />
+    </Suspense>
   );
 } 
