@@ -31,6 +31,71 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const viewCountIncremented = useRef(false); // 조회수 증가 중복 방지
   const [isLiking, setIsLiking] = useState(false); // 좋아요 처리 중 상태
   const [hasLiked, setHasLiked] = useState(false); // 좋아요 여부 상태
+  const [showStickyAd, setShowStickyAd] = useState(true); // 스티키 광고 표시 상태
+
+  // 광고 데이터 상태
+  const [premiumAd, setPremiumAd] = useState({
+    isActive: false,
+    title: '',
+    content: ''
+  });
+  
+  const [listAd, setListAd] = useState({
+    isActive: false,
+    title: '',
+    content: ''
+  });
+
+  // 광고 데이터 가져오기
+  useEffect(() => {
+    const fetchAds = async () => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (isProduction) {
+        // 프로덕션: 실제 광고 API 호출
+        try {
+          const response = await fetch('/api/ads?position=header');
+          const data = await response.json();
+          
+          if (data.ads && data.ads.length > 0) {
+            setPremiumAd({
+              isActive: true,
+              title: data.ads[0].title,
+              content: data.ads[0].description
+            });
+          }
+          
+          const listResponse = await fetch('/api/ads?position=sidebar');
+          const listData = await listResponse.json();
+          
+          if (listData.ads && listData.ads.length > 0) {
+            setListAd({
+              isActive: true,
+              title: listData.ads[0].title,
+              content: listData.ads[0].description
+            });
+          }
+        } catch (error) {
+          console.error('광고 데이터 가져오기 실패:', error);
+        }
+      } else {
+        // 개발환경: 더미 광고 데이터
+        setPremiumAd({
+          isActive: true,
+          title: '신용회복 전문 상담센터 - 프리미엄 광고',
+          content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
+        });
+        
+        setListAd({
+          isActive: true,
+          title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
+          content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
+        });
+      }
+    };
+
+    fetchAds();
+  }, []);
 
   // 게시글 데이터 가져오기
   useEffect(() => {
@@ -430,6 +495,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* 상단 프리미엄 광고 */}
+        {premiumAd?.isActive && (
+          <div className="mb-4 md:mb-6 flex justify-center">
+            <div className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4">
+              <div className="text-center">
+                <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
+                <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* 로딩 상태 */}
         {loading && (
           <div className="flex justify-center py-8">
@@ -579,6 +656,32 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           </article>
         )}
 
+        {/* 리스트 광고 */}
+        {post && listAd?.isActive && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3">
+              <div className="flex-shrink-0 w-8 md:w-8 text-right">
+                <span className="text-xs md:text-sm text-orange-400">#AD</span>
+              </div>
+              <div className="flex-1 ml-3 md:ml-4">
+                <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                  <a href="#" className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
+                    {listAd.title}
+                  </a>
+                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded self-start">
+                    금융 광고
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                  {listAd.content.split(' | ').map((item, idx) => (
+                    <span key={idx}>{item}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 댓글 섹션 */}
         {post && (
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -718,6 +821,33 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
+        {/* 구글 애드센스 광고 */}
+        {post && (
+          <div className="mb-6">
+            <div className="flex items-start py-2 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-300 rounded -mx-2 px-2">
+              <div className="flex-shrink-0 w-8 text-right">
+                <span className="text-sm text-gray-400">#AD</span>
+              </div>
+              <div className="flex-1 ml-4">
+                <div className="flex items-center space-x-2">
+                  <a href="#" className="text-black hover:text-gray-600 text-sm leading-relaxed">
+                    맞춤형 금융 상품 추천 - Google AI 기반 개인화 서비스
+                  </a>
+                  <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                    구글 광고
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                  <span>Google AdSense</span>
+                  <span>자동 최적화</span>
+                  <span>개인 맞춤</span>
+                  <span>안전한 서비스</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="text-center">
           <Link 
             href="/" 
@@ -775,6 +905,38 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 }`}
               >
                 {isProcessing ? '처리 중...' : (passwordAction === 'edit' ? '수정하기' : '삭제하기')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 스티키 광고 */}
+      {showStickyAd && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
+          <div className="max-w-4xl mx-auto px-3 md:px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  신용회복 전문 상담센터 - 24시간 무료 상담
+                </p>
+                <p className="text-xs text-blue-100 truncate">
+                  성공률 95% | 맞춤 솔루션 | 전국 지점 운영
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button className="bg-white text-blue-600 px-3 md:px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors touch-manipulation">
+                상담신청
+              </button>
+              <button
+                onClick={() => setShowStickyAd(false)}
+                className="text-blue-100 hover:text-white p-2 rounded-lg transition-colors touch-manipulation"
+                aria-label="광고 닫기"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>

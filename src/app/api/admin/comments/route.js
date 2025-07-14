@@ -21,7 +21,7 @@ export async function GET(request) {
     
     // 삭제된 댓글 포함 여부
     if (!includeDeleted) {
-      query = query.eq('is_deleted', false);
+      query = query.eq('is_hidden', false);
     }
     
     // 특정 게시글 댓글만 조회
@@ -100,7 +100,6 @@ export async function PUT(request) {
     if (action === 'restore') {
       // 댓글 복구
       updateData = {
-        is_deleted: false,
         is_hidden: false,
         deleted_at: null,
         updated_at: new Date().toISOString()
@@ -108,7 +107,7 @@ export async function PUT(request) {
     } else if (action === 'delete') {
       // 댓글 논리 삭제
       updateData = {
-        is_deleted: true,
+        is_hidden: true,
         deleted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

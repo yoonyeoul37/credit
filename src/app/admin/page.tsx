@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [modalType, setModalType] = useState('');
   const [selectedAds, setSelectedAds] = useState<number[]>([]);
   const [selectedNews, setSelectedNews] = useState<number[]>([]);
+  const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
   const [adForm, setAdForm] = useState({
     type: 'premium',
     title: '',
@@ -43,7 +44,7 @@ export default function AdminPage() {
   // 관리자 데이터 가져오기
   useEffect(() => {
     const fetchAdminData = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 항상 실제 API 호출하도록 수정
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -174,27 +175,25 @@ export default function AdminPage() {
         setNewsItems([
           {
             id: 1,
-            title: "2024년 개인회생 신청 절차 변경사항 발표",
-            summary: "법원 접수 서류 간소화 및 온라인 신청 확대",
-            source: "금융감독원",
-            url: "https://www.fss.or.kr",
-            publishedAt: "2024-01-15",
-            category: "정책",
+            title: '2024년 신용회복 정책 변경 사항',
+            summary: '금융위원회에서 발표한 신용회복 지원 정책의 주요 변경 사항을 안내드립니다.',
+            source: '금융위원회',
+            url: '#',
+            publishedAt: '2024-01-15',
+            category: '정책',
             isImportant: true,
-            isActive: true,
-            createdAt: "2024-01-15"
+            isActive: true
           },
           {
             id: 2,
-            title: "신용등급 평가기준 개편, 무엇이 달라지나?",
-            summary: "소득 대비 부채비율 반영 비중 확대",
-            source: "한국경제신문",
-            url: "https://www.hankyung.com",
-            publishedAt: "2024-01-14",
-            category: "신용",
+            title: '개인회생 신청 절차 간소화',
+            summary: '개인회생 신청 절차가 간소화되어 더욱 쉽게 신청할 수 있게 되었습니다.',
+            source: '법원행정처',
+            url: '#',
+            publishedAt: '2024-01-14',
+            category: '정책',
             isImportant: false,
-            isActive: true,
-            createdAt: "2024-01-14"
+            isActive: true
           }
         ]);
       }
@@ -234,10 +233,28 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeletePost = (id: number) => {
+  const handleDeletePost = async (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
-      setPosts(posts.filter(post => post.id !== id));
-      alert('게시물이 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/posts', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: [id] }),
+        });
+
+        if (response.ok) {
+          setPosts(posts.filter(post => post.id !== id));
+          alert('게시물이 삭제되었습니다.');
+        } else {
+          const error = await response.json();
+          alert(`게시물 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('게시물 삭제 오류:', error);
+        alert('게시물 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -366,6 +383,63 @@ export default function AdminPage() {
     }
   };
 
+  // 게시물 선택 관련 핸들러들
+  const handlePostSelect = (postId: number) => {
+    console.log('게시물 선택:', postId);
+    console.log('현재 선택된 게시물들:', selectedPosts);
+    setSelectedPosts(prev => {
+      const newSelection = prev.includes(postId)
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId];
+      console.log('새로운 선택:', newSelection);
+      return newSelection;
+    });
+  };
+
+  const handleSelectAllPosts = (checked: boolean) => {
+    console.log('전체 선택:', checked);
+    console.log('전체 게시물 수:', posts.length);
+    if (checked) {
+      const allIds = posts.map(post => post.id);
+      console.log('모든 ID:', allIds);
+      setSelectedPosts(allIds);
+    } else {
+      setSelectedPosts([]);
+    }
+  };
+
+  const handleBulkDeletePosts = async () => {
+    if (selectedPosts.length === 0) {
+      alert('삭제할 게시물을 선택해주세요.');
+      return;
+    }
+
+    if (confirm(`선택한 ${selectedPosts.length}개의 게시물을 삭제하시겠습니까?`)) {
+      try {
+        const response = await fetch('/api/admin/posts', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: selectedPosts }),
+        });
+
+        if (response.ok) {
+          // 로컬 상태에서도 제거
+          setPosts(prevPosts => prevPosts.filter(post => !selectedPosts.includes(post.id)));
+          setSelectedPosts([]);
+          alert(`${selectedPosts.length}개의 게시물이 삭제되었습니다.`);
+        } else {
+          const error = await response.json();
+          alert(`게시물 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('게시물 삭제 오류:', error);
+        alert('게시물 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 모바일 네비게이션 */}
@@ -483,9 +557,14 @@ export default function AdminPage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleBulkDeleteAds}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    disabled={selectedAds.length === 0}
+                    className={`px-4 py-2 rounded ${
+                      selectedAds.length === 0 
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                        : 'bg-red-600 text-white hover:bg-red-700'
+                    }`}
                   >
-                    일괄 삭제
+                    일괄 삭제 {selectedAds.length > 0 && `(${selectedAds.length})`}
                   </button>
                   <button
                     onClick={() => openModal('add')}
@@ -501,31 +580,39 @@ export default function AdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedAds.length === ads.length && ads.length > 0}
-                          onChange={(e) => handleSelectAllAds(e.target.checked)}
-                        />
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            onClick={() => handleSelectAllAds(!(selectedAds.length === ads.length && ads.length > 0))}
+                            className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                            style={{
+                              backgroundColor: selectedAds.length === ads.length && ads.length > 0 ? '#000' : 'white',
+                              color: selectedAds.length === ads.length && ads.length > 0 ? 'white' : 'black'
+                            }}
+                          >
+                            {selectedAds.length === ads.length && ads.length > 0 && <span>✓</span>}
+                          </div>
+                          <span className="text-gray-700 font-medium whitespace-nowrap">전체선택</span>
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         타입
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         제목
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         내용
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         이미지
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         게재 기간
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         상태
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작업
                       </th>
                     </tr>
@@ -534,11 +621,18 @@ export default function AdminPage() {
                     {ads.map((ad) => (
                       <tr key={ad.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <input 
-                            type="checkbox"
-                            checked={selectedAds.includes(ad.id)}
-                            onChange={() => handleAdSelect(ad.id)}
-                          />
+                          <div className="flex items-center justify-center">
+                            <div 
+                              onClick={() => handleAdSelect(ad.id)}
+                              className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                              style={{
+                                backgroundColor: selectedAds.includes(ad.id) ? '#000' : 'white',
+                                color: selectedAds.includes(ad.id) ? 'white' : 'black'
+                              }}
+                            >
+                              {selectedAds.includes(ad.id) && <span>✓</span>}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded ${
@@ -601,8 +695,16 @@ export default function AdminPage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-medium text-gray-900">게시물 관리</h2>
                 <div className="flex space-x-2">
-                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                    일괄 삭제
+                  <button
+                    onClick={handleBulkDeletePosts}
+                    disabled={selectedPosts.length === 0}
+                    className={`px-4 py-2 rounded ${
+                      selectedPosts.length === 0 
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                        : 'bg-red-600 text-white hover:bg-red-700'
+                    }`}
+                  >
+                    일괄 삭제 {selectedPosts.length > 0 && `(${selectedPosts.length})`}
                   </button>
                 </div>
               </div>
@@ -612,27 +714,39 @@ export default function AdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input type="checkbox" />
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            onClick={() => handleSelectAllPosts(!(selectedPosts.length === posts.length && posts.length > 0))}
+                            className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                            style={{
+                              backgroundColor: selectedPosts.length === posts.length && posts.length > 0 ? '#000' : 'white',
+                              color: selectedPosts.length === posts.length && posts.length > 0 ? 'white' : 'black'
+                            }}
+                          >
+                            {selectedPosts.length === posts.length && posts.length > 0 && <span>✓</span>}
+                          </div>
+                          <span className="text-gray-700 font-medium whitespace-nowrap">전체선택</span>
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         제목
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작성자
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         카테고리
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         조회수
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         신고
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         등록일
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작업
                       </th>
                     </tr>
@@ -641,7 +755,18 @@ export default function AdminPage() {
                     {posts.map((post) => (
                       <tr key={post.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <input type="checkbox" />
+                          <div className="flex items-center justify-center">
+                            <div 
+                              onClick={() => handlePostSelect(post.id)}
+                              className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                              style={{
+                                backgroundColor: selectedPosts.includes(post.id) ? '#000' : 'white',
+                                color: selectedPosts.includes(post.id) ? 'white' : 'black'
+                              }}
+                            >
+                              {selectedPosts.includes(post.id) && <span>✓</span>}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                           {post.title}
@@ -653,17 +778,17 @@ export default function AdminPage() {
                           {post.category}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {post.views.toLocaleString()}
+                          {post.views ? post.views.toLocaleString() : '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded ${
-                            post.reports > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                            (post.reports || 0) > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {post.reports}
+                            {post.reports || 0}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {post.createdAt}
+                          {post.created_at ? new Date(post.created_at).toLocaleDateString() : post.createdAt}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                           <button className="text-blue-600 hover:text-blue-900">보기</button>
@@ -697,24 +822,31 @@ export default function AdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input type="checkbox" />
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                          >
+                            <span>✓</span>
+                          </div>
+                          <span className="text-gray-700 font-medium whitespace-nowrap">전체선택</span>
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         내용
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작성자
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         게시물
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         신고
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         등록일
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작업
                       </th>
                     </tr>
@@ -723,7 +855,13 @@ export default function AdminPage() {
                     {comments.map((comment) => (
                       <tr key={comment.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <input type="checkbox" />
+                          <div className="flex items-center justify-center">
+                            <div 
+                              className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                            >
+                              <span>✓</span>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                           {comment.content}
@@ -836,9 +974,14 @@ export default function AdminPage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleBulkDeleteNews}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    disabled={selectedNews.length === 0}
+                    className={`px-4 py-2 rounded ${
+                      selectedNews.length === 0 
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                        : 'bg-red-600 text-white hover:bg-red-700'
+                    }`}
                   >
-                    일괄 삭제
+                    일괄 삭제 {selectedNews.length > 0 && `(${selectedNews.length})`}
                   </button>
                   <button
                     onClick={() => openModal('addNews')}
@@ -854,31 +997,39 @@ export default function AdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedNews.length === newsItems.length && newsItems.length > 0}
-                          onChange={(e) => handleSelectAllNews(e.target.checked)}
-                        />
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            onClick={() => handleSelectAllNews(!(selectedNews.length === newsItems.length && newsItems.length > 0))}
+                            className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                            style={{
+                              backgroundColor: selectedNews.length === newsItems.length && newsItems.length > 0 ? '#000' : 'white',
+                              color: selectedNews.length === newsItems.length && newsItems.length > 0 ? 'white' : 'black'
+                            }}
+                          >
+                            {selectedNews.length === newsItems.length && newsItems.length > 0 && <span>✓</span>}
+                          </div>
+                          <span className="text-gray-700 font-medium whitespace-nowrap">전체선택</span>
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         제목
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         출처
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         카테고리
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         중요
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         상태
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         발행일
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작업
                       </th>
                     </tr>
@@ -887,11 +1038,18 @@ export default function AdminPage() {
                     {newsItems.map((news) => (
                       <tr key={news.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <input 
-                            type="checkbox"
-                            checked={selectedNews.includes(news.id)}
-                            onChange={() => handleNewsSelect(news.id)}
-                          />
+                          <div className="flex items-center justify-center">
+                            <div 
+                              onClick={() => handleNewsSelect(news.id)}
+                              className="w-5 h-5 border-2 border-black cursor-pointer flex items-center justify-center bg-white"
+                              style={{
+                                backgroundColor: selectedNews.includes(news.id) ? '#000' : 'white',
+                                color: selectedNews.includes(news.id) ? 'white' : 'black'
+                              }}
+                            >
+                              {selectedNews.includes(news.id) && <span>✓</span>}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                           {news.title}

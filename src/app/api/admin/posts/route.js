@@ -18,7 +18,7 @@ export async function GET(request) {
     
     // 삭제된 게시글 포함 여부
     if (!includeDeleted) {
-      query = query.eq('is_deleted', false);
+      query = query.eq('is_hidden', false);
     }
     
     // 카테고리 필터링
@@ -97,14 +97,14 @@ export async function PUT(request) {
     if (action === 'restore') {
       // 게시글 복구
       updateData = {
-        is_deleted: false,
+        is_hidden: false,
         deleted_at: null,
         updated_at: new Date().toISOString()
       };
     } else if (action === 'delete') {
       // 게시글 논리 삭제
       updateData = {
-        is_deleted: true,
+        is_hidden: true,
         deleted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
