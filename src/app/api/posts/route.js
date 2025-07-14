@@ -10,10 +10,13 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const sort = searchParams.get('sort') || 'created_at';
     
-    // 기본 쿼리 구성
+    // 기본 쿼리 구성 (댓글 수 포함)
     let query = supabase
       .from('posts')
-      .select('*')
+      .select(`
+        *,
+        comments:comments!inner(count)
+      `)
       .eq('is_hidden', false)
       .order(sort, { ascending: false });
     
@@ -33,9 +36,25 @@ export async function GET(request) {
       console.error('게시글 조회 오류:', error);
       return NextResponse.json({ error: '게시글을 불러오는데 실패했습니다.' }, { status: 500 });
     }
-    
+
+    // 각 게시글에 대해 댓글 수 계산
+    const postsWithCommentCount = await Promise.all(
+      (posts || []).map(async (post) => {
+        const { count: commentCount } = await supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id)
+          .eq('is_hidden', false);
+        
+        return {
+          ...post,
+          commentCount: commentCount || 0
+        };
+      })
+    );
+
     return NextResponse.json({
-      posts: posts || [],
+      posts: postsWithCommentCount || [],
       pagination: {
         page,
         limit,

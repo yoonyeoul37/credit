@@ -178,6 +178,7 @@ export default function CardPage() {
                       <span>{post.createdAt}</span>
                       <span>{post.commentCount} 댓글</span>
                       <span>{post.views} 조회</span>
+                      <span>{post.likes} 좋아요</span>
                     </div>
                   </div>
                 </div>

@@ -39,7 +39,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "1시간 전",
             commentCount: 34,
-            views: 567
+            views: 567,
+            likes: 12
           },
           {
             id: 12,
@@ -47,7 +48,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "3시간 전",
             commentCount: 18,
-            views: 234
+            views: 234,
+            likes: 5
           },
           {
             id: 13,
@@ -55,7 +57,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "5시간 전",
             commentCount: 11,
-            views: 189
+            views: 189,
+            likes: 8
           },
           {
             id: 14,
@@ -63,7 +66,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "7시간 전",
             commentCount: 26,
-            views: 345
+            views: 345,
+            likes: 15
           },
           {
             id: 15,
@@ -71,7 +75,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "9시간 전",
             commentCount: 8,
-            views: 156
+            views: 156,
+            likes: 3
           },
           {
             id: 16,
@@ -79,7 +84,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "11시간 전",
             commentCount: 15,
-            views: 289
+            views: 289,
+            likes: 10
           },
           {
             id: 17,
@@ -87,7 +93,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "13시간 전",
             commentCount: 22,
-            views: 401
+            views: 401,
+            likes: 18
           },
           {
             id: 18,
@@ -95,7 +102,8 @@ export default function CreditPage() {
             author: "익명",
             createdAt: "15시간 전",
             commentCount: 19,
-            views: 325
+            views: 325,
+            likes: 7
           }
         ];
         
@@ -254,6 +262,7 @@ export default function CreditPage() {
                       <span>{post.createdAt}</span>
                       <span>{post.commentCount} 댓글</span>
                       <span>{post.views} 조회</span>
+                      <span>{post.likes} 좋아요</span>
                     </div>
                   </div>
                 </div>

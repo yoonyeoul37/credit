@@ -131,8 +131,9 @@ export default function Home() {
               category: categoryMap[post.category] || post.category,
               author: post.author,
               createdAt: timeAgo,
-              commentCount: 0, // 댓글 수는 별도 계산 필요
-              views: post.views
+              commentCount: post.commentCount || 0, // 실제 댓글 수 사용
+              views: post.views,
+              likes: post.likes || 0 // 실제 좋아요 수 사용
             };
           });
 
@@ -423,6 +424,7 @@ export default function Home() {
                     <span>{post.createdAt}</span>
                     <span>{post.commentCount} 댓글</span>
                     <span>{post.views} 조회</span>
+                    <span>{post.likes} 좋아요</span>
                   </div>
                 </div>
               </div>

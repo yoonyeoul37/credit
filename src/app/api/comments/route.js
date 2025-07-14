@@ -18,7 +18,6 @@ export async function GET(request) {
       .from('comments')
       .select('*')
       .eq('post_id', postId)
-      .eq('is_deleted', false)
       .eq('is_hidden', false)
       .order('created_at', { ascending: true });
     
@@ -64,7 +63,7 @@ export async function POST(request) {
       .from('posts')
       .select('id')
       .eq('id', post_id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (postError || !post) {
@@ -77,7 +76,7 @@ export async function POST(request) {
         .from('comments')
         .select('id')
         .eq('id', parent_id)
-        .eq('is_deleted', false)
+        .eq('is_hidden', false)
         .single();
       
       if (parentError || !parentComment) {
@@ -93,9 +92,8 @@ export async function POST(request) {
           post_id,
           content,
           author,
-          password, // 실제 운영에서는 해싱 필요
+          password_hash: password, // 실제 운영에서는 해싱 필요
           parent_id: parent_id || null,
-          is_deleted: false,
           is_hidden: false,
           created_at: new Date().toISOString()
         }

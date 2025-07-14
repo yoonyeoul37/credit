@@ -19,17 +19,76 @@ export default function WritePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
 
   // URL 파라미터에서 카테고리 자동 설정
   useEffect(() => {
     const categoryParam = searchParams.get('category');
+    const editId = searchParams.get('edit');
+    const editPassword = searchParams.get('password');
+
     if (categoryParam) {
       setFormData(prev => ({
         ...prev,
         category: categoryParam
       }));
     }
+
+    // 수정 모드인 경우 기존 게시글 로드
+    if (editId && editPassword) {
+      loadPostForEdit(editId, editPassword);
+    }
   }, [searchParams]);
+
+  // 수정할 게시글 로드
+  const loadPostForEdit = async (postId: string, password: string) => {
+    try {
+      setLoading(true);
+      
+      // 비밀번호 확인을 위해 PUT 요청으로 확인
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          password,
+          title: '',
+          content: '',
+          verify: true // 비밀번호 확인용 플래그
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('비밀번호가 일치하지 않거나 게시글을 찾을 수 없습니다.');
+      }
+
+      // 게시글 내용 가져오기
+      const postResponse = await fetch(`/api/posts/${postId}`);
+      const postData = await postResponse.json();
+
+      if (postResponse.ok && postData.post) {
+        setFormData({
+          nickname: postData.post.author,
+          password: '',
+          title: postData.post.title,
+          content: postData.post.content,
+          category: postData.post.category,
+          images: postData.post.images || []
+        });
+        setIsEditMode(true);
+        setEditPostId(postId);
+      }
+    } catch (error: any) {
+      console.error('게시글 로드 오류:', error);
+      alert(error.message || '게시글을 불러오는데 실패했습니다.');
+      router.push('/');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = [
     { id: 'credit', name: '신용이야기' },
@@ -151,10 +210,13 @@ export default function WritePage() {
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
-        console.log('🌐 프로덕션 모드: 실제 API 호출 중...');
+        console.log(`🌐 프로덕션 모드: ${isEditMode ? '게시글 수정' : '게시글 작성'} 중...`);
         
-        const response = await fetch('/api/posts', {
-          method: 'POST',
+        const apiUrl = isEditMode ? `/api/posts/${editPostId}` : '/api/posts';
+        const method = isEditMode ? 'PUT' : 'POST';
+        
+        const response = await fetch(apiUrl, {
+          method: method,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -171,10 +233,14 @@ export default function WritePage() {
         const result = await response.json();
 
         if (response.ok) {
-          alert('글이 성공적으로 등록되었습니다!');
-          router.push(categoryRoutes[formData.category] || '/');
+          alert(isEditMode ? '글이 성공적으로 수정되었습니다!' : '글이 성공적으로 등록되었습니다!');
+          if (isEditMode) {
+            router.push(`/post/${editPostId}`);
+          } else {
+            router.push(categoryRoutes[formData.category] || '/');
+          }
         } else {
-          throw new Error(result.error || '글 등록에 실패했습니다.');
+          throw new Error(result.error || (isEditMode ? '글 수정에 실패했습니다.' : '글 등록에 실패했습니다.'));
         }
       } else {
         // 개발환경: 더미 모드 (현재 사용)
@@ -239,8 +305,15 @@ export default function WritePage() {
       {/* 메인 컨텐츠 */}
       <main className="max-w-4xl mx-auto px-4 py-4 md:py-6">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-normal text-black mb-2">글쓰기</h2>
-          <p className="text-sm text-gray-600">익명으로 글을 작성할 수 있습니다. 수정/삭제 시 비밀번호가 필요합니다.</p>
+          <h2 className="text-xl md:text-2xl font-normal text-black mb-2">
+            {isEditMode ? '글 수정' : '글쓰기'}
+          </h2>
+          <p className="text-sm text-gray-600">
+            {isEditMode 
+              ? '게시글을 수정할 수 있습니다. 수정 시 비밀번호가 필요합니다.'
+              : '익명으로 글을 작성할 수 있습니다. 수정/삭제 시 비밀번호가 필요합니다.'
+            }
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
@@ -408,7 +481,10 @@ export default function WritePage() {
               disabled={isSubmitting}
               className="w-full md:w-auto px-6 py-4 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-base font-medium touch-manipulation"
             >
-              {isSubmitting ? '등록 중...' : '글 등록'}
+              {isSubmitting 
+                ? (isEditMode ? '수정 중...' : '등록 중...') 
+                : (isEditMode ? '글 수정' : '글 등록')
+              }
             </button>
           </div>
         </form>

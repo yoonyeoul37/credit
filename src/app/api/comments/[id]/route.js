@@ -4,13 +4,12 @@ import { supabase } from '../../../../lib/supabase';
 // 개별 댓글 조회
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     const { data: comment, error } = await supabase
       .from('comments')
       .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
       .eq('is_hidden', false)
       .single();
     
@@ -30,16 +29,16 @@ export async function GET(request, { params }) {
 // 댓글 수정
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { content, password } = body;
     
     // 기존 댓글 조회 (패스워드 확인용)
     const { data: existingComment, error: fetchError } = await supabase
       .from('comments')
-      .select('password')
+      .select('password_hash')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -47,7 +46,7 @@ export async function PUT(request, { params }) {
     }
     
     // 패스워드 확인 (실제 운영에서는 해싱된 패스워드 비교)
-    if (existingComment.password !== password) {
+    if (existingComment.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -78,15 +77,15 @@ export async function PUT(request, { params }) {
 // 댓글 삭제
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { password } = await request.json();
     
     // 기존 댓글 조회 (패스워드 확인용)
     const { data: existingComment, error: fetchError } = await supabase
       .from('comments')
-      .select('password')
+      .select('password_hash')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -94,7 +93,7 @@ export async function DELETE(request, { params }) {
     }
     
     // 패스워드 확인
-    if (existingComment.password !== password) {
+    if (existingComment.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -102,7 +101,7 @@ export async function DELETE(request, { params }) {
     const { error } = await supabase
       .from('comments')
       .update({
-        is_deleted: true,
+        is_hidden: true,
         deleted_at: new Date().toISOString()
       })
       .eq('id', id);
