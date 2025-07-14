@@ -12,13 +12,15 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' })
 
   const menuItems = [
     { name: '홈', href: '/', icon: '🏠' },
-    { name: '개인회복', href: '/personal', icon: '👤' },
-    { name: '기업회복', href: '/corporate', icon: '🏢' },
+    { name: '신용이야기', href: '/credit', icon: '💳' },
+    { name: '개인회생', href: '/personal', icon: '👤' },
+    { name: '법인회생', href: '/corporate', icon: '🏢' },
     { name: '워크아웃', href: '/workout', icon: '🏋️' },
-    { name: '신용카드', href: '/card', icon: '💳' },
+    { name: '신용카드', href: '/card', icon: '💎' },
     { name: '대출', href: '/loan', icon: '💰' },
+    { name: '뉴스정보', href: '/news', icon: '📰' },
     { name: '계산기', href: '/calculator', icon: '🔢' },
-    { name: '광고', href: '/ad', icon: '📰' },
+    { name: '광고문의', href: '/ad', icon: '📢' },
   ]
 
   const toggleMenu = () => {
