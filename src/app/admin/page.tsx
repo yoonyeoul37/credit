@@ -12,6 +12,8 @@ export default function AdminPage() {
   const [selectedAds, setSelectedAds] = useState<number[]>([]);
   const [selectedNews, setSelectedNews] = useState<number[]>([]);
   const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
   const [adForm, setAdForm] = useState({
     type: 'premium',
     title: '',
@@ -85,71 +87,75 @@ export default function AdminPage() {
           console.error('관리자 데이터 로딩 실패:', error);
         }
       } else {
-        // 개발환경: 샘플 데이터
+        // 개발환경: 더미 데이터 사용
         setAds([
           {
             id: 1,
             type: 'premium',
-            title: '신용회복 전문 상담센터',
-            content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공',
+            title: '프리미엄 광고 1',
+            content: '프리미엄 광고 내용입니다.',
             url: '#',
             imageUrl: '',
-            startDate: '2024-01-15',
+            startDate: '2024-01-01',
             endDate: '2024-12-31',
             isActive: true,
-            createdAt: '2024-01-15'
+            createdAt: '2024-01-01'
           },
           {
             id: 2,
             type: 'list',
-            title: '저금리 대출 비교 플랫폼',
-            content: 'AI 맞춤 대출 상품 추천 | 즉시 심사',
+            title: '리스트 광고 1',
+            content: '리스트 광고 내용입니다.',
             url: '#',
             imageUrl: '',
-            startDate: '2024-01-14',
-            endDate: '2024-06-30',
+            startDate: '2024-01-01',
+            endDate: '2024-12-31',
             isActive: true,
-            createdAt: '2024-01-14'
+            createdAt: '2024-01-01'
           }
         ]);
 
         setPosts([
           {
             id: 1,
-            title: '개인회생 신청 후 3년간의 경험담',
-            author: '희망이',
-            category: '개인회생',
-            createdAt: '2024-01-15',
-            views: 1234,
-            reports: 2
+            title: '신용회복 성공 사례',
+            content: '신용회복 성공 사례 내용입니다.',
+            author: '작성자1',
+            category: 'credit',
+            views: 150,
+            likes: 5,
+            comments: 3,
+            createdAt: '2024-01-15'
           },
           {
             id: 2,
-            title: '법인회생 절차 중 궁금한 점들',
-            author: '사장님',
-            category: '법인회생',
-            createdAt: '2024-01-14',
-            views: 856,
-            reports: 0
+            title: '개인회생 신청 방법',
+            content: '개인회생 신청 방법에 대한 내용입니다.',
+            author: '작성자2',
+            category: 'personal',
+            views: 200,
+            likes: 8,
+            comments: 5,
+            createdAt: '2024-01-14'
           }
         ]);
 
         setComments([
           {
             id: 1,
-            postId: 1,
-            author: '응원합니다',
             content: '좋은 정보 감사합니다.',
-            createdAt: '2024-01-15',
-            reports: 1
+            author: '댓글작성자1',
+            postId: 1,
+            reports: 0,
+            createdAt: '2024-01-15'
           },
           {
             id: 2,
+            content: '저도 비슷한 경험이 있습니다.',
+            author: '댓글작성자2',
             postId: 1,
-            author: '질문있어요',
-            content: '변호사 선임은 필수인가요?',
-            createdAt: '2024-01-15',
-            reports: 0
+            reports: 1,
+            createdAt: '2024-01-15'
           }
         ]);
 
@@ -265,10 +271,32 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteReport = (id: number) => {
-    if (confirm('신고를 처리하시겠습니까?')) {
-      setReports(reports.filter(report => report.id !== id));
-      alert('신고가 처리되었습니다.');
+  const handleDeleteReport = async (id: number) => {
+    if (confirm('신고를 해결 처리하시겠습니까?')) {
+      try {
+        const response = await fetch('/api/admin/reports', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id, status: 'resolved' }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          alert('신고가 해결 처리되었습니다.');
+          // 신고 목록에서 제거하거나 상태 업데이트
+          setReports(reports.map(report => 
+            report.id === id ? { ...report, status: 'resolved' } : report
+          ));
+        } else {
+          const error = await response.json();
+          alert(`신고 처리에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('신고 처리 오류:', error);
+        alert('신고 처리 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -438,6 +466,55 @@ export default function AdminPage() {
         alert('게시물 삭제 중 오류가 발생했습니다.');
       }
     }
+  };
+
+  // 신고 상태 변경 함수 추가
+  const handleReportStatusChange = async (ids: number[], status: 'resolved' | 'dismissed') => {
+    if (ids.length === 0) {
+      alert('처리할 신고를 선택해주세요.');
+      return;
+    }
+    
+    try {
+      const responses = await Promise.all(
+        ids.map(id => 
+          fetch('/api/admin/reports', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id, status }),
+          })
+        )
+      );
+
+      const allSuccessful = responses.every(response => response.ok);
+      
+      if (allSuccessful) {
+        const message = status === 'resolved' 
+          ? `${ids.length}개의 신고가 해결되었으며 해당 콘텐츠가 삭제되었습니다.`
+          : `${ids.length}개의 신고가 기각되었습니다.`;
+        alert(message);
+        // 페이지 새로고침 또는 상태 업데이트
+        window.location.reload();
+      } else {
+        alert('일부 신고 처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('신고 상태 변경 오류:', error);
+      alert('신고 상태 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 신고 상세 정보 보기 함수 추가
+  const handleViewReport = (report: any) => {
+    setSelectedReport(report);
+    setShowReportModal(true);
+  };
+
+  const closeReportModal = () => {
+    setShowReportModal(false);
+    setSelectedReport(null);
   };
 
   return (
@@ -903,29 +980,43 @@ export default function AdminPage() {
           {activeTab === 'reports' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-medium text-gray-900">신고 관리</h2>
-                <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                  모두 처리
-                </button>
+                <h2 className="text-xl font-semibold text-gray-800">신고 관리</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleReportStatusChange([], 'resolved')}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    선택된 신고 해결
+                  </button>
+                  <button
+                    onClick={() => handleReportStatusChange([], 'dismissed')}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    선택된 신고 기각
+                  </button>
+                </div>
               </div>
-
+              
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        타입
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        유형
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         신고 사유
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         신고자
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        상태
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         신고일
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         작업
                       </th>
                     </tr>
@@ -935,27 +1026,50 @@ export default function AdminPage() {
                       <tr key={report.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded ${
-                            report.type === 'post' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                            report.target_type === 'post' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                           }`}>
-                            {report.type === 'post' ? '게시물' : '댓글'}
+                            {report.target_type === 'post' ? '게시물' : '댓글'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {report.reason}
+                          {report.reason === 'spam' ? '스팸/도배' :
+                           report.reason === 'inappropriate' ? '부적절한 내용' :
+                           report.reason === 'advertising' ? '광고/홍보' : '기타'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.reporter}
+                          {report.reporter_ip || '익명'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded ${
+                            report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            report.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {report.status === 'pending' ? '대기중' :
+                             report.status === 'resolved' ? '해결됨' : '기각됨'}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.createdAt}
+                          {new Date(report.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                          <button className="text-blue-600 hover:text-blue-900">보기</button>
+                          <button 
+                            onClick={() => handleViewReport(report)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            보기
+                          </button>
                           <button
                             onClick={() => handleDeleteReport(report.id)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            해결
+                          </button>
+                          <button
+                            onClick={() => handleReportStatusChange([report.id], 'dismissed')}
                             className="text-red-600 hover:text-red-900"
                           >
-                            처리
+                            기각
                           </button>
                         </td>
                       </tr>
@@ -1426,6 +1540,131 @@ export default function AdminPage() {
               </div>
             </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 신고 상세 정보 모달 */}
+      {showReportModal && selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">신고 상세 정보</h2>
+                <button
+                  onClick={closeReportModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">신고 ID</label>
+                    <p className="text-sm text-gray-900">{selectedReport.id}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">신고 유형</label>
+                    <span className={`inline-block px-2 py-1 text-xs rounded ${
+                      selectedReport.target_type === 'post' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {selectedReport.target_type === 'post' ? '게시물' : '댓글'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">대상 ID</label>
+                    <p className="text-sm text-gray-900">{selectedReport.target_id}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">신고자 IP</label>
+                    <p className="text-sm text-gray-900">{selectedReport.reporter_ip || '익명'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">신고 사유</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedReport.reason === 'spam' ? '스팸/도배' :
+                     selectedReport.reason === 'inappropriate' ? '부적절한 내용' :
+                     selectedReport.reason === 'advertising' ? '광고/홍보' : '기타'}
+                  </p>
+                </div>
+
+                {selectedReport.description && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">상세 설명</label>
+                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded border">
+                      {selectedReport.description}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">현재 상태</label>
+                    <span className={`inline-block px-2 py-1 text-xs rounded ${
+                      selectedReport.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedReport.status === 'pending' ? '대기중' :
+                       selectedReport.status === 'resolved' ? '해결됨' : '기각됨'}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">신고일시</label>
+                    <p className="text-sm text-gray-900">
+                      {new Date(selectedReport.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedReport.updated_at !== selectedReport.created_at && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">마지막 수정일시</label>
+                    <p className="text-sm text-gray-900">
+                      {new Date(selectedReport.updated_at).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button
+                  onClick={closeReportModal}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  닫기
+                </button>
+                {selectedReport.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleReportStatusChange([selectedReport.id], 'dismissed');
+                        closeReportModal();
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      기각
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleDeleteReport(selectedReport.id);
+                        closeReportModal();
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      해결
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
