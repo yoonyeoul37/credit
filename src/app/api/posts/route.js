@@ -14,7 +14,7 @@ export async function GET(request) {
     let query = supabase
       .from('posts')
       .select('*')
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .order(sort, { ascending: false });
     
     // 카테고리 필터링
@@ -39,13 +39,13 @@ export async function GET(request) {
       pagination: {
         page,
         limit,
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: count || 0,
+        hasMore: count > page * limit
       }
     });
     
   } catch (error) {
-    console.error('게시글 API 오류:', error);
+    console.error('게시글 조회 API 오류:', error);
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
   }
 }
@@ -69,12 +69,12 @@ export async function POST(request) {
           title,
           content,
           author,
-          password, // 실제 운영에서는 해싱 필요
+          password_hash: password, // password_hash 사용
           category,
           images: images || [],
           views: 0,
           likes: 0,
-          is_deleted: false,
+          is_hidden: false,
           created_at: new Date().toISOString()
         }
       ])

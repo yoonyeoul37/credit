@@ -13,7 +13,7 @@ export default function CardPage() {
   // 신용카드 관련 글들 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 실제 API 사용
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -30,78 +30,7 @@ export default function CardPage() {
           console.error('게시글 로딩 실패:', error);
           setPosts([]);
         }
-      } else {
-        // 개발환경: 임시 데이터
-        const allCardPosts = [
-          {
-            id: 51,
-            title: "신용카드 연체 후 회복 과정 후기",
-            author: "익명",
-            createdAt: "1시간 전",
-            commentCount: 24,
-            views: 456
-          },
-          {
-            id: 52,
-            title: "연체자도 발급 가능한 신용카드 정리",
-            author: "익명",
-            createdAt: "3시간 전",
-            commentCount: 31,
-            views: 678
-          },
-          {
-            id: 53,
-            title: "신용카드 정리 vs 개인회생 선택 기준",
-            author: "익명",
-            createdAt: "5시간 전",
-            commentCount: 17,
-            views: 298
-          },
-          {
-            id: 54,
-            title: "신용카드 현금서비스 줄이는 방법",
-            author: "익명",
-            createdAt: "7시간 전",
-            commentCount: 22,
-            views: 389
-          },
-          {
-            id: 55,
-            title: "카드 대금 연체 시 대처 방법",
-            author: "익명",
-            createdAt: "9시간 전",
-            commentCount: 19,
-            views: 334
-          },
-          {
-            id: 56,
-            title: "신용카드 부채 통합 성공 후기",
-            author: "익명",
-            createdAt: "11시간 전",
-            commentCount: 26,
-            views: 467
-          },
-          {
-            id: 57,
-            title: "카드론 vs 신용대출 비교",
-            author: "익명",
-            createdAt: "13시간 전",
-            commentCount: 15,
-            views: 278
-          },
-          {
-            id: 58,
-            title: "신용카드 한도 감액 후 복구 방법",
-            author: "익명",
-            createdAt: "15시간 전",
-            commentCount: 28,
-            views: 412
-          }
-        ];
-        
-        setPosts(allCardPosts);
       }
-      
       setLoading(false);
     };
     
@@ -184,58 +113,78 @@ export default function CardPage() {
           </div>
         </div>
         
-        <div className="space-y-1">
-          {cardPosts.map((post, index) => (
-            <div key={post.id}>
-              {/* 리스트 광고 (6번째 글 뒤에 삽입) */}
-              {index === 5 && (
-                <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+        {/* 게시글 목록 */}
+        {!loading && posts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-5xl mb-4">💳</div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">아직 신용카드 게시글이 없습니다</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              첫 번째 신용카드 경험담을 작성해보세요!<br />
+              여러분의 신용카드 관련 이야기를 공유해주세요.
+            </p>
+            <Link 
+              href="/write" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              글쓰기 시작하기
+            </Link>
+          </div>
+        )}
+
+        {!loading && posts.length > 0 && (
+          <div className="space-y-1">
+            {cardPosts.map((post, index) => (
+              <div key={post.id}>
+                {/* 리스트 광고 (6번째 글 뒤에 삽입) */}
+                {index === 5 && (
+                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+                    <div className="flex-shrink-0 w-8 text-right">
+                      <span className="text-sm text-orange-400">#AD</span>
+                    </div>
+                    <div className="flex-1 ml-4">
+                      <div className="flex items-center space-x-2">
+                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                          저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                        </a>
+                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                          금융 광고
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                        <span>핀테크 플랫폼</span>
+                        <span>AI 분석</span>
+                        <span>최저금리</span>
+                        <span>즉시 심사</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
                   <div className="flex-shrink-0 w-8 text-right">
-                    <span className="text-sm text-orange-400">#AD</span>
+                    <span className="text-sm text-gray-500">{(currentPage - 1) * postsPerPage + index + 1}</span>
                   </div>
                   <div className="flex-1 ml-4">
                     <div className="flex items-center space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                        저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                      <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                        {post.title}
                       </a>
-                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                        금융 광고
+                      <span className="text-xs text-gray-500 bg-orange-100 px-2 py-0.5 rounded">
+                        신용카드
                       </span>
                     </div>
                     <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                      <span>핀테크 플랫폼</span>
-                      <span>AI 분석</span>
-                      <span>최저금리</span>
-                      <span>즉시 심사</span>
+                      <span>{post.author}</span>
+                      <span>{post.createdAt}</span>
+                      <span>{post.commentCount} 댓글</span>
+                      <span>{post.views} 조회</span>
                     </div>
                   </div>
                 </div>
-              )}
-              
-              <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
-                <div className="flex-shrink-0 w-8 text-right">
-                  <span className="text-sm text-gray-500">{post.id}</span>
-                </div>
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center space-x-2">
-                    <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
-                      {post.title}
-                    </a>
-                    <span className="text-xs text-gray-500 bg-orange-100 px-2 py-0.5 rounded">
-                      신용카드
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                    <span>{post.author}</span>
-                    <span>{post.createdAt}</span>
-                    <span>{post.commentCount} 댓글</span>
-                    <span>{post.views} 조회</span>
-                  </div>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
         <div className="mt-8 flex justify-center">
@@ -394,4 +343,4 @@ export default function CardPage() {
       )}
     </div>
   );
-} 
+}

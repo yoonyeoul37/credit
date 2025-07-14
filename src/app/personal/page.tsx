@@ -27,7 +27,7 @@ export default function PersonalPage() {
   // 개인회생 관련 글들 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 실제 API 사용
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -44,110 +44,7 @@ export default function PersonalPage() {
           console.error('게시글 로딩 실패:', error);
           setPosts([]);
         }
-      } else {
-        // 개발환경: 임시 데이터
-        const allPersonalPosts = [
-          {
-            id: 21,
-            title: "개인회생 신청 후 3년 경과 후기",
-            author: "익명",
-            createdAt: "30분 전",
-            commentCount: 28,
-            views: 442
-          },
-          {
-            id: 22,
-            title: "개인회생 변제계획 수립 팁",
-            author: "익명",
-            createdAt: "2시간 전",
-            commentCount: 15,
-            views: 189
-          },
-          {
-            id: 23,
-            title: "개인회생 중 생활비 관리 방법",
-            author: "익명",
-            createdAt: "4시간 전",
-            commentCount: 22,
-            views: 334
-          },
-          {
-            id: 24,
-            title: "개인회생 신청 시 필요한 서류 리스트",
-            author: "익명",
-            createdAt: "6시간 전",
-            commentCount: 31,
-            views: 567
-          },
-          {
-            id: 25,
-            title: "개인회생 면책 후 신용회복 과정",
-            author: "익명",
-            createdAt: "8시간 전",
-            commentCount: 19,
-            views: 278
-          },
-          {
-            id: 26,
-            title: "개인회생 변제율 30%로 확정된 후기",
-            author: "익명",
-            createdAt: "10시간 전",
-            commentCount: 25,
-            views: 389
-          },
-          {
-            id: 27,
-            title: "개인회생 중 취업 성공 사례",
-            author: "익명",
-            createdAt: "12시간 전",
-            commentCount: 18,
-            views: 267
-          },
-          {
-            id: 28,
-            title: "개인회생 신청 전 주의사항",
-            author: "익명",
-            createdAt: "14시간 전",
-            commentCount: 33,
-            views: 512
-          },
-          {
-            id: 29,
-            title: "개인회생 변제계획 변경 신청 방법",
-            author: "익명",
-            createdAt: "16시간 전",
-            commentCount: 21,
-            views: 345
-          },
-          {
-            id: 30,
-            title: "개인회생 후 신용카드 발급 가능한 곳",
-            author: "익명",
-            createdAt: "18시간 전",
-            commentCount: 27,
-            views: 423
-          },
-          {
-            id: 31,
-            title: "개인회생 기각 사유와 대응 방법",
-            author: "익명",
-            createdAt: "20시간 전",
-            commentCount: 16,
-            views: 298
-          },
-          {
-            id: 32,
-            title: "개인회생 완료 후 주택 구매 경험담",
-            author: "익명",
-            createdAt: "22시간 전",
-            commentCount: 29,
-            views: 456
-          }
-        ];
-        
-        setPosts(allPersonalPosts);
       }
-      
       setLoading(false);
     };
     
@@ -236,58 +133,78 @@ export default function PersonalPage() {
           </div>
         </div>
         
-        <div className="space-y-1">
-          {personalPosts.map((post, index) => (
-            <div key={post.id}>
-              {/* 리스트 광고 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
-              {index === 5 && listAd?.isActive && (
-                <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+        {/* 게시글 목록 */}
+        {!loading && posts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-5xl mb-4">🏠</div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">아직 개인회생 게시글이 없습니다</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              첫 번째 개인회생 경험담을 작성해보세요!<br />
+              여러분의 회생 과정을 다른 분들과 공유해주세요.
+            </p>
+            <Link 
+              href="/write" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              글쓰기 시작하기
+            </Link>
+          </div>
+        )}
+
+        {!loading && posts.length > 0 && (
+          <div className="space-y-1">
+            {personalPosts.map((post, index) => (
+              <div key={post.id}>
+                {/* 리스트 광고 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
+                {index === 5 && listAd?.isActive && (
+                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+                    <div className="flex-shrink-0 w-8 text-right">
+                      <span className="text-sm text-orange-400">#AD</span>
+                    </div>
+                    <div className="flex-1 ml-4">
+                      <div className="flex items-center space-x-2">
+                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                          {listAd.title}
+                        </a>
+                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                          금융 광고
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                        {listAd.content.split(' | ').map((item, idx) => (
+                          <span key={idx}>{item}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 게시글 아이템 */}
+                <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
                   <div className="flex-shrink-0 w-8 text-right">
-                    <span className="text-sm text-orange-400">#AD</span>
+                    <span className="text-sm text-gray-500">{(currentPage - 1) * postsPerPage + index + 1}</span>
                   </div>
                   <div className="flex-1 ml-4">
                     <div className="flex items-center space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                        {listAd.title}
+                      <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                        {post.title}
                       </a>
-                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                        금융 광고
+                      <span className="text-xs text-gray-500 bg-blue-100 px-2 py-0.5 rounded">
+                        개인회생
                       </span>
                     </div>
                     <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                      {listAd.content.split(' | ').map((item, idx) => (
-                        <span key={idx}>{item}</span>
-                      ))}
+                      <span>{post.author}</span>
+                      <span>{post.createdAt}</span>
+                      <span>{post.commentCount} 댓글</span>
+                      <span>{post.views} 조회</span>
                     </div>
                   </div>
                 </div>
-              )}
-              
-              {/* 게시글 아이템 */}
-              <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
-                <div className="flex-shrink-0 w-8 text-right">
-                  <span className="text-sm text-gray-500">{post.id}</span>
-                </div>
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center space-x-2">
-                    <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
-                      {post.title}
-                    </a>
-                    <span className="text-xs text-gray-500 bg-blue-100 px-2 py-0.5 rounded">
-                      개인회생
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                    <span>{post.author}</span>
-                    <span>{post.createdAt}</span>
-                    <span>{post.commentCount} 댓글</span>
-                    <span>{post.views} 조회</span>
-                  </div>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
         <div className="mt-8 flex justify-center">

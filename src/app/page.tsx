@@ -96,7 +96,7 @@ export default function Home() {
         setLoading(true);
         
         // 환경에 따른 분기 처리
-        const isProduction = process.env.NODE_ENV === 'production';
+        const isProduction = true; // 실제 API 사용하도록 변경
         
         if (isProduction) {
           // 프로덕션: 실제 API 호출 시도
@@ -359,7 +359,24 @@ export default function Home() {
         )}
 
         {/* 게시글 목록 */}
-        {!loading && !error && (
+        {!loading && !error && posts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-5xl mb-4">📝</div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">아직 게시글이 없습니다</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              첫 번째 게시글을 작성해보세요!<br />
+              여러분의 신용 회복 이야기를 공유해주세요.
+            </p>
+            <Link 
+              href="/write" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              글쓰기 시작하기
+            </Link>
+          </div>
+        )}
+
+        {!loading && !error && posts.length > 0 && (
           <div className="space-y-1">
             {currentPosts.map((post, index) => (
             <div key={post.id}>
@@ -390,7 +407,7 @@ export default function Home() {
               {/* 게시글 아이템 */}
               <div className="flex items-start py-3 hover:bg-gray-50 -mx-2 px-3 touch-manipulation">
                 <div className="flex-shrink-0 w-8 md:w-8 text-right">
-                  <span className="text-xs md:text-sm text-gray-500">{post.id}</span>
+                  <span className="text-xs md:text-sm text-gray-500">{(currentPage - 1) * postsPerPage + index + 1}</span>
                 </div>
                 <div className="flex-1 ml-3 md:ml-4">
                   <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">

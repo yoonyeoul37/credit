@@ -13,7 +13,7 @@ export default function CreditPage() {
   // 신용이야기 관련 글들 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 실제 API 사용
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -188,59 +188,79 @@ export default function CreditPage() {
           </div>
         </div>
         
-        <div className="space-y-1">
-          {creditPosts.map((post, index) => (
-            <div key={post.id}>
-              {/* 리스트 광고 (6번째 글 뒤에 삽입) */}
-              {index === 5 && (
-                <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+        {/* 게시글 목록 */}
+        {!loading && posts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-5xl mb-4">💳</div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">아직 신용이야기가 없습니다</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              첫 번째 신용 회복 이야기를 작성해보세요!<br />
+              여러분의 경험을 다른 분들과 공유해주세요.
+            </p>
+            <Link 
+              href="/write" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              글쓰기 시작하기
+            </Link>
+          </div>
+        )}
+
+        {!loading && posts.length > 0 && (
+          <div className="space-y-1">
+            {creditPosts.map((post, index) => (
+              <div key={post.id}>
+                {/* 광고 배너 (6번째 글 뒤에 삽입) */}
+                {index === 5 && (
+                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+                    <div className="flex-shrink-0 w-8 text-right">
+                      <span className="text-xs text-orange-400">#AD</span>
+                    </div>
+                    <div className="flex-1 ml-4">
+                      <div className="flex items-center space-x-2">
+                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                          저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                        </a>
+                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                          금융 광고
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                        <span>핀테크 플랫폼</span>
+                        <span>AI 분석</span>
+                        <span>최저금리</span>
+                        <span>즉시 심사</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 게시글 아이템 */}
+                <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
                   <div className="flex-shrink-0 w-8 text-right">
-                    <span className="text-sm text-orange-400">#AD</span>
+                    <span className="text-sm text-gray-500">{(currentPage - 1) * postsPerPage + index + 1}</span>
                   </div>
                   <div className="flex-1 ml-4">
                     <div className="flex items-center space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                        저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                      <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                        {post.title}
                       </a>
-                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                        금융 광고
+                      <span className="text-xs text-gray-500 bg-red-100 px-2 py-0.5 rounded">
+                        신용이야기
                       </span>
                     </div>
                     <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                      <span>핀테크 플랫폼</span>
-                      <span>AI 분석</span>
-                      <span>최저금리</span>
-                      <span>즉시 심사</span>
+                      <span>{post.author}</span>
+                      <span>{post.createdAt}</span>
+                      <span>{post.commentCount} 댓글</span>
+                      <span>{post.views} 조회</span>
                     </div>
                   </div>
                 </div>
-              )}
-              
-              {/* 게시글 아이템 */}
-              <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
-                <div className="flex-shrink-0 w-8 text-right">
-                  <span className="text-sm text-gray-500">{post.id}</span>
-                </div>
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center space-x-2">
-                    <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
-                      {post.title}
-                    </a>
-                    <span className="text-xs text-gray-500 bg-red-100 px-2 py-0.5 rounded">
-                      신용이야기
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                    <span>{post.author}</span>
-                    <span>{post.createdAt}</span>
-                    <span>{post.commentCount} 댓글</span>
-                    <span>{post.views} 조회</span>
-                  </div>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
         <div className="mt-8 flex justify-center">

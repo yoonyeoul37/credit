@@ -13,7 +13,7 @@ export default function LoanPage() {
   // 대출 관련 글들 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = true; // 실제 API 사용
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -30,86 +30,7 @@ export default function LoanPage() {
           console.error('게시글 로딩 실패:', error);
           setPosts([]);
         }
-      } else {
-        // 개발환경: 임시 데이터
-        const allLoanPosts = [
-          {
-            id: 61,
-            title: "신용불량자 대출 가능한 곳 정리",
-            author: "익명",
-            createdAt: "30분 전",
-            commentCount: 42,
-            views: 789
-          },
-          {
-            id: 62,
-            title: "대출 정리 후 신용 회복 과정",
-            author: "익명",
-            createdAt: "2시간 전",
-            commentCount: 28,
-            views: 456
-          },
-          {
-            id: 63,
-            title: "고금리 대출 저금리로 갈아타기 후기",
-            author: "익명",
-            createdAt: "4시간 전",
-            commentCount: 19,
-            views: 334
-          },
-          {
-            id: 64,
-            title: "대출 연체 시 대처 방법",
-            author: "익명",
-            createdAt: "6시간 전",
-            commentCount: 35,
-            views: 567
-          },
-          {
-            id: 65,
-            title: "저신용자 대출 승인 받는 방법",
-            author: "익명",
-            createdAt: "8시간 전",
-            commentCount: 31,
-            views: 498
-          },
-          {
-            id: 66,
-            title: "대출 중도상환 수수료 줄이는 팁",
-            author: "익명",
-            createdAt: "10시간 전",
-            commentCount: 23,
-            views: 367
-          },
-          {
-            id: 67,
-            title: "대환대출 신청 전 주의사항",
-            author: "익명",
-            createdAt: "12시간 전",
-            commentCount: 26,
-            views: 423
-          },
-          {
-            id: 68,
-            title: "담보대출 vs 신용대출 비교",
-            author: "익명",
-            createdAt: "14시간 전",
-            commentCount: 18,
-            views: 289
-          },
-          {
-            id: 69,
-            title: "대출 승인률 높이는 방법",
-            author: "익명",
-            createdAt: "16시간 전",
-            commentCount: 29,
-            views: 445
-          }
-        ];
-        
-        setPosts(allLoanPosts);
       }
-      
       setLoading(false);
     };
     
@@ -192,58 +113,78 @@ export default function LoanPage() {
           </div>
         </div>
         
-        <div className="space-y-1">
-          {loanPosts.map((post, index) => (
-            <div key={post.id}>
-              {/* 리스트 광고 (6번째 글 뒤에 삽입) */}
-              {index === 5 && (
-                <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+        {/* 게시글 목록 */}
+        {!loading && posts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-5xl mb-4">💰</div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">아직 대출 게시글이 없습니다</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              첫 번째 대출 경험담을 작성해보세요!<br />
+              여러분의 대출 관련 이야기를 공유해주세요.
+            </p>
+            <Link 
+              href="/write" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              글쓰기 시작하기
+            </Link>
+          </div>
+        )}
+
+        {!loading && posts.length > 0 && (
+          <div className="space-y-1">
+            {loanPosts.map((post, index) => (
+              <div key={post.id}>
+                {/* 리스트 광고 (6번째 글 뒤에 삽입) */}
+                {index === 5 && (
+                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+                    <div className="flex-shrink-0 w-8 text-right">
+                      <span className="text-sm text-orange-400">#AD</span>
+                    </div>
+                    <div className="flex-1 ml-4">
+                      <div className="flex items-center space-x-2">
+                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                          저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                        </a>
+                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                          금융 광고
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                        <span>핀테크 플랫폼</span>
+                        <span>AI 분석</span>
+                        <span>최저금리</span>
+                        <span>즉시 심사</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
                   <div className="flex-shrink-0 w-8 text-right">
-                    <span className="text-sm text-orange-400">#AD</span>
+                    <span className="text-sm text-gray-500">{(currentPage - 1) * postsPerPage + index + 1}</span>
                   </div>
                   <div className="flex-1 ml-4">
                     <div className="flex items-center space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                        저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                      <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
+                        {post.title}
                       </a>
-                      <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                        금융 광고
+                      <span className="text-xs text-gray-500 bg-yellow-100 px-2 py-0.5 rounded">
+                        대출
                       </span>
                     </div>
                     <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                      <span>핀테크 플랫폼</span>
-                      <span>AI 분석</span>
-                      <span>최저금리</span>
-                      <span>즉시 심사</span>
+                      <span>{post.author}</span>
+                      <span>{post.createdAt}</span>
+                      <span>{post.commentCount} 댓글</span>
+                      <span>{post.views} 조회</span>
                     </div>
                   </div>
                 </div>
-              )}
-              
-              <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
-                <div className="flex-shrink-0 w-8 text-right">
-                  <span className="text-sm text-gray-500">{post.id}</span>
-                </div>
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center space-x-2">
-                    <a href={`/post/${post.id}`} className="text-black hover:text-blue-600 text-sm leading-relaxed">
-                      {post.title}
-                    </a>
-                    <span className="text-xs text-gray-500 bg-yellow-100 px-2 py-0.5 rounded">
-                      대출
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                    <span>{post.author}</span>
-                    <span>{post.createdAt}</span>
-                    <span>{post.commentCount} 댓글</span>
-                    <span>{post.views} 조회</span>
-                  </div>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
         <div className="mt-8 flex justify-center">
