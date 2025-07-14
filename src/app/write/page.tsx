@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import MobileNavigation from '../components/MobileNavigation';
+import MobileNav from '../components/MobileNav';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function WriteForm() {
@@ -289,7 +289,7 @@ function WriteForm() {
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 모바일 네비게이션 */}
-      <MobileNavigation currentPage="/write" />
+              <MobileNav currentPage="/write" />
       
       {/* 헤더 */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40">

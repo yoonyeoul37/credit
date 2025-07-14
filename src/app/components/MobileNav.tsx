@@ -3,11 +3,11 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 
-interface MobileNavigationProps {
+interface MobileNavProps {
   currentPage?: string
 }
 
-const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const menuItems = [
@@ -121,4 +121,4 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' })
   )
 }
 
-export default MobileNavigation 
+export default MobileNav 
