@@ -45,42 +45,35 @@ export default function Home() {
   // 광고 데이터 가져오기
   useEffect(() => {
     const fetchAds = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
-      
-      if (isProduction) {
-        // 프로덕션: 실제 광고 API 호출
-        try {
-          const response = await fetch('/api/ads?position=header');
-          const data = await response.json();
-          
-          if (data.ads && data.ads.length > 0) {
-            setPremiumAd({
-              id: data.ads[0].id,
-              isActive: true,
-              title: data.ads[0].title,
-              content: data.ads[0].description,
-              link_url: data.ads[0].link_url || ''
-            });
-          }
-          
-          const listResponse = await fetch('/api/ads?position=sidebar');
-          const listData = await listResponse.json();
-          
-          if (listData.ads && listData.ads.length > 0) {
-            setListAd({
-              id: listData.ads[0].id,
-              isActive: true,
-              title: listData.ads[0].title,
-              content: listData.ads[0].description,
-              link_url: listData.ads[0].link_url || ''
-            });
-          }
-        } catch (error) {
-          console.error('광고 데이터 가져오기 실패:', error);
+      // 실제 광고 API 호출 (개발/프로덕션 모두)
+      try {
+        const response = await fetch('/api/ads?position=header');
+        const data = await response.json();
+        
+        if (data.ads && data.ads.length > 0) {
+          setPremiumAd({
+            id: data.ads[0].id,
+            isActive: true,
+            title: data.ads[0].title,
+            content: data.ads[0].description,
+            link_url: data.ads[0].url || ''
+          });
         }
-      } else {
-        // 개발환경: 광고 비활성화
-        console.log('🚧 개발 모드: 광고 데이터 없음');
+        
+        const listResponse = await fetch('/api/ads?position=sidebar');
+        const listData = await listResponse.json();
+        
+        if (listData.ads && listData.ads.length > 0) {
+          setListAd({
+            id: listData.ads[0].id,
+            isActive: true,
+            title: listData.ads[0].title,
+            content: listData.ads[0].description,
+            link_url: listData.ads[0].url || ''
+          });
+        }
+      } catch (error) {
+        console.error('광고 데이터 가져오기 실패:', error);
         setPremiumAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
         setListAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
       }
