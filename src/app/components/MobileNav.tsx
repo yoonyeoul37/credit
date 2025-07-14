@@ -1,3 +1,4 @@
+// Mobile Navigation Component - 이모지 제거 및 handleTouchStart 에러 수정
 'use client'
 
 import React, { useState } from 'react'
