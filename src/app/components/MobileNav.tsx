@@ -1,4 +1,3 @@
-// Mobile Navigation Component - 이모지 제거 및 handleTouchStart 에러 수정
 'use client'
 
 import React, { useState } from 'react'
@@ -24,21 +23,12 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
     { name: '광고문의', href: '/ad' },
   ]
 
-  const toggleMenuState = () => {
-    console.log('메뉴 토글:', !isMenuOpen); // 디버그용 로그
+  const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  const closeMenuHandler = () => {
+  const closeMenu = () => {
     setIsMenuOpen(false)
-  }
-
-  // 메뉴 버튼 클릭 핸들러
-  const menuButtonHandler = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('메뉴 버튼 클릭됨');
-    toggleMenuState();
   }
 
   return (
@@ -50,14 +40,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
             크레딧스토리
           </Link>
           <button
-            onClick={menuButtonHandler}
-            className="p-3 rounded-lg hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:bg-gray-100 touch-manipulation select-none"
-            style={{ 
-              WebkitTapHighlightColor: 'transparent',
-              minWidth: '44px',
-              minHeight: '44px',
-              cursor: 'pointer'
-            }}
+            onClick={toggleMenu}
+            className="p-3 rounded-lg hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:bg-gray-100"
             aria-label="메뉴 열기"
             type="button"
           >
@@ -74,8 +58,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
       {isMenuOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40" 
-          onClick={closeMenuHandler}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
+          onClick={closeMenu}
         >
           <div 
             className="fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out"
@@ -87,13 +70,12 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={closeMenuHandler}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-lg font-medium transition-colors touch-manipulation ${
+                    onClick={closeMenu}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-lg font-medium transition-colors ${
                       currentPage === item.href
                         ? 'bg-blue-100 text-blue-600 border-l-4 border-blue-600'
                         : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                     }`}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <span>{item.name}</span>
                   </Link>
@@ -102,9 +84,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
                 <div className="pt-4 border-t border-gray-200">
                   <Link
                     href="/write"
-                    onClick={closeMenuHandler}
-                    className="flex items-center justify-center space-x-2 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium touch-manipulation"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    onClick={closeMenu}
+                    className="flex items-center justify-center space-x-2 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
                   >
                     <span>글쓰기</span>
                   </Link>

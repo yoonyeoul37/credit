@@ -63,4 +63,9 @@ jobs:
           NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory" -- start
           pm2 save
           
+          # 배포 후 상태 확인
+          sleep 3
+          pm2 list
+          pm2 logs creditstory --lines 20
+          
           echo "배포 완료"
