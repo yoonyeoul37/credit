@@ -10,6 +10,13 @@ export default function CorporatePage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // 프리미엄 광고 상태
+  const [premiumAd, setPremiumAd] = useState({
+    isActive: false,
+    title: '',
+    content: ''
+  });
+  
   // 법인회생 관련 글들 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
@@ -35,6 +42,37 @@ export default function CorporatePage() {
     };
     
     fetchPosts();
+  }, []);
+  
+  // 프리미엄 광고 데이터 가져오기
+  useEffect(() => {
+    const fetchAds = async () => {
+      const isProduction = true; // 실제 API 사용
+      
+      if (isProduction) {
+        // 프로덕션: 실제 광고 API 호출
+        try {
+          const response = await fetch('/api/ads?position=header');
+          const data = await response.json();
+          
+          if (data.ads && data.ads.length > 0) {
+            setPremiumAd({
+              isActive: true,
+              title: data.ads[0].title,
+              content: data.ads[0].description
+            });
+          }
+        } catch (error) {
+          console.error('광고 데이터 가져오기 실패:', error);
+        }
+      } else {
+        // 개발환경: 광고 비활성화
+        console.log('🚧 개발 모드: 광고 데이터 없음');
+        setPremiumAd({ isActive: false, title: '', content: '' });
+      }
+    };
+    
+    fetchAds();
   }, []);
   
   // 페이징 계산
@@ -92,14 +130,17 @@ export default function CorporatePage() {
           <p className="text-sm text-gray-600">법인회생 절차와 기업 재구조화 경험을 공유하세요</p>
         </div>
 
-        <div className="mb-6 flex justify-center">
-          <div className="w-[728px] h-[90px] bg-green-50 border border-green-200 flex items-center justify-center text-sm text-green-600 rounded-lg">
-            <div className="text-center">
-              <div className="text-lg mb-1">법인회생 전문 프리미엄 광고</div>
-              <div className="text-xs text-green-400">728 × 90 (리더보드)</div>
+        {/* 상단 프리미엄 광고 */}
+        {premiumAd?.isActive && (
+          <div className="mb-4 md:mb-6 flex justify-center">
+            <div className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4">
+              <div className="text-center">
+                <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
+                <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* 글쓰기 버튼 */}
         <div className="flex justify-center mb-6">

@@ -8,14 +8,14 @@ export default function PersonalPage() {
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
   
-  // 광고 데이터 비활성화
-  const [premiumAd] = useState({
+  // 프리미엄 광고 상태
+  const [premiumAd, setPremiumAd] = useState({
     isActive: false,
     title: '',
     content: ''
   });
   
-  const [listAd] = useState({
+  const [listAd, setListAd] = useState({
     isActive: false,
     title: '',
     content: ''
@@ -49,6 +49,37 @@ export default function PersonalPage() {
     };
     
     fetchPosts();
+  }, []);
+  
+  // 프리미엄 광고 데이터 가져오기
+  useEffect(() => {
+    const fetchAds = async () => {
+      const isProduction = true; // 실제 API 사용
+      
+      if (isProduction) {
+        // 프로덕션: 실제 광고 API 호출
+        try {
+          const response = await fetch('/api/ads?position=header');
+          const data = await response.json();
+          
+          if (data.ads && data.ads.length > 0) {
+            setPremiumAd({
+              isActive: true,
+              title: data.ads[0].title,
+              content: data.ads[0].description
+            });
+          }
+        } catch (error) {
+          console.error('광고 데이터 가져오기 실패:', error);
+        }
+      } else {
+        // 개발환경: 광고 비활성화
+        console.log('🚧 개발 모드: 광고 데이터 없음');
+        setPremiumAd({ isActive: false, title: '', content: '' });
+      }
+    };
+    
+    fetchAds();
   }, []);
   
   // 페이징 계산
