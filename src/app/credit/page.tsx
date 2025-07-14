@@ -96,6 +96,19 @@ export default function CreditPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 광고 클릭 처리
+  const handleAdClick = async (adId: number) => {
+    try {
+      await fetch('/api/ads/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId })
+      });
+    } catch (error) {
+      console.error('광고 클릭 추적 실패:', error);
+    }
+  };
+
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 헤더 */}
@@ -161,7 +174,7 @@ export default function CreditPage() {
             </Link>
           </div>
         </div>
-        
+
         {/* 게시글 목록 */}
         {!loading && posts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
@@ -249,7 +262,7 @@ export default function CreditPage() {
                 ← 이전
               </button>
             )}
-            
+
             {/* 페이지 번호들 */}
             {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
               <button
@@ -264,7 +277,7 @@ export default function CreditPage() {
                 {page}
               </button>
             ))}
-            
+
             {/* 다음 10페이지 */}
             {endPage < totalPages && (
               <button
@@ -353,7 +366,7 @@ export default function CreditPage() {
               </ul>
             </div>
           </div>
-          
+           
           <div className="border-t border-gray-200 mt-8 pt-8 text-center">
             <p className="text-xs text-gray-500">
               © 2024 크레딧스토리. 모든 권리 보유.

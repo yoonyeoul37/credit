@@ -1,4 +1,4 @@
--- 수정된 데이터베이스 스키마 업데이트
+-- 데이터베이스 스키마 업데이트
 -- 실행 순서: 이 파일을 Supabase SQL 에디터에서 실행하세요
 
 -- 1. 광고 테이블에 우선순위 컬럼 추가
@@ -15,10 +15,11 @@ CREATE TABLE IF NOT EXISTS ad_clicks (
     page_url VARCHAR(500)
 );
 
--- 3. 인덱스 추가 (문제가 있던 DATE 함수 인덱스 제외)
+-- 3. 인덱스 추가
 CREATE INDEX IF NOT EXISTS idx_ads_priority ON ads(priority DESC);
 CREATE INDEX IF NOT EXISTS idx_ad_clicks_ad_id ON ad_clicks(ad_id);
 CREATE INDEX IF NOT EXISTS idx_ad_clicks_clicked_at ON ad_clicks(clicked_at);
+CREATE INDEX IF NOT EXISTS idx_ad_clicks_date ON ad_clicks(DATE(clicked_at));
 
 -- 4. 기존 광고들의 우선순위를 0으로 설정
 UPDATE ads SET priority = 0 WHERE priority IS NULL;

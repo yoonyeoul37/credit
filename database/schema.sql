@@ -41,6 +41,7 @@ CREATE TABLE ads (
     image_url VARCHAR(500),
     link_url VARCHAR(500),
     position VARCHAR(50) NOT NULL CHECK (position IN ('header', 'sidebar', 'content', 'footer')),
+    priority INTEGER DEFAULT 0, -- 우선순위 (높은 숫자가 우선)
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     is_active BOOLEAN DEFAULT true,
@@ -77,6 +78,17 @@ CREATE TABLE reports (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. 광고 클릭 추적 테이블 (ad_clicks)
+CREATE TABLE ad_clicks (
+    id BIGSERIAL PRIMARY KEY,
+    ad_id BIGINT REFERENCES ads(id) ON DELETE CASCADE,
+    clicked_at TIMESTAMPTZ DEFAULT NOW(),
+    user_ip VARCHAR(45),
+    user_agent TEXT,
+    referrer VARCHAR(500),
+    page_url VARCHAR(500)
+);
+
 -- 인덱스 생성
 CREATE INDEX idx_posts_category ON posts(category);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
@@ -90,6 +102,7 @@ CREATE INDEX idx_comments_is_hidden ON comments(is_hidden);
 
 CREATE INDEX idx_ads_position ON ads(position);
 CREATE INDEX idx_ads_active_dates ON ads(is_active, start_date, end_date);
+CREATE INDEX idx_ads_priority ON ads(priority DESC);
 
 CREATE INDEX idx_news_category ON news(category);
 CREATE INDEX idx_news_published_at ON news(published_at DESC);
@@ -98,6 +111,10 @@ CREATE INDEX idx_news_is_important ON news(is_important);
 
 CREATE INDEX idx_reports_target ON reports(target_type, target_id);
 CREATE INDEX idx_reports_status ON reports(status);
+
+CREATE INDEX idx_ad_clicks_ad_id ON ad_clicks(ad_id);
+CREATE INDEX idx_ad_clicks_clicked_at ON ad_clicks(clicked_at);
+CREATE INDEX idx_ad_clicks_date ON ad_clicks(DATE(clicked_at));
 
 -- 트리거 함수 생성 (updated_at 자동 업데이트)
 CREATE OR REPLACE FUNCTION update_updated_at_column()

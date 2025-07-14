@@ -8,11 +8,12 @@ export async function GET(request) {
     const position = searchParams.get('position'); // header, sidebar, content 등
     const isActive = searchParams.get('active') !== 'false'; // 기본값: true
     
-    // 기본 쿼리 구성
+    // 기본 쿼리 구성 (우선순위 순, 그 다음 최신순)
     let query = supabase
       .from('ads')
       .select('*')
       .eq('is_active', isActive)
+      .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
     
     // 위치별 필터링

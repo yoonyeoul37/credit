@@ -7,6 +7,7 @@ import MobileNavigation from '../components/MobileNavigation';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('ads');
+  const [adAnalytics, setAdAnalytics] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [selectedAds, setSelectedAds] = useState<number[]>([]);
@@ -20,6 +21,7 @@ export default function AdminPage() {
     content: '',
     url: '',
     imageUrl: '',
+    priority: 0,
     startDate: '',
     endDate: '',
     isActive: true
@@ -117,6 +119,7 @@ export default function AdminPage() {
           image_url: adForm.imageUrl,
           link_url: adForm.url,
           position: adForm.type === 'premium' ? 'header' : adForm.type === 'list' ? 'sidebar' : 'content',
+          priority: parseInt(adForm.priority) || 0,
           start_date: adForm.startDate,
           end_date: adForm.endDate,
           is_active: adForm.isActive
@@ -132,6 +135,7 @@ export default function AdminPage() {
           content: '', 
           url: '', 
           imageUrl: '', 
+          priority: 0,
           startDate: '', 
           endDate: '', 
           isActive: true 
@@ -546,6 +550,26 @@ export default function AdminPage() {
     setSelectedReport(null);
   };
 
+  // 광고 분석 데이터 가져오기
+  const fetchAdAnalytics = async (adId?: number) => {
+    try {
+      const url = adId 
+        ? `/api/ads/click?ad_id=${adId}&days=30`
+        : '/api/ads/click?days=30';
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setAdAnalytics(data);
+      } else {
+        console.error('광고 분석 데이터 로딩 실패:', data.error);
+      }
+    } catch (error) {
+      console.error('광고 분석 데이터 로딩 오류:', error);
+    }
+  };
+
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 모바일 네비게이션 */}
@@ -652,6 +676,19 @@ export default function AdminPage() {
               >
                 뉴스 관리
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab('analytics');
+                  fetchAdAnalytics();
+                }}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                광고 분석
+              </button>
             </nav>
           </div>
 
@@ -710,6 +747,9 @@ export default function AdminPage() {
                         내용
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        우선순위
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         이미지
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
@@ -755,6 +795,11 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                           {ad.content}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
+                            {ad.priority || 0}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {ad.imageUrl ? (
@@ -1252,6 +1297,126 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {/* 광고 분석 */}
+          {activeTab === 'analytics' && (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-medium text-gray-900">광고 분석</h2>
+                <button
+                  onClick={() => fetchAdAnalytics()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  새로고침
+                </button>
+              </div>
+
+              {/* 전체 통계 카드 */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">총 클릭 수</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {adAnalytics.total_clicks?.toLocaleString() || 0}
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">순 방문자</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {adAnalytics.unique_visitors?.toLocaleString() || 0}
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">클릭률</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {adAnalytics.total_clicks && adAnalytics.unique_visitors 
+                      ? ((adAnalytics.total_clicks / adAnalytics.unique_visitors) * 100).toFixed(1) + '%'
+                      : '0%'
+                    }
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">기간</div>
+                  <div className="text-lg font-bold text-gray-900">최근 30일</div>
+                </div>
+              </div>
+
+              {/* 일별 클릭 통계 */}
+              {adAnalytics.daily_stats && Object.keys(adAnalytics.daily_stats).length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">일별 클릭 통계</h3>
+                  <div className="space-y-2">
+                    {Object.entries(adAnalytics.daily_stats)
+                      .sort(([a], [b]) => b.localeCompare(a))
+                      .slice(0, 7)
+                      .map(([date, clicks]) => (
+                        <div key={date} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                          <span className="text-sm text-gray-600">{date}</span>
+                          <span className="text-sm font-medium text-gray-900">{clicks}회</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 최근 클릭 목록 */}
+              {adAnalytics.recent_clicks && adAnalytics.recent_clicks.length > 0 && (
+                <div className="bg-white rounded-lg shadow border">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">최근 클릭 내역</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            시간
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            광고 ID
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            사용자 IP
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            페이지
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {adAnalytics.recent_clicks.map((click, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(click.clicked_at).toLocaleString('ko-KR')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              #{click.ad_id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {click.user_ip}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 max-w-xs truncate">
+                              {click.page_url || click.referrer || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 데이터가 없을 때 */}
+              {(!adAnalytics.total_clicks || adAnalytics.total_clicks === 0) && (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-lg mb-2">📊</div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">아직 클릭 데이터가 없습니다</h3>
+                  <p className="text-sm text-gray-500">
+                    광고가 클릭되면 여기에 분석 데이터가 표시됩니다.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1515,6 +1680,21 @@ export default function AdminPage() {
                       />
                     </div>
                   )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    우선순위
+                  </label>
+                  <input
+                    type="number"
+                    value={adForm.priority}
+                    onChange={(e) => setAdForm({...adForm, priority: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                    placeholder="0"
+                    min="0"
+                    max="999"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">높은 숫자일수록 우선 표시됩니다</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

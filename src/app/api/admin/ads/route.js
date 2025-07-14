@@ -12,6 +12,7 @@ export async function GET(request) {
     const query = supabase
       .from('ads')
       .select('*')
+      .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
     
     // 페이지네이션
@@ -44,29 +45,37 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { title, description, image_url, link_url, position, start_date, end_date, is_active } = body;
+    const { title, description, image_url, link_url, position, priority, start_date, end_date, is_active } = body;
     
     // 유효성 검사
     if (!title || !description || !position) {
       return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 });
     }
     
-    // 광고 생성
+    // 광고 생성 (실제 테이블 구조에 맞춤)
+    const insertData = {
+      title,
+      description,
+      position,
+      start_date: start_date || new Date().toISOString(),
+      end_date: end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      is_active: is_active !== false
+    };
+
+    // 선택적 컬럼들 (실제 테이블 구조 기준)
+    if (image_url) {
+      insertData.image_url = image_url;
+    }
+    if (link_url) {
+      insertData.url = link_url; // link_url이 아니라 url 컬럼
+    }
+    if (priority !== undefined) {
+      insertData.priority = priority || 1;
+    }
+
     const { data: ad, error } = await supabase
       .from('ads')
-      .insert([
-        {
-          title,
-          description,
-          image_url,
-          link_url,
-          position,
-          start_date: start_date || new Date().toISOString(),
-          end_date: end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: is_active !== false,
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([insertData])
       .select()
       .single();
     
@@ -87,7 +96,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const { id, title, description, image_url, link_url, position, start_date, end_date, is_active } = body;
+    const { id, title, description, image_url, link_url, position, priority, start_date, end_date, is_active } = body;
     
     if (!id) {
       return NextResponse.json({ error: '광고 ID가 필요합니다.' }, { status: 400 });
@@ -102,6 +111,7 @@ export async function PUT(request) {
         image_url,
         link_url,
         position,
+        priority,
         start_date,
         end_date,
         is_active,

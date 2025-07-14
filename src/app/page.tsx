@@ -27,15 +27,19 @@ export default function Home() {
   
   // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
   const [premiumAd, setPremiumAd] = useState({
+    id: null,
     isActive: false,
     title: '',
-    content: ''
+    content: '',
+    link_url: ''
   });
   
   const [listAd, setListAd] = useState({
+    id: null,
     isActive: false,
     title: '',
-    content: ''
+    content: '',
+    link_url: ''
   });
   
   // 광고 데이터 가져오기
@@ -51,9 +55,11 @@ export default function Home() {
           
           if (data.ads && data.ads.length > 0) {
             setPremiumAd({
+              id: data.ads[0].id,
               isActive: true,
               title: data.ads[0].title,
-              content: data.ads[0].description
+              content: data.ads[0].description,
+              link_url: data.ads[0].link_url || ''
             });
           }
           
@@ -62,9 +68,11 @@ export default function Home() {
           
           if (listData.ads && listData.ads.length > 0) {
             setListAd({
+              id: listData.ads[0].id,
               isActive: true,
               title: listData.ads[0].title,
-              content: listData.ads[0].description
+              content: listData.ads[0].description,
+              link_url: listData.ads[0].link_url || ''
             });
           }
         } catch (error) {
@@ -73,8 +81,8 @@ export default function Home() {
       } else {
         // 개발환경: 광고 비활성화
         console.log('🚧 개발 모드: 광고 데이터 없음');
-        setPremiumAd({ isActive: false, title: '', content: '' });
-        setListAd({ isActive: false, title: '', content: '' });
+        setPremiumAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
+        setListAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
       }
     };
     
@@ -87,60 +95,45 @@ export default function Home() {
       try {
         setLoading(true);
         
-        // 환경에 따른 분기 처리
-        const isProduction = true; // 실제 API 사용하도록 변경
+        // 실제 API 호출
+        console.log('🌐 실제 API 호출 중...');
         
-        if (isProduction) {
-          // 프로덕션: 실제 API 호출 시도
-          console.log('🌐 프로덕션 모드: 실제 API 호출 중...');
-          
-          // 실제 API 호출 (Supabase 설정 후 활성화)
-          const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&sort=created_at`);
-          
-          if (!response.ok) {
-            throw new Error('게시글을 불러오는데 실패했습니다.');
-          }
-
-          const data = await response.json();
-          
-          // 데이터 포맷 변환 (기존 UI에 맞게)
-          const formattedPosts = data.posts.map(post => {
-            const categoryMap = {
-              'credit': '신용이야기',
-              'personal': '개인회생', 
-              'corporate': '법인회생',
-              'workout': '워크아웃',
-              'card': '신용카드',
-              'loan': '대출',
-              'news': '뉴스정보'
-            };
-
-            const timeAgo = getTimeAgo(post.created_at);
-
-            return {
-              id: post.id,
-              title: post.title,
-              category: categoryMap[post.category] || post.category,
-              author: post.author,
-              createdAt: timeAgo,
-              commentCount: post.commentCount || 0, // 실제 댓글 수 사용
-              views: post.views,
-              likes: post.likes || 0 // 실제 좋아요 수 사용
-            };
-          });
-
-          setPosts(formattedPosts);
-          setError(null);
-          setLoading(false);
-          return;
-        } else {
-          // 개발환경: 빈 배열로 설정
-          console.log('🚧 개발 모드: API 연결 대기 중');
-          setPosts([]);
-          setError(null);
-          setLoading(false);
-          return;
+        const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&sort=created_at`);
+        
+        if (!response.ok) {
+          throw new Error('게시글을 불러오는데 실패했습니다.');
         }
+
+        const data = await response.json();
+        
+        // 데이터 포맷 변환 (기존 UI에 맞게)
+        const formattedPosts = data.posts.map(post => {
+          const categoryMap = {
+            'credit': '신용이야기',
+            'personal': '개인회생', 
+            'corporate': '법인회생',
+            'workout': '워크아웃',
+            'card': '신용카드',
+            'loan': '대출',
+            'news': '뉴스정보'
+          };
+
+          const timeAgo = getTimeAgo(post.created_at);
+
+          return {
+            id: post.id,
+            title: post.title,
+            category: categoryMap[post.category] || post.category,
+            author: post.author,
+            createdAt: timeAgo,
+            commentCount: post.commentCount || 0, // 실제 댓글 수 사용
+            views: post.views,
+            likes: post.likes || 0 // 실제 좋아요 수 사용
+          };
+        });
+
+        setPosts(formattedPosts);
+        setError(null);
 
         /* 
         // 실제 API 호출 (Supabase 설정 후 활성화)
@@ -208,6 +201,34 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 광고 클릭 추적 함수
+  const handleAdClick = async (adId: number, adUrl?: string) => {
+    try {
+      // 클릭 추적 API 호출
+      await fetch('/api/ads/click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ad_id: adId,
+          page_url: window.location.href
+        }),
+      });
+      
+      // 광고 URL이 있으면 새 탭에서 열기
+      if (adUrl) {
+        window.open(adUrl, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('광고 클릭 추적 실패:', error);
+      // 추적이 실패해도 광고 링크는 열어줌
+      if (adUrl) {
+        window.open(adUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
+
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 모바일 네비게이션 */}
@@ -256,7 +277,10 @@ export default function Home() {
         {/* 상단 배너 광고 - 조건부 렌더링 */}
         {premiumAd?.isActive && (
           <div className="mb-4 md:mb-6 flex justify-center">
-            <div className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4">
+            <div 
+              className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4 cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
+              onClick={() => handleAdClick(premiumAd.id, premiumAd.link_url)}
+            >
               <div className="text-center">
                 <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
                 <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
@@ -315,15 +339,18 @@ export default function Home() {
             <div key={post.id}>
               {/* 광고 배너 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
               {index === 5 && listAd?.isActive && (
-                <div className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3">
+                <div 
+                  className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3 cursor-pointer hover:bg-gradient-to-r hover:from-orange-100 hover:to-amber-100 transition-all duration-200"
+                  onClick={() => handleAdClick(listAd.id, listAd.link_url)}
+                >
                   <div className="flex-shrink-0 w-8 md:w-8 text-right">
                     <span className="text-xs md:text-sm text-orange-400">#AD</span>
                   </div>
                   <div className="flex-1 ml-3 md:ml-4">
                     <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                      <a href="#" className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
+                      <span className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
                         {listAd.title}
-                      </a>
+                      </span>
                       <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded self-start">
                         금융 광고
                       </span>
