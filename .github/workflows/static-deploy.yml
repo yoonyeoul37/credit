@@ -37,37 +37,70 @@ jobs:
         timeout: 300s
         script: |
           echo "🚀 크레딧스토리 배포 시작"
+          echo "📅 배포 시간: $(date)"
+          echo "🌿 배포 브랜치: ${{ github.ref }}"
+          echo "💾 커밋 해시: ${{ github.sha }}"
           
           # 기존 프로세스 안전하게 종료
           echo "🛑 기존 프로세스 종료"
           pm2 stop all 2>/dev/null || true
           pm2 delete all 2>/dev/null || true
+          pkill -f "node" 2>/dev/null || true
           
           # 프로젝트 디렉토리로 이동
           cd /var/www/html/credit
           
+          # 현재 브랜치 확인
+          echo "🔍 현재 브랜치: $(git branch --show-current)"
+          echo "🔍 현재 커밋: $(git rev-parse HEAD)"
+          
           # 최신 코드 업데이트
           echo "📥 최신 코드 업데이트"
-          git pull origin main
+          git fetch origin main
+          git reset --hard origin/main
+          
+          # 캐시 완전 삭제
+          echo "🧹 캐시 삭제"
+          rm -rf .next
+          rm -rf node_modules
           
           # 의존성 설치
           echo "📦 의존성 설치"
           npm install
           
           # 빌드
-          echo "🏗️ 빌드"
+          echo "🏗️ 빌드 시작"
           npm run build
+          echo "✅ 빌드 완료"
+          
+          # 빌드 결과 확인
+          if [ -d ".next" ]; then
+            echo "✅ .next 폴더 생성됨"
+            ls -la .next/
+          else
+            echo "❌ .next 폴더가 생성되지 않음"
+            exit 1
+          fi
           
           # PM2로 앱 시작
           echo "🚀 앱 시작"
           NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory" -- start
           pm2 save
           
+          # 잠시 대기
+          sleep 5
+          
           # 상태 확인
           echo "📊 배포 상태 확인"
           pm2 list
+          pm2 logs creditstory --lines 10
+          
+          # 헬스체크
+          echo "🔍 헬스체크"
+          curl -I http://localhost:3000/ || echo "❌ 헬스체크 실패"
           
           echo "✅ 배포 완료!"
+          echo "🎉 배포 성공: $(date)"
           
     - name: 파일 업로드
       uses: appleboy/scp-action@v0.1.4
