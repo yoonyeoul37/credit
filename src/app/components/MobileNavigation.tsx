@@ -92,7 +92,6 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' })
                     }`}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
-                    <span className="text-2xl">{item.icon}</span>
                     <span>{item.name}</span>
                   </Link>
                 ))}
