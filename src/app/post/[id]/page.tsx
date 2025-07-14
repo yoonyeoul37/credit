@@ -43,59 +43,109 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   // 광고 데이터 상태
   const [premiumAd, setPremiumAd] = useState({
+    id: null,
     isActive: false,
     title: '',
-    content: ''
+    content: '',
+    link_url: ''
   });
   
   const [listAd, setListAd] = useState({
+    id: null,
     isActive: false,
     title: '',
-    content: ''
+    content: '',
+    link_url: ''
   });
 
   // 광고 데이터 가져오기
   useEffect(() => {
     const fetchAds = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
-      
-      if (isProduction) {
-        // 프로덕션: 실제 광고 API 호출
-        try {
-          const response = await fetch('/api/ads?position=header');
-          const data = await response.json();
-          
-          if (data.ads && data.ads.length > 0) {
-            setPremiumAd({
-              isActive: true,
-              title: data.ads[0].title,
-              content: data.ads[0].description
-            });
-          }
-          
-          const listResponse = await fetch('/api/ads?position=sidebar');
-          const listData = await listResponse.json();
-          
-          if (listData.ads && listData.ads.length > 0) {
-            setListAd({
-              isActive: true,
-              title: listData.ads[0].title,
-              content: listData.ads[0].description
-            });
-          }
-        } catch (error) {
-          console.error('광고 데이터 가져오기 실패:', error);
+      // 실제 광고 API 호출 (개발/프로덕션 모두)
+      try {
+        const response = await fetch('/api/ads?position=header');
+        const data = await response.json();
+        
+        if (data.ads && data.ads.length > 0) {
+          // 가중치 기반 랜덤 선택
+          const selectedAd = getWeightedRandomAd(data.ads);
+          setPremiumAd({
+            id: selectedAd.id,
+            isActive: true,
+            title: selectedAd.title,
+            content: selectedAd.description,
+            link_url: selectedAd.url || ''
+          });
         }
-      } else {
-        // 개발환경: 광고 비활성화
-        console.log('🚧 개발 모드: 광고 데이터 없음');
-        setPremiumAd({ isActive: false, title: '', content: '' });
-        setListAd({ isActive: false, title: '', content: '' });
+        
+        const listResponse = await fetch('/api/ads?position=sidebar');
+        const listData = await listResponse.json();
+        
+        if (listData.ads && listData.ads.length > 0) {
+          // 가중치 기반 랜덤 선택
+          const selectedListAd = getWeightedRandomAd(listData.ads);
+          setListAd({
+            id: selectedListAd.id,
+            isActive: true,
+            title: selectedListAd.title,
+            content: selectedListAd.description,
+            link_url: selectedListAd.url || ''
+          });
+        }
+      } catch (error) {
+        console.error('광고 데이터 가져오기 실패:', error);
+        setPremiumAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
+        setListAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
       }
+    };
+
+    // 가중치 기반 랜덤 광고 선택 함수
+    const getWeightedRandomAd = (ads) => {
+      if (ads.length === 1) return ads[0];
+      
+      // 우선순위를 가중치로 사용 (최소 가중치 1)
+      const totalWeight = ads.reduce((sum, ad) => sum + Math.max(ad.priority || 1, 1), 0);
+      let random = Math.random() * totalWeight;
+      
+      for (let ad of ads) {
+        const weight = Math.max(ad.priority || 1, 1);
+        random -= weight;
+        if (random <= 0) return ad;
+      }
+      
+      // fallback: 첫 번째 광고 반환
+      return ads[0];
     };
 
     fetchAds();
   }, []);
+
+  // 광고 클릭 핸들러
+  const handleAdClick = async (adId: number, adUrl?: string) => {
+    if (adId && adUrl) {
+      try {
+        // 광고 클릭 추적
+        await fetch(`/api/ads/${adId}/click`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_agent: navigator.userAgent,
+            referrer: window.location.href,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        // 광고 링크로 이동
+        window.open(adUrl, '_blank');
+      } catch (error) {
+        console.error('광고 클릭 추적 실패:', error);
+        // 추적 실패해도 링크는 열기
+        window.open(adUrl, '_blank');
+      }
+    }
+  };
 
   // 게시글 데이터 가져오기
   useEffect(() => {
@@ -547,7 +597,10 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         {/* 상단 프리미엄 광고 */}
         {premiumAd?.isActive && (
           <div className="mb-4 md:mb-6 flex justify-center">
-            <div className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4">
+            <div 
+              className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4 cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
+              onClick={() => handleAdClick(premiumAd.id, premiumAd.link_url)}
+            >
               <div className="text-center">
                 <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
                 <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
@@ -708,15 +761,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         {/* 리스트 광고 */}
         {post && listAd?.isActive && (
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <div className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3">
+            <div 
+              className="flex items-start py-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-3 cursor-pointer hover:bg-gradient-to-r hover:from-orange-100 hover:to-amber-100 transition-all duration-200"
+              onClick={() => handleAdClick(listAd.id, listAd.link_url)}
+            >
               <div className="flex-shrink-0 w-8 md:w-8 text-right">
                 <span className="text-xs md:text-sm text-orange-400">#AD</span>
               </div>
               <div className="flex-1 ml-3 md:ml-4">
                 <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                  <a href="#" className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
+                  <span className="text-black hover:text-orange-600 text-sm md:text-base leading-relaxed">
                     {listAd.title}
-                  </a>
+                  </span>
                   <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded self-start">
                     금융 광고
                   </span>
@@ -966,6 +1022,17 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* 신고 모달 */}
+      {showReportModal && reportTarget && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          onReportSubmit={handleReportSubmit}
+          targetType={reportTarget.type}
+          targetId={reportTarget.id}
+        />
+      )}
+
       {/* 스티키 광고 */}
       {showStickyAd && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
@@ -996,17 +1063,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         </div>
-      )}
-
-      {/* 신고 모달 */}
-      {showReportModal && reportTarget && (
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          onReportSubmit={handleReportSubmit}
-          targetType={reportTarget.type}
-          targetId={reportTarget.id}
-        />
       )}
     </div>
   );

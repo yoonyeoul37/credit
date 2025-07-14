@@ -47,29 +47,42 @@ export default function CardPage() {
   // 프리미엄 광고 데이터 가져오기
   useEffect(() => {
     const fetchAds = async () => {
-      const isProduction = true; // 실제 API 사용
-      
-      if (isProduction) {
-        // 프로덕션: 실제 광고 API 호출
-        try {
-          const response = await fetch('/api/ads?position=header');
-          const data = await response.json();
-          
-          if (data.ads && data.ads.length > 0) {
-            setPremiumAd({
-              isActive: true,
-              title: data.ads[0].title,
-              content: data.ads[0].description
-            });
-          }
-        } catch (error) {
-          console.error('광고 데이터 가져오기 실패:', error);
+      // 실제 광고 API 호출 (개발/프로덕션 모두)
+      try {
+        const response = await fetch('/api/ads?position=header');
+        const data = await response.json();
+        
+        if (data.ads && data.ads.length > 0) {
+          // 가중치 기반 랜덤 선택
+          const selectedAd = getWeightedRandomAd(data.ads);
+          setPremiumAd({
+            isActive: true,
+            title: selectedAd.title,
+            content: selectedAd.description
+          });
         }
-      } else {
-        // 개발환경: 광고 비활성화
-        console.log('🚧 개발 모드: 광고 데이터 없음');
+      } catch (error) {
+        console.error('광고 데이터 가져오기 실패:', error);
         setPremiumAd({ isActive: false, title: '', content: '' });
       }
+    };
+
+    // 가중치 기반 랜덤 광고 선택 함수
+    const getWeightedRandomAd = (ads) => {
+      if (ads.length === 1) return ads[0];
+      
+      // 우선순위를 가중치로 사용 (최소 가중치 1)
+      const totalWeight = ads.reduce((sum, ad) => sum + Math.max(ad.priority || 1, 1), 0);
+      let random = Math.random() * totalWeight;
+      
+      for (let ad of ads) {
+        const weight = Math.max(ad.priority || 1, 1);
+        random -= weight;
+        if (random <= 0) return ad;
+      }
+      
+      // fallback: 첫 번째 광고 반환
+      return ads[0];
     };
     
     fetchAds();
