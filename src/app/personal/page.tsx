@@ -8,17 +8,17 @@ export default function PersonalPage() {
   const postsPerPage = 10;
   const [showStickyAd, setShowStickyAd] = useState(true);
   
-  // 광고 데이터 (실제로는 관리자 페이지에서 가져옴)
+  // 광고 데이터 비활성화
   const [premiumAd] = useState({
-    isActive: true,
-    title: '개인회생 전문 프리미엄 광고',
-    content: '728 × 90 (리더보드)'
+    isActive: false,
+    title: '',
+    content: ''
   });
   
   const [listAd] = useState({
-    isActive: true,
-    title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
-    content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
+    isActive: false,
+    title: '',
+    content: ''
   });
   
   const [posts, setPosts] = useState([]);

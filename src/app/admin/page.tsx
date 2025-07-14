@@ -46,7 +46,7 @@ export default function AdminPage() {
   // 관리자 데이터 가져오기
   useEffect(() => {
     const fetchAdminData = async () => {
-      const isProduction = true; // 항상 실제 API 호출하도록 수정
+      const isProduction = true; // 항상 실제 API 호출
       
       if (isProduction) {
         // 프로덕션: 실제 API 호출
@@ -87,121 +87,13 @@ export default function AdminPage() {
           console.error('관리자 데이터 로딩 실패:', error);
         }
       } else {
-        // 개발환경: 더미 데이터 사용
-        setAds([
-          {
-            id: 1,
-            type: 'premium',
-            title: '프리미엄 광고 1',
-            content: '프리미엄 광고 내용입니다.',
-            url: '#',
-            imageUrl: '',
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
-            isActive: true,
-            createdAt: '2024-01-01'
-          },
-          {
-            id: 2,
-            type: 'list',
-            title: '리스트 광고 1',
-            content: '리스트 광고 내용입니다.',
-            url: '#',
-            imageUrl: '',
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
-            isActive: true,
-            createdAt: '2024-01-01'
-          }
-        ]);
-
-        setPosts([
-          {
-            id: 1,
-            title: '신용회복 성공 사례',
-            content: '신용회복 성공 사례 내용입니다.',
-            author: '작성자1',
-            category: 'credit',
-            views: 150,
-            likes: 5,
-            comments: 3,
-            createdAt: '2024-01-15'
-          },
-          {
-            id: 2,
-            title: '개인회생 신청 방법',
-            content: '개인회생 신청 방법에 대한 내용입니다.',
-            author: '작성자2',
-            category: 'personal',
-            views: 200,
-            likes: 8,
-            comments: 5,
-            createdAt: '2024-01-14'
-          }
-        ]);
-
-        setComments([
-          {
-            id: 1,
-            content: '좋은 정보 감사합니다.',
-            author: '댓글작성자1',
-            postId: 1,
-            reports: 0,
-            createdAt: '2024-01-15'
-          },
-          {
-            id: 2,
-            content: '저도 비슷한 경험이 있습니다.',
-            author: '댓글작성자2',
-            postId: 1,
-            reports: 1,
-            createdAt: '2024-01-15'
-          }
-        ]);
-
-        setReports([
-          {
-            id: 1,
-            type: 'post',
-            targetId: 1,
-            reason: '스팸/광고',
-            reporter: '신고자1',
-            createdAt: '2024-01-15'
-          },
-          {
-            id: 2,
-            type: 'comment',
-            targetId: 1,
-            reason: '부적절한 언어',
-            reporter: '신고자2',
-            createdAt: '2024-01-15'
-          }
-        ]);
-
-        setNewsItems([
-          {
-            id: 1,
-            title: '2024년 신용회복 정책 변경 사항',
-            summary: '금융위원회에서 발표한 신용회복 지원 정책의 주요 변경 사항을 안내드립니다.',
-            source: '금융위원회',
-            url: '#',
-            publishedAt: '2024-01-15',
-            category: '정책',
-            isImportant: true,
-            isActive: true
-          },
-          {
-            id: 2,
-            title: '개인회생 신청 절차 간소화',
-            summary: '개인회생 신청 절차가 간소화되어 더욱 쉽게 신청할 수 있게 되었습니다.',
-            source: '법원행정처',
-            url: '#',
-            publishedAt: '2024-01-14',
-            category: '정책',
-            isImportant: false,
-            isActive: true
-          }
-        ]);
+        // 개발환경: 빈 배열로 설정
+        console.log('🚧 개발 모드: API 연결 대기 중');
+        setAds([]);
+        setPosts([]);
+        setComments([]);
+        setReports([]);
+        setNewsItems([]);
       }
       
       setLoading(false);
@@ -210,32 +102,74 @@ export default function AdminPage() {
     fetchAdminData();
   }, []);
 
-  const handleAdSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAdSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newAd = {
-      id: ads.length + 1,
-      ...adForm,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setAds([...ads, newAd]);
-    setAdForm({ 
-      type: 'premium', 
-      title: '', 
-      content: '', 
-      url: '', 
-      imageUrl: '', 
-      startDate: '', 
-      endDate: '', 
-      isActive: true 
-    });
-    setShowModal(false);
-    alert('광고가 등록되었습니다.');
+    
+    try {
+      const response = await fetch('/api/admin/ads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: adForm.title,
+          description: adForm.content,
+          image_url: adForm.imageUrl,
+          link_url: adForm.url,
+          position: adForm.type === 'premium' ? 'header' : adForm.type === 'list' ? 'sidebar' : 'content',
+          start_date: adForm.startDate,
+          end_date: adForm.endDate,
+          is_active: adForm.isActive
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setAds([...ads, result.ad]);
+        setAdForm({ 
+          type: 'premium', 
+          title: '', 
+          content: '', 
+          url: '', 
+          imageUrl: '', 
+          startDate: '', 
+          endDate: '', 
+          isActive: true 
+        });
+        setShowModal(false);
+        alert('광고가 등록되었습니다.');
+      } else {
+        const error = await response.json();
+        alert(`광고 등록에 실패했습니다: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('광고 등록 오류:', error);
+      alert('광고 등록 중 오류가 발생했습니다.');
+    }
   };
 
-  const handleDeleteAd = (id: number) => {
+  const handleDeleteAd = async (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
-      setAds(ads.filter(ad => ad.id !== id));
-      alert('광고가 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/ads', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: [id] }),
+        });
+
+        if (response.ok) {
+          setAds(ads.filter(ad => ad.id !== id));
+          alert('광고가 삭제되었습니다.');
+        } else {
+          const error = await response.json();
+          alert(`광고 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('광고 삭제 오류:', error);
+        alert('광고 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -264,10 +198,28 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteComment = (id: number) => {
+  const handleDeleteComment = async (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
-      setComments(comments.filter(comment => comment.id !== id));
-      alert('댓글이 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/comments', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: [id] }),
+        });
+
+        if (response.ok) {
+          setComments(comments.filter(comment => comment.id !== id));
+          alert('댓글이 삭제되었습니다.');
+        } else {
+          const error = await response.json();
+          alert(`댓글 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('댓글 삭제 오류:', error);
+        alert('댓글 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -300,32 +252,73 @@ export default function AdminPage() {
     }
   };
 
-  const handleNewsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleNewsSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newNews = {
-      id: newsItems.length + 1,
-      ...newsForm,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setNewsItems([...newsItems, newNews]);
-    setNewsForm({
-      title: '',
-      summary: '',
-      source: '',
-      url: '',
-      publishedAt: '',
-      category: '정책',
-      isImportant: false,
-      isActive: true
-    });
-    setShowModal(false);
-    alert('뉴스가 등록되었습니다.');
+    
+    try {
+      const response = await fetch('/api/admin/news', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newsForm.title,
+          summary: newsForm.summary,
+          source: newsForm.source,
+          url: newsForm.url,
+          category: newsForm.category,
+          is_important: newsForm.isImportant,
+          published_at: newsForm.publishedAt || new Date().toISOString()
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setNewsItems([...newsItems, result.news]);
+        setNewsForm({
+          title: '',
+          summary: '',
+          source: '',
+          url: '',
+          publishedAt: '',
+          category: '정책',
+          isImportant: false,
+          isActive: true
+        });
+        setShowModal(false);
+        alert('뉴스가 등록되었습니다.');
+      } else {
+        const error = await response.json();
+        alert(`뉴스 등록에 실패했습니다: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('뉴스 등록 오류:', error);
+      alert('뉴스 등록 중 오류가 발생했습니다.');
+    }
   };
 
-  const handleDeleteNews = (id: number) => {
+  const handleDeleteNews = async (id: number) => {
     if (confirm('정말로 삭제하시겠습니까?')) {
-      setNewsItems(newsItems.filter(news => news.id !== id));
-      alert('뉴스가 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/news', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: [id] }),
+        });
+
+        if (response.ok) {
+          setNewsItems(newsItems.filter(news => news.id !== id));
+          alert('뉴스가 삭제되었습니다.');
+        } else {
+          const error = await response.json();
+          alert(`뉴스 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('뉴스 삭제 오류:', error);
+        alert('뉴스 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -369,16 +362,34 @@ export default function AdminPage() {
     }
   };
 
-  const handleBulkDeleteAds = () => {
+  const handleBulkDeleteAds = async () => {
     if (selectedAds.length === 0) {
       alert('삭제할 광고를 선택해주세요.');
       return;
     }
     
     if (confirm(`선택한 ${selectedAds.length}개의 광고를 삭제하시겠습니까?`)) {
-      setAds(ads.filter(ad => !selectedAds.includes(ad.id)));
-      setSelectedAds([]);
-      alert('선택한 광고들이 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/ads', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: selectedAds }),
+        });
+
+        if (response.ok) {
+          setAds(ads.filter(ad => !selectedAds.includes(ad.id)));
+          setSelectedAds([]);
+          alert(`${selectedAds.length}개의 광고가 삭제되었습니다.`);
+        } else {
+          const error = await response.json();
+          alert(`광고 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('광고 일괄 삭제 오류:', error);
+        alert('광고 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -398,16 +409,34 @@ export default function AdminPage() {
     }
   };
 
-  const handleBulkDeleteNews = () => {
+  const handleBulkDeleteNews = async () => {
     if (selectedNews.length === 0) {
       alert('삭제할 뉴스를 선택해주세요.');
       return;
     }
     
     if (confirm(`선택한 ${selectedNews.length}개의 뉴스를 삭제하시겠습니까?`)) {
-      setNewsItems(newsItems.filter(news => !selectedNews.includes(news.id)));
-      setSelectedNews([]);
-      alert('선택한 뉴스들이 삭제되었습니다.');
+      try {
+        const response = await fetch('/api/admin/news', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: selectedNews }),
+        });
+
+        if (response.ok) {
+          setNewsItems(newsItems.filter(news => !selectedNews.includes(news.id)));
+          setSelectedNews([]);
+          alert(`${selectedNews.length}개의 뉴스가 삭제되었습니다.`);
+        } else {
+          const error = await response.json();
+          alert(`뉴스 삭제에 실패했습니다: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('뉴스 일괄 삭제 오류:', error);
+        alert('뉴스 삭제 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -1174,9 +1203,9 @@ export default function AdminPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded ${
                             news.category === '정책' ? 'bg-red-100 text-red-800' :
-                            news.category === '신용' ? 'bg-blue-100 text-blue-800' :
-                            news.category === '금리' ? 'bg-green-100 text-green-800' :
-                            news.category === '카드' ? 'bg-orange-100 text-orange-800' :
+                            news.category === '금융' ? 'bg-blue-100 text-blue-800' :
+                            news.category === '법률' ? 'bg-green-100 text-green-800' :
+                            news.category === '일반' ? 'bg-gray-100 text-gray-800' :
                             'bg-purple-100 text-purple-800'
                           }`}>
                             {news.category}
@@ -1358,10 +1387,9 @@ export default function AdminPage() {
                     className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   >
                     <option value="정책">정책</option>
-                    <option value="신용">신용</option>
-                    <option value="금리">금리</option>
-                    <option value="카드">카드</option>
-                    <option value="대출">대출</option>
+                    <option value="금융">금융</option>
+                    <option value="법률">법률</option>
+                    <option value="일반">일반</option>
                   </select>
                 </div>
                 <div className="flex items-center space-x-4">

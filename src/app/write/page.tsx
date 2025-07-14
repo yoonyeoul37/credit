@@ -243,20 +243,39 @@ export default function WritePage() {
           throw new Error(result.error || (isEditMode ? '글 수정에 실패했습니다.' : '글 등록에 실패했습니다.'));
         }
       } else {
-        // 개발환경: 더미 모드 (현재 사용)
-        console.log('🚧 임시 모드: 글쓰기 시뮬레이션:', {
-          title: formData.title,
-          content: formData.content,
-          author: formData.nickname,
-          category: formData.category
+        // 개발환경: 실제 API 호출 시도
+        console.log('🚧 개발 모드에서도 실제 API 호출 시도');
+        
+        const apiUrl = isEditMode ? `/api/posts/${editPostId}` : '/api/posts';
+        const method = isEditMode ? 'PUT' : 'POST';
+        
+        const response = await fetch(apiUrl, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            content: formData.content,
+            author: formData.nickname,
+            password: formData.password,
+            category: formData.category,
+            images: formData.images.map(img => img.preview)
+          }),
         });
-        
-        // 성공 시뮬레이션 (1초 대기)
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        alert('✅ 글이 성공적으로 등록되었습니다!\n(임시 모드: API 수정 중)');
-        
-        router.push(categoryRoutes[formData.category] || '/');
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(isEditMode ? '글이 성공적으로 수정되었습니다!' : '글이 성공적으로 등록되었습니다!');
+          if (isEditMode) {
+            router.push(`/post/${editPostId}`);
+          } else {
+            router.push(categoryRoutes[formData.category] || '/');
+          }
+        } else {
+          throw new Error(result.error || (isEditMode ? '글 수정에 실패했습니다.' : '글 등록에 실패했습니다.'));
+        }
       }
       
     } catch (error) {

@@ -87,18 +87,10 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           console.error('광고 데이터 가져오기 실패:', error);
         }
       } else {
-        // 개발환경: 더미 광고 데이터
-        setPremiumAd({
-          isActive: true,
-          title: '신용회복 전문 상담센터 - 프리미엄 광고',
-          content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
-        });
-        
-        setListAd({
-          isActive: true,
-          title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
-          content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
-        });
+        // 개발환경: 광고 비활성화
+        console.log('🚧 개발 모드: 광고 데이터 없음');
+        setPremiumAd({ isActive: false, title: '', content: '' });
+        setListAd({ isActive: false, title: '', content: '' });
       }
     };
 

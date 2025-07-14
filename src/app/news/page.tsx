@@ -12,135 +12,42 @@ export default function NewsPage() {
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // 관리자 뉴스 목록 가져오기
+  // 뉴스 목록 가져오기
   useEffect(() => {
     const fetchNews = async () => {
-      const isProduction = process.env.NODE_ENV === 'production';
-      
-      if (isProduction) {
-        // 프로덕션: 실제 API 호출
-        try {
-          const response = await fetch('/api/news');
-          const data = await response.json();
-          
-          if (response.ok) {
-            setNewsItems(data.news || []);
-          } else {
-            throw new Error('뉴스를 불러오는데 실패했습니다.');
-          }
-        } catch (error) {
-          console.error('뉴스 로딩 실패:', error);
-          setNewsItems([]);
-        }
-      } else {
-        // 개발환경: 더미 뉴스 데이터
-        const allNewsItems = [
-          {
-            id: 1,
-            title: "2024년 개인회생 신청 절차 변경사항 발표",
-            summary: "법원 접수 서류 간소화 및 온라인 신청 확대",
-            source: "금융감독원",
-            url: "https://www.fss.or.kr",
-            publishedAt: "2024-01-15",
-            category: "정책",
-            isImportant: true
-          },
-          {
-            id: 2,
-            title: "신용등급 평가기준 개편, 무엇이 달라지나?",
-            summary: "소득 대비 부채비율 반영 비중 확대",
-            source: "한국경제신문",
-            url: "https://www.hankyung.com",
-            publishedAt: "2024-01-14",
-            category: "신용",
-            isImportant: false
-          },
-          {
-            id: 3,
-            title: "금리 인하 전망, 대출자들에게 미치는 영향",
-            summary: "기준금리 0.25%p 인하 가능성 높아져",
-            source: "연합뉴스",
-            url: "https://www.yna.co.kr",
-            publishedAt: "2024-01-13",
-            category: "금리",
-            isImportant: false
-          },
-          {
-            id: 4,
-            title: "신용회복위원회, 새로운 채무조정 프로그램 출시",
-            summary: "최대 90% 감면 혜택, 신청 자격 완화",
-            source: "매일경제",
-            url: "https://www.mk.co.kr",
-            publishedAt: "2024-01-12",
-            category: "정책",
-            isImportant: true
-          },
-          {
-            id: 5,
-            title: "카드 연체율 상승세, 소비자 주의 필요",
-            summary: "전년 대비 0.3%p 상승, 관리 필요성 증대",
-            source: "머니투데이",
-            url: "https://www.mt.co.kr",
-            publishedAt: "2024-01-11",
-            category: "카드",
-            isImportant: false
-          },
-          {
-            id: 6,
-            title: "가계부채 증가율 둔화, 정책 효과 나타나",
-            summary: "전월 대비 0.1%p 증가, 역대 최저 수준",
-            source: "한국은행",
-            url: "https://www.bok.or.kr",
-            publishedAt: "2024-01-10",
-            category: "정책",
-            isImportant: true
-          },
-          {
-            id: 7,
-            title: "신용대출 금리 상승, 대출 신청 급감",
-            summary: "주요 시중은행 평균 금리 0.2%p 상승",
-            source: "이데일리",
-            url: "https://www.edaily.co.kr",
-            publishedAt: "2024-01-09",
-            category: "대출",
-            isImportant: false
-          },
-          {
-            id: 8,
-            title: "워크아웃 신청 증가, 중소기업 어려움 가중",
-            summary: "전년 동기 대비 15% 증가, 업종별 차이 존재",
-            source: "비즈니스워치",
-            url: "https://www.bizwatch.co.kr",
-            publishedAt: "2024-01-08",
-            category: "정책",
-            isImportant: false
-          },
-          {
-            id: 9,
-            title: "신용카드 캐시백 규제 강화 방안 논의",
-            summary: "과도한 혜택 경쟁 방지를 위한 가이드라인 검토",
-            source: "파이낸셜뉴스",
-            url: "https://www.fnnews.com",
-            publishedAt: "2024-01-07",
-            category: "카드",
-            isImportant: false
-          },
-          {
-            id: 10,
-            title: "법정관리 신청 기업 수 감소, 경기 회복 신호",
-            summary: "전년 대비 20% 감소, 제조업 중심 개선",
-            source: "서울경제",
-            url: "https://www.sedaily.com",
-            publishedAt: "2024-01-06",
-            category: "정책",
-            isImportant: true
-          }
-        ];
+      try {
+        console.log('🌐 뉴스 API 호출 시도...');
         
-        setNewsItems(allNewsItems);
+        const response = await fetch('/api/news');
+        const data = await response.json();
+        
+        if (response.ok) {
+          console.log('✅ 뉴스 데이터 로드 성공:', data.news?.length || 0, '개');
+          
+          // 데이터 포맷 변환 (기존 UI에 맞게)
+          const formattedNews = (data.news || []).map(item => ({
+            id: item.id,
+            title: item.title,
+            summary: item.summary,
+            source: item.source,
+            url: item.url || '#',
+            publishedAt: new Date(item.published_at).toLocaleDateString(),
+            category: item.category,
+            isImportant: item.is_important
+          }));
+          
+          setNewsItems(formattedNews);
+        } else {
+          throw new Error(data.error || '뉴스를 불러오는데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('❌ 뉴스 로딩 실패:', error);
+        
+        // 오류 시 빈 배열로 설정
+        setNewsItems([]);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     fetchNews();
@@ -164,10 +71,9 @@ export default function NewsPage() {
 
   const categoryColors: { [key: string]: string } = {
     "정책": "bg-red-100 text-red-800",
-    "신용": "bg-blue-100 text-blue-800", 
-    "금리": "bg-green-100 text-green-800",
-    "카드": "bg-orange-100 text-orange-800",
-    "대출": "bg-purple-100 text-purple-800"
+    "금융": "bg-blue-100 text-blue-800", 
+    "법률": "bg-green-100 text-green-800",
+    "일반": "bg-gray-100 text-gray-800"
   };
 
   return (
@@ -212,15 +118,7 @@ export default function NewsPage() {
           <p className="text-sm text-gray-600">최신 금융·신용 관련 뉴스와 정책 정보</p>
         </div>
 
-        {/* 프리미엄 광고 */}
-        <div className="mb-8 flex justify-center">
-          <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
-            <div className="text-center">
-              <div className="text-lg mb-1">신용회복 전문 상담센터 - 프리미엄 광고</div>
-              <div className="text-xs text-blue-500">24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공</div>
-            </div>
-          </div>
-        </div>
+        {/* 프리미엄 광고 영역 (현재 비활성화) */}
 
 
 
@@ -233,30 +131,7 @@ export default function NewsPage() {
           ) : (
             displayedNews.map((news, index) => (
               <div key={news.id}>
-                {/* 리스트 광고 (6번째 뉴스 뒤에 삽입) */}
-                {index === 5 && (
-                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2 mb-4">
-                    <div className="flex-shrink-0 w-8 text-right">
-                      <span className="text-sm text-orange-400">#AD</span>
-                    </div>
-                    <div className="flex-1 ml-4">
-                      <div className="flex items-center space-x-2">
-                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                          저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
-                        </a>
-                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                          금융 광고
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                        <span>핀테크 플랫폼</span>
-                        <span>AI 분석</span>
-                        <span>최저금리</span>
-                        <span>즉시 심사</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* 리스트 광고 영역 (현재 비활성화) */}
                 
                 {/* 뉴스 카드 */}
                 <article className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">

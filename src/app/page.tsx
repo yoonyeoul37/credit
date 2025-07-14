@@ -71,25 +71,17 @@ export default function Home() {
           console.error('광고 데이터 가져오기 실패:', error);
         }
       } else {
-        // 개발환경: 더미 광고 데이터
-        setPremiumAd({
-          isActive: true,
-          title: '신용회복 전문 상담센터 - 프리미엄 광고',
-          content: '24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공'
-        });
-        
-        setListAd({
-          isActive: true,
-          title: '저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천',
-          content: '핀테크 플랫폼 | AI 분석 | 최저금리 | 즉시 심사'
-        });
+        // 개발환경: 광고 비활성화
+        console.log('🚧 개발 모드: 광고 데이터 없음');
+        setPremiumAd({ isActive: false, title: '', content: '' });
+        setListAd({ isActive: false, title: '', content: '' });
       }
     };
     
     fetchAds();
   }, []);
   
-  // API에서 게시글 데이터 가져오기 (Supabase 미설정 시 더미 데이터 사용)
+  // API에서 게시글 데이터 가져오기
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -142,58 +134,9 @@ export default function Home() {
           setLoading(false);
           return;
         } else {
-          // 개발환경: 더미 데이터 사용
-          console.log('🚧 개발 모드: 더미 데이터 사용');
-          
-          const dummyPosts = [
-            {
-              id: 1,
-              title: "개인회생 신청 후 신용 회복 과정 질문드립니다",
-              category: "개인회생",
-              author: "회생성공자",
-              createdAt: "2시간 전",
-              commentCount: 12,
-              views: 89
-            },
-            {
-              id: 2,
-              title: "신용카드 연체 상황에서 대출 가능한 곳이 있을까요?",
-              category: "신용카드",
-              author: "신용회복중",
-              createdAt: "4시간 전",
-              commentCount: 8,
-              views: 156
-            },
-            {
-              id: 3,
-              title: "워크아웃 진행 중인데 추가 대출이 필요합니다",
-              category: "워크아웃",
-              author: "재정전문가",
-              createdAt: "6시간 전",
-              commentCount: 15,
-              views: 203
-            },
-            {
-              id: 4,
-              title: "법인회생 절차 관련 경험담 공유합니다",
-              category: "법인회생",
-              author: "법인대표",
-              createdAt: "8시간 전",
-              commentCount: 5,
-              views: 67
-            },
-            {
-              id: 5,
-              title: "신용등급 상승을 위한 실질적인 방법들",
-              category: "신용이야기",
-              author: "대출마스터",
-              createdAt: "10시간 전",
-              commentCount: 23,
-              views: 301
-            }
-          ];
-          
-          setPosts(dummyPosts);
+          // 개발환경: 빈 배열로 설정
+          console.log('🚧 개발 모드: API 연결 대기 중');
+          setPosts([]);
           setError(null);
           setLoading(false);
           return;
@@ -237,21 +180,10 @@ export default function Home() {
         setPosts(formattedPosts);
         */
       } catch (err) {
-        // 혹시 오류 발생 시 더미 데이터 사용
-        console.log('🚧 오류 발생: 더미 데이터로 대체');
-        const fallbackPosts = [
-          {
-            id: 1,
-            title: "개인회생 신청 후기 - 성공사례 공유",
-            category: "개인회생",
-            author: "회생성공자",
-            createdAt: "2시간 전",
-            commentCount: 12,
-            views: 89
-          }
-        ];
-        setPosts(fallbackPosts);
-        setError(null);
+        // 오류 발생 시 빈 배열로 설정
+        console.error('❌ 게시글 로딩 실패:', err);
+        setPosts([]);
+        setError('게시글을 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
       }

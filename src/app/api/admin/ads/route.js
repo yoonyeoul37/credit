@@ -124,27 +124,33 @@ export async function PUT(request) {
   }
 }
 
-// 관리자 광고 삭제
+// 관리자 광고 삭제 (단일 또는 일괄)
 export async function DELETE(request) {
   try {
-    const { id } = await request.json();
+    const { id, ids } = await request.json();
     
-    if (!id) {
-      return NextResponse.json({ error: '광고 ID가 필요합니다.' }, { status: 400 });
+    // 단일 삭제 또는 일괄 삭제 지원
+    const deleteIds = ids || (id ? [id] : []);
+    
+    if (!deleteIds || deleteIds.length === 0) {
+      return NextResponse.json({ error: '삭제할 광고 ID가 필요합니다.' }, { status: 400 });
     }
     
     // 광고 삭제
     const { error } = await supabase
       .from('ads')
       .delete()
-      .eq('id', id);
+      .in('id', deleteIds);
     
     if (error) {
       console.error('관리자 광고 삭제 오류:', error);
       return NextResponse.json({ error: '광고 삭제에 실패했습니다.' }, { status: 500 });
     }
     
-    return NextResponse.json({ message: '광고가 삭제되었습니다.' });
+    return NextResponse.json({ 
+      message: `${deleteIds.length}개의 광고가 삭제되었습니다.`,
+      deletedCount: deleteIds.length
+    });
     
   } catch (error) {
     console.error('관리자 광고 삭제 API 오류:', error);

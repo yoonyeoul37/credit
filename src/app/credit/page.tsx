@@ -31,83 +31,9 @@ export default function CreditPage() {
           setPosts([]);
         }
       } else {
-        // 개발환경: 임시 데이터
-        const allCreditPosts = [
-          {
-            id: 11,
-            title: "신용등급 7등급에서 2등급까지 올린 후기",
-            author: "익명",
-            createdAt: "1시간 전",
-            commentCount: 34,
-            views: 567,
-            likes: 12
-          },
-          {
-            id: 12,
-            title: "신용카드 연체 후 신용회복 과정 공유",
-            author: "익명",
-            createdAt: "3시간 전",
-            commentCount: 18,
-            views: 234,
-            likes: 5
-          },
-          {
-            id: 13,
-            title: "NICE 신용평가 vs KCB 신용평가 차이점",
-            author: "익명",
-            createdAt: "5시간 전",
-            commentCount: 11,
-            views: 189,
-            likes: 8
-          },
-          {
-            id: 14,
-            title: "신용회복위원회 프로그램 이용 후기",
-            author: "익명",
-            createdAt: "7시간 전",
-            commentCount: 26,
-            views: 345,
-            likes: 15
-          },
-          {
-            id: 15,
-            title: "신용 관리 앱 추천 및 사용법",
-            author: "익명",
-            createdAt: "9시간 전",
-            commentCount: 8,
-            views: 156,
-            likes: 3
-          },
-          {
-            id: 16,
-            title: "부실 채권 매각 후 신용등급 변화",
-            author: "익명",
-            createdAt: "11시간 전",
-            commentCount: 15,
-            views: 289,
-            likes: 10
-          },
-          {
-            id: 17,
-            title: "신용보증재단 대출 후기",
-            author: "익명",
-            createdAt: "13시간 전",
-            commentCount: 22,
-            views: 401,
-            likes: 18
-          },
-          {
-            id: 18,
-            title: "개인신용정보 무료 조회 방법",
-            author: "익명",
-            createdAt: "15시간 전",
-            commentCount: 19,
-            views: 325,
-            likes: 7
-          }
-        ];
-        
-        setPosts(allCreditPosts);
+        // 개발환경: 빈 배열로 설정
+        console.log('🚧 개발 모드: API 연결 대기 중');
+        setPosts([]);
       }
       
       setLoading(false);
@@ -174,15 +100,7 @@ export default function CreditPage() {
           <p className="text-sm text-gray-600">신용등급 관리와 신용회복에 관한 이야기를 나눠보세요</p>
         </div>
 
-        {/* 프리미엄 광고 */}
-        <div className="mb-6 flex justify-center">
-          <div className="w-[728px] h-[90px] bg-red-50 border border-red-200 flex items-center justify-center text-sm text-red-600 rounded-lg">
-            <div className="text-center">
-              <div className="text-lg mb-1">신용관리 프리미엄 광고</div>
-              <div className="text-xs text-red-400">728 × 90 (리더보드)</div>
-            </div>
-          </div>
-        </div>
+        {/* 프리미엄 광고 영역 (현재 비활성화) */}
         
         {/* 글쓰기 버튼 */}
         <div className="flex justify-center mb-6">
