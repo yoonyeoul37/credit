@@ -32,9 +32,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' })
     setIsOpen(false)
   }
 
-  // 터치 이벤트 핸들러
-  const handleTouchStart = (e: React.TouchEvent) => {
+  // 햄버거 메뉴 클릭 핸들러 (터치와 클릭 모두 처리)
+  const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     toggleMenu();
   }
 
@@ -47,13 +48,13 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPage = '' })
             크레딧스토리
           </Link>
           <button
-            onClick={toggleMenu}
-            onTouchStart={handleTouchStart}
+            onClick={handleMenuClick}
             className="p-3 rounded-lg hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:bg-gray-100 touch-manipulation select-none"
             style={{ 
               WebkitTapHighlightColor: 'transparent',
               minWidth: '44px',
-              minHeight: '44px'
+              minHeight: '44px',
+              cursor: 'pointer'
             }}
             aria-label="메뉴 열기"
             type="button"
