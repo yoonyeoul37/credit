@@ -11,16 +11,16 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const menuItems = [
-    { name: '홈', href: '/', icon: '🏠' },
-    { name: '신용이야기', href: '/credit', icon: '💳' },
-    { name: '개인회생', href: '/personal', icon: '👤' },
-    { name: '법인회생', href: '/corporate', icon: '🏢' },
-    { name: '워크아웃', href: '/workout', icon: '🏋️' },
-    { name: '신용카드', href: '/card', icon: '💎' },
-    { name: '대출', href: '/loan', icon: '💰' },
-    { name: '뉴스정보', href: '/news', icon: '📰' },
-    { name: '계산기', href: '/calculator', icon: '🔢' },
-    { name: '광고문의', href: '/ad', icon: '📢' },
+    { name: '홈', href: '/' },
+    { name: '신용이야기', href: '/credit' },
+    { name: '개인회생', href: '/personal' },
+    { name: '법인회생', href: '/corporate' },
+    { name: '워크아웃', href: '/workout' },
+    { name: '신용카드', href: '/card' },
+    { name: '대출', href: '/loan' },
+    { name: '뉴스정보', href: '/news' },
+    { name: '계산기', href: '/calculator' },
+    { name: '광고문의', href: '/ad' },
   ]
 
   const toggleMenuState = () => {
@@ -105,7 +105,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPage = '' }) => {
                     className="flex items-center justify-center space-x-2 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium touch-manipulation"
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
-                    <span>✍️</span>
                     <span>글쓰기</span>
                   </Link>
                 </div>
