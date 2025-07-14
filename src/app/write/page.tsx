@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNavigation from '../components/MobileNavigation';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function WritePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showStickyAd, setShowStickyAd] = useState(true);
   const [formData, setFormData] = useState({
     nickname: '',
@@ -19,6 +20,17 @@ export default function WritePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
 
+  // URL 파라미터에서 카테고리 자동 설정
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setFormData(prev => ({
+        ...prev,
+        category: categoryParam
+      }));
+    }
+  }, [searchParams]);
+
   const categories = [
     { id: 'credit', name: '신용이야기' },
     { id: 'personal', name: '개인회생' },
@@ -27,6 +39,15 @@ export default function WritePage() {
     { id: 'card', name: '신용카드' },
     { id: 'loan', name: '대출' }
   ];
+
+  // 현재 카테고리 이름 가져오기
+  const getCurrentCategoryName = () => {
+    const category = categories.find(cat => cat.id === formData.category);
+    return category ? category.name : '';
+  };
+
+  // 카테고리가 URL에서 지정되었는지 확인
+  const isAutoCategory = searchParams.get('category') !== null;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -269,19 +290,25 @@ export default function WritePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   카테고리 <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white appearance-none"
-                >
-                  <option value="">카테고리를 선택하세요</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                {isAutoCategory ? (
+                  <div className="w-full p-4 md:p-3 border border-gray-300 rounded-lg bg-gray-50 text-base text-gray-700">
+                    {getCurrentCategoryName()}
+                  </div>
+                ) : (
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white appearance-none"
+                  >
+                    <option value="">카테고리를 선택하세요</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               
               <div>

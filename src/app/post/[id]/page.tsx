@@ -1,14 +1,64 @@
+'use client';
+
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-// 정적 생성할 게시글 ID 목록
-export async function generateStaticParams() {
-  return [
-    { id: '1' },
-    { id: '2' },
-  ];
-}
+export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const resolvedParams = use(params);
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default function PostDetailPage({ params }: { params: { id: string } }) {
+  // 게시글 데이터 가져오기
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(`/api/posts/${resolvedParams.id}`);
+        
+        if (!response.ok) {
+          throw new Error('게시글을 찾을 수 없습니다.');
+        }
+
+        const data = await response.json();
+        setPost(data.post);
+      } catch (error: any) {
+        console.error('게시글 조회 오류:', error);
+        setError(error.message || '게시글을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [resolvedParams.id]);
+
+  // 시간 포맷 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // 카테고리 이름 매핑
+  const getCategoryName = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'credit': '신용이야기',
+      'personal': '개인회생',
+      'corporate': '법인회생',
+      'workout': '워크아웃',
+      'card': '신용카드',
+      'loan': '대출'
+    };
+    return categoryMap[category] || category;
+  };
+
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
       {/* 헤더 */}
@@ -48,27 +98,71 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <article className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="border-b border-gray-200 pb-4 mb-6">
-            <h1 className="text-2xl font-medium text-black mb-3">
-              게시글 #{params.id} - 정적 사이트 배포 테스트
-            </h1>
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span className="font-medium text-gray-700">테스트 작성자</span>
-              <span>2024-01-15 14:30</span>
-            </div>
+        {/* 로딩 상태 */}
+        {loading && (
+          <div className="flex justify-center py-8">
+            <div className="text-gray-500">게시글을 불러오는 중...</div>
           </div>
+        )}
 
-          <div className="prose prose-sm max-w-none">
-            <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-              정적 사이트 배포 테스트용 게시글입니다.
-              
-              게시글 ID: {params.id}
-              
-              정적 HTML 파일로 성공적으로 생성되었습니다!
-            </div>
+        {/* 에러 상태 */}
+        {error && (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="text-red-500 mb-4">{error}</div>
+            <Link 
+              href="/" 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              홈으로 돌아가기
+            </Link>
           </div>
-        </article>
+        )}
+
+        {/* 게시글 내용 */}
+        {post && (
+          <article className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <div className="mb-3">
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                  {getCategoryName(post.category)}
+                </span>
+              </div>
+              <h1 className="text-2xl font-medium text-black mb-3">
+                {post.title}
+              </h1>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span className="font-medium text-gray-700">{post.author}</span>
+                <div className="flex items-center space-x-3">
+                  <span>{formatDate(post.created_at)}</span>
+                  <span>조회 {post.views}</span>
+                  <span>좋아요 {post.likes}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="prose prose-sm max-w-none">
+              <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                {post.content}
+              </div>
+            </div>
+
+            {/* 이미지가 있다면 표시 */}
+            {post.images && post.images.length > 0 && (
+              <div className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {post.images.map((image: string, index: number) => (
+                    <img 
+                      key={index}
+                      src={image} 
+                      alt={`게시글 이미지 ${index + 1}`}
+                      className="w-full h-auto rounded-lg border"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+        )}
 
         <div className="text-center">
           <Link 

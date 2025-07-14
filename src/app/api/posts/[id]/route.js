@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (error) {
@@ -44,12 +44,12 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const { title, content, password } = body;
     
-    // 기존 게시글 조회 (패스워드 확인용)
+    // 수정 권한 확인을 위한 게시글 조회
     const { data: existingPost, error: fetchError } = await supabase
       .from('posts')
-      .select('password')
+      .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -92,12 +92,12 @@ export async function DELETE(request, { params }) {
     const { id } = params;
     const { password } = await request.json();
     
-    // 기존 게시글 조회 (패스워드 확인용)
+    // 수정 권한 확인을 위한 게시글 조회
     const { data: existingPost, error: fetchError } = await supabase
       .from('posts')
-      .select('password')
+      .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -113,7 +113,7 @@ export async function DELETE(request, { params }) {
     const { error } = await supabase
       .from('posts')
       .update({
-        is_deleted: true,
+        is_hidden: true,
         deleted_at: new Date().toISOString()
       })
       .eq('id', id);

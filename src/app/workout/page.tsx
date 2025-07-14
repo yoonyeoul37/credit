@@ -105,7 +105,7 @@ export default function WorkoutPage() {
         <div className="flex justify-center mb-6">
           <div className="w-[728px] flex justify-end">
             <Link 
-              href="/write" 
+              href="/write?category=workout" 
               className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
             >
               작성하기
@@ -123,7 +123,7 @@ export default function WorkoutPage() {
               여러분의 워크아웃 과정을 다른 분들과 공유해주세요.
             </p>
             <Link 
-              href="/write" 
+              href="/write?category=workout" 
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               글쓰기 시작하기
