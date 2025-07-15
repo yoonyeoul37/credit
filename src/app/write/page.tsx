@@ -314,6 +314,7 @@ function WriteForm() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
+                  autoComplete="off"
                   className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white"
                   placeholder="사용하실 닉네임을 입력하세요"
                   maxLength={20}
@@ -328,6 +329,7 @@ function WriteForm() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  autoComplete="new-password"
                   className="w-full p-4 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900 bg-white"
                   placeholder="수정/삭제 시 사용할 비밀번호"
                   maxLength={20}
