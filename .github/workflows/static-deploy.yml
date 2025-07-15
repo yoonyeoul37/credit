@@ -1,4 +1,4 @@
-name: 크레딧스토리 자동 배포
+name: 카페24 자동 배포
 
 on:
   push:
@@ -27,45 +27,57 @@ jobs:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         
-    - name: 서버 배포
+    - name: 서버 디렉토리 준비 및 앱 중지
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CAFE24_HOST }}
         username: ${{ secrets.CAFE24_USERNAME }}
         password: ${{ secrets.CAFE24_PASSWORD }}
         port: ${{ secrets.CAFE24_PORT }}
-        timeout: 300s
+        timeout: 180s
         script: |
-          echo "배포 시작"
+          echo "📦 기존 앱 중지 및 디렉토리 준비"
+          which pm2 || npm install -g pm2
+
+          # 기존 pm2 앱 종료 및 삭제 (있을 경우)
+          pm2 delete app || true
+          pm2 kill || true
+
+          cd ~
+          mkdir -p www
+          cd www
+          echo "✅ 디렉토리 준비 완료"
           
-          # 기존 프로세스 종료
-          pm2 stop all || true
-          pm2 delete all || true
-          
-          # 프로젝트 디렉토리로 이동
-          cd /var/www/html/credit
-          
-          # 최신 코드 가져오기
-          git fetch origin main
-          git reset --hard origin/main
-          
-          # 캐시 삭제
-          rm -rf .next
-          rm -rf node_modules
+    - name: 파일 업로드
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        source: ".next,package.json,next.config.ts,public,src"
+        target: "~/www/"
+        timeout: 180s
+        
+    - name: 앱 실행
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CAFE24_HOST }}
+        username: ${{ secrets.CAFE24_USERNAME }}
+        password: ${{ secrets.CAFE24_PASSWORD }}
+        port: ${{ secrets.CAFE24_PORT }}
+        timeout: 180s
+        script: |
+          echo "🚀 앱 실행 시작"
+          cd ~/www
           
           # 의존성 설치
-          npm install
-          
-          # 빌드
-          npm run build
-          
-          # PM2로 앱 시작
-          NODE_ENV=production PORT=3000 pm2 start npm --name "creditstory" -- start
+          npm install --omit=dev
+
+          # PM2로 앱 실행
+          pm2 start npm --name "app" -- start
           pm2 save
-          
-          # 배포 후 상태 확인
+
+          # 앱 상태 확인
           sleep 3
           pm2 list
-          pm2 logs creditstory --lines 20
-          
-          echo "배포 완료"
