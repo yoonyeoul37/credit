@@ -47,36 +47,33 @@ function WriteForm() {
     try {
       setLoading(true);
       
-      // 비밀번호 확인을 위해 PUT 요청으로 확인
+      // 비밀번호 확인 및 게시글 데이터 가져오기
       const response = await fetch(`/api/posts/${postId}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           password,
-          title: '',
-          content: '',
-          verify: true // 비밀번호 확인용 플래그
+          action: 'verify'
         }),
       });
 
       if (!response.ok) {
-        throw new Error('비밀번호가 일치하지 않거나 게시글을 찾을 수 없습니다.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || '비밀번호가 일치하지 않거나 게시글을 찾을 수 없습니다.');
       }
 
-      // 게시글 내용 가져오기
-      const postResponse = await fetch(`/api/posts/${postId}`);
-      const postData = await postResponse.json();
-
-      if (postResponse.ok && postData.post) {
+      const { post } = await response.json();
+      
+      if (post) {
         setFormData({
-          nickname: postData.post.author,
+          nickname: post.author,
           password: '',
-          title: postData.post.title,
-          content: postData.post.content,
-          category: postData.post.category,
-          images: postData.post.images || []
+          title: post.title,
+          content: post.content,
+          category: post.category,
+          images: post.images || []
         });
         setIsEditMode(true);
         setEditPostId(postId);

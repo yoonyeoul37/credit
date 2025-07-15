@@ -27,6 +27,45 @@ export async function GET(request, { params }) {
   }
 }
 
+// 게시글 비밀번호 확인 (수정용)
+export async function POST(request, { params }) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { password, action } = body;
+    
+    // 비밀번호 확인용 요청인지 체크
+    if (action !== 'verify') {
+      return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+    }
+    
+    // 게시글 조회 및 비밀번호 확인
+    const { data: post, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', id)
+      .eq('is_hidden', false)
+      .single();
+    
+    if (error) {
+      console.error('게시글 조회 오류:', error);
+      return NextResponse.json({ error: '게시글을 찾을 수 없습니다.' }, { status: 404 });
+    }
+    
+    // 패스워드 확인
+    if (post.password_hash !== password) {
+      return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
+    }
+    
+    // 비밀번호가 맞으면 게시글 데이터 반환
+    return NextResponse.json({ post, verified: true });
+    
+  } catch (error) {
+    console.error('게시글 비밀번호 확인 API 오류:', error);
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
+  }
+}
+
 // 게시글 수정
 export async function PUT(request, { params }) {
   try {
