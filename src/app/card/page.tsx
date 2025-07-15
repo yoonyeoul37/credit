@@ -291,31 +291,6 @@ export default function CardPage() {
             전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
-
-        {/* 구글 애드센스 영역 */}
-        <div className="mt-6">
-          <div className="flex items-start py-2 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-300 rounded -mx-2 px-2">
-            <div className="flex-shrink-0 w-8 text-right">
-              <span className="text-sm text-gray-400">#AD</span>
-            </div>
-            <div className="flex-1 ml-4">
-              <div className="flex items-center space-x-2">
-                <a href="#" className="text-black hover:text-gray-600 text-sm leading-relaxed">
-                  맞춤형 금융 상품 추천 - Google AI 기반 개인화 서비스
-                </a>
-                <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                  구글 광고
-                </span>
-              </div>
-              <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                <span>Google AdSense</span>
-                <span>자동 최적화</span>
-                <span>개인 맞춤</span>
-                <span>안전한 서비스</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </main>
 
       <footer className="border-t border-gray-200 mt-16 py-12 bg-gray-50">
