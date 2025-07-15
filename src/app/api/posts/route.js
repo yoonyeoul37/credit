@@ -118,7 +118,7 @@ export async function POST(request) {
       title,
       content,
       author,
-      password_hash: password, // password_hash 필드 사용
+      password: password, // password 필드 사용
       category,
       images: images || [],
       views: 0,
