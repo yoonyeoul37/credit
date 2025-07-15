@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import MobileNav from '../components/MobileNav';
 
 export default function LoanPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -106,6 +107,9 @@ export default function LoanPage() {
 
   return (
     <div className="font-pretendard font-light min-h-screen bg-white">
+      {/* 모바일 네비게이션 */}
+      <MobileNav currentPage="/loan" />
+      
       <header className="border-b border-gray-200 bg-white sticky top-0">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
