@@ -13,6 +13,23 @@ export default function CalculatorPage() {
   const [activeTab, setActiveTab] = useState('loan');
   const [currentCalculator, setCurrentCalculator] = useState('loan');
   
+  // 광고 상태 추가
+  const [premiumAd, setPremiumAd] = useState({
+    id: null,
+    isActive: false,
+    title: '',
+    content: '',
+    link_url: ''
+  });
+  
+  const [listAd, setListAd] = useState({
+    id: null,
+    isActive: false,
+    title: '',
+    content: '',
+    link_url: ''
+  });
+  
   // 대출 계산기 상태
   const [loanAmount, setLoanAmount] = useState(10000);
   const [interestRate, setInterestRate] = useState(3.5);
@@ -40,6 +57,93 @@ export default function CalculatorPage() {
   const [repaymentRate, setRepaymentRate] = useState(0);
   const [monthlyRepayment, setMonthlyRepayment] = useState(0);
   const [recoveryResult, setRecoveryResult] = useState(null);
+
+  // 광고 데이터 가져오기
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const response = await fetch('/api/ads?position=header');
+        const data = await response.json();
+        
+        if (data.ads && data.ads.length > 0) {
+          // 가중치 기반 랜덤 선택
+          const selectedAd = getWeightedRandomAd(data.ads);
+          setPremiumAd({
+            id: selectedAd.id,
+            isActive: true,
+            title: selectedAd.title,
+            content: selectedAd.description,
+            link_url: selectedAd.url || ''
+          });
+        }
+        
+        const listResponse = await fetch('/api/ads?position=sidebar');
+        const listData = await listResponse.json();
+        
+        if (listData.ads && listData.ads.length > 0) {
+          // 가중치 기반 랜덤 선택
+          const selectedListAd = getWeightedRandomAd(listData.ads);
+          setListAd({
+            id: selectedListAd.id,
+            isActive: true,
+            title: selectedListAd.title,
+            content: selectedListAd.description,
+            link_url: selectedListAd.url || ''
+          });
+        }
+      } catch (error) {
+        console.error('광고 데이터 가져오기 실패:', error);
+        setPremiumAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
+        setListAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
+      }
+    };
+
+    // 가중치 기반 랜덤 광고 선택 함수
+    const getWeightedRandomAd = (ads) => {
+      if (ads.length === 1) return ads[0];
+      
+      // 우선순위를 가중치로 사용 (최소 가중치 1)
+      const totalWeight = ads.reduce((sum, ad) => sum + Math.max(ad.priority || 1, 1), 0);
+      let random = Math.random() * totalWeight;
+      
+      for (let ad of ads) {
+        const weight = Math.max(ad.priority || 1, 1);
+        random -= weight;
+        if (random <= 0) return ad;
+      }
+      
+      // fallback: 첫 번째 광고 반환
+      return ads[0];
+    };
+    
+    fetchAds();
+  }, []);
+
+  // 광고 클릭 핸들러
+  const handleAdClick = async (adId, adUrl) => {
+    if (adId && adUrl) {
+      try {
+        // 광고 클릭 추적
+        await fetch('/api/ads/click', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ad_id: adId,
+            page_url: window.location.href
+          })
+        });
+
+        // 광고 링크로 이동
+        window.open(adUrl, '_blank');
+      } catch (error) {
+        console.error('광고 클릭 추적 실패:', error);
+        // 추적 실패해도 링크는 열기
+        window.open(adUrl, '_blank');
+      }
+    }
+  };
 
   // 숫자 포맷팅 함수 (콤마 추가)
   const formatNumber = (value: string | number): string => {
@@ -317,12 +421,24 @@ export default function CalculatorPage() {
 
         {/* 프리미엄 광고 */}
         <div className="mb-6 flex justify-center">
-          <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
-            <div className="text-center">
-              <div className="text-lg mb-1">신용회복 전문 상담센터 - 프리미엄 광고</div>
-              <div className="text-xs text-blue-500">24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공</div>
+          {premiumAd.isActive ? (
+            <div 
+              className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handleAdClick(premiumAd.id, premiumAd.link_url)}
+            >
+              <div className="text-center">
+                <div className="text-lg mb-1">{premiumAd.title}</div>
+                <div className="text-xs text-blue-500">{premiumAd.content}</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
+              <div className="text-center">
+                <div className="text-lg mb-1">신용회복 전문 상담센터 - 프리미엄 광고</div>
+                <div className="text-xs text-blue-500">24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공</div>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* 글쓰기 버튼 */}
@@ -796,27 +912,51 @@ export default function CalculatorPage() {
 
         {/* 리스트 광고 */}
         <div className="mt-6">
-          <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
-            <div className="flex-shrink-0 w-8 text-right">
-              <span className="text-sm text-orange-400">#AD</span>
-            </div>
-            <div className="flex-1 ml-4">
-              <div className="flex items-center space-x-2">
-                <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                  저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
-                </a>
-                <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                  금융 광고
-                </span>
+          {listAd.isActive ? (
+            <div 
+              className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handleAdClick(listAd.id, listAd.link_url)}
+            >
+              <div className="flex-shrink-0 w-8 text-right">
+                <span className="text-sm text-orange-400">#AD</span>
               </div>
-              <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                <span>핀테크 플랫폼</span>
-                <span>AI 분석</span>
-                <span>최저금리</span>
-                <span>즉시 심사</span>
+              <div className="flex-1 ml-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                    {listAd.title}
+                  </span>
+                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                    광고
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                  <span>{listAd.content}</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
+              <div className="flex-shrink-0 w-8 text-right">
+                <span className="text-sm text-orange-400">#AD</span>
+              </div>
+              <div className="flex-1 ml-4">
+                <div className="flex items-center space-x-2">
+                  <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
+                    저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
+                  </a>
+                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
+                    금융 광고
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                  <span>핀테크 플랫폼</span>
+                  <span>AI 분석</span>
+                  <span>최저금리</span>
+                  <span>즉시 심사</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

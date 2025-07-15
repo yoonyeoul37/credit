@@ -38,5 +38,25 @@
     "is_unique_daily": true,
     "id": 1752561432142.424,
     "visited_at": "2025-07-15T06:37:12.142Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/",
+    "referrer": "http://localhost:3000/",
+    "session_id": "session_1752566081758_kwl19eexw",
+    "is_unique_daily": true,
+    "id": 1752566085096.2363,
+    "visited_at": "2025-07-15T07:54:45.096Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/calculator",
+    "referrer": "http://localhost:3000/calculator",
+    "session_id": "session_1752566081758_kwl19eexw",
+    "is_unique_daily": true,
+    "id": 1752566343822.2715,
+    "visited_at": "2025-07-15T07:59:03.822Z"
   }
 ]
