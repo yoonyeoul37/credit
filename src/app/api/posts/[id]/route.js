@@ -204,8 +204,7 @@ export async function DELETE(request, { params }) {
     const { error } = await supabase
       .from('posts')
       .update({
-        is_hidden: true,
-        deleted_at: new Date().toISOString()
+        is_hidden: true
       })
       .eq('id', id);
     

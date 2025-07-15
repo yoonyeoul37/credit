@@ -487,6 +487,8 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         router.push(editUrl);
       } else if (passwordAction === 'delete') {
         // 삭제: API 호출
+        console.log('🗑️ 게시글 삭제 시작:', { id: resolvedParams.id, password: '***' });
+        
         const response = await fetch(`/api/posts/${resolvedParams.id}`, {
           method: 'DELETE',
           headers: {
@@ -495,13 +497,31 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           body: JSON.stringify({ password }),
         });
 
-        const result = await response.json();
+        console.log('📡 API 응답 상태:', response.status);
+        console.log('📡 API 응답 헤더:', response.headers);
+        console.log('📡 API 응답 OK:', response.ok);
+        
+        let result;
+        try {
+          result = await response.json();
+          console.log('📡 API 응답 데이터:', result);
+        } catch (jsonError) {
+          console.error('❌ JSON 파싱 실패:', jsonError);
+          console.log('📡 응답 텍스트:', await response.text());
+          throw new Error('서버 응답을 처리할 수 없습니다.');
+        }
 
         if (response.ok) {
+          console.log('✅ 게시글 삭제 성공');
           alert('게시글이 삭제되었습니다.');
           router.push('/');
         } else {
-          throw new Error(result.error || '삭제에 실패했습니다.');
+          console.error('❌ 게시글 삭제 실패:', {
+            status: response.status,
+            statusText: response.statusText,
+            result: result
+          });
+          throw new Error(result.error || result.message || '삭제에 실패했습니다.');
         }
       }
     } catch (error: any) {
