@@ -6,6 +6,9 @@ import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
 
 export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('ads');
   const [adAnalytics, setAdAnalytics] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -45,8 +48,42 @@ export default function AdminPage() {
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 로그인 처리
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // 환경변수에서 관리자 계정 확인 (기본값 설정)
+    const adminUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'dudnf1212@@';
+    
+    if (loginForm.username === adminUsername && loginForm.password === adminPassword) {
+      setIsAuthenticated(true);
+      setLoginError('');
+      sessionStorage.setItem('admin_auth', 'true');
+    } else {
+      setLoginError('아이디 또는 비밀번호가 올바르지 않습니다.');
+    }
+  };
+
+  // 로그아웃 처리
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('admin_auth');
+    setLoginForm({ username: '', password: '' });
+  };
+
+  // 인증 상태 확인
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('admin_auth');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   // 관리자 데이터 가져오기
   useEffect(() => {
+    if (!isAuthenticated) return; // 인증되지 않으면 데이터 로드 안함
+    
     const fetchAdminData = async () => {
       const isProduction = true; // 항상 실제 API 호출
       
@@ -102,7 +139,70 @@ export default function AdminPage() {
     };
     
     fetchAdminData();
-  }, []);
+  }, [isAuthenticated]);
+
+  // 로그인 폼 렌더링
+  if (!isAuthenticated) {
+    return (
+      <div className="font-pretendard font-light min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">관리자 로그인</h1>
+            <p className="text-gray-600">크레딧스토리 관리자 페이지</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                아이디
+              </label>
+              <input
+                type="text"
+                value={loginForm.username}
+                onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                placeholder="관리자 아이디를 입력하세요"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호
+              </label>
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                placeholder="비밀번호를 입력하세요"
+                required
+              />
+            </div>
+            
+            {loginError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-sm">{loginError}</p>
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              로그인
+            </button>
+          </form>
+          
+          <div className="mt-8 text-center">
+            <p className="text-xs text-gray-500">
+              기본 계정: admin / dudnf1212@@
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleAdSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -614,7 +714,10 @@ export default function AdminPage() {
               <h2 className="text-lg font-medium text-gray-900">관리자 페이지</h2>
               <span className="text-sm text-gray-500">사이트 관리 및 설정</span>
             </div>
-            <button className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+            <button 
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+            >
               로그아웃
             </button>
           </div>
