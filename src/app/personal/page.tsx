@@ -3,25 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
+import StickyAd from '../components/StickyAd';
 
 export default function PersonalPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
-  const [showStickyAd, setShowStickyAd] = useState(true);
-  
-  // 프리미엄 광고 상태
-  const [premiumAd, setPremiumAd] = useState({
-    isActive: false,
-    title: '',
-    content: ''
-  });
-  
-  const [listAd, setListAd] = useState({
-    isActive: false,
-    title: '',
-    content: ''
-  });
-  
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -50,50 +36,6 @@ export default function PersonalPage() {
     };
     
     fetchPosts();
-  }, []);
-  
-  // 프리미엄 광고 데이터 가져오기
-  useEffect(() => {
-    const fetchAds = async () => {
-      // 실제 광고 API 호출 (개발/프로덕션 모두)
-      try {
-        const response = await fetch('/api/ads?position=header');
-        const data = await response.json();
-        
-        if (data.ads && data.ads.length > 0) {
-          // 가중치 기반 랜덤 선택
-          const selectedAd = getWeightedRandomAd(data.ads);
-          setPremiumAd({
-            isActive: true,
-            title: selectedAd.title,
-            content: selectedAd.description
-          });
-        }
-      } catch (error) {
-        console.error('광고 데이터 가져오기 실패:', error);
-        setPremiumAd({ isActive: false, title: '', content: '' });
-      }
-    };
-
-    // 가중치 기반 랜덤 광고 선택 함수
-    const getWeightedRandomAd = (ads) => {
-      if (ads.length === 1) return ads[0];
-      
-      // 우선순위를 가중치로 사용 (최소 가중치 1)
-      const totalWeight = ads.reduce((sum, ad) => sum + Math.max(ad.priority || 1, 1), 0);
-      let random = Math.random() * totalWeight;
-      
-      for (let ad of ads) {
-        const weight = Math.max(ad.priority || 1, 1);
-        random -= weight;
-        if (random <= 0) return ad;
-      }
-      
-      // fallback: 첫 번째 광고 반환
-      return ads[0];
-    };
-    
-    fetchAds();
   }, []);
   
   // 페이징 계산
@@ -158,16 +100,7 @@ export default function PersonalPage() {
         </div>
 
         {/* 프리미엄 광고 - 조건부 렌더링 */}
-        {premiumAd?.isActive && (
-          <div className="mb-6 flex justify-center">
-            <div className="w-[728px] h-[90px] bg-blue-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
-              <div className="text-center">
-                <div className="text-lg mb-1">{premiumAd.title}</div>
-                <div className="text-xs text-blue-400">{premiumAd.content}</div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 스티키 광고 컴포넌트로 대체 */}
         
         {/* 글쓰기 버튼 */}
         <div className="flex justify-center mb-6">
@@ -204,28 +137,7 @@ export default function PersonalPage() {
             {personalPosts.map((post, index) => (
               <div key={post.id}>
                 {/* 리스트 광고 (6번째 글 뒤에 삽입) - 조건부 렌더링 */}
-                {index === 5 && listAd?.isActive && (
-                  <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
-                    <div className="flex-shrink-0 w-8 text-right">
-                      <span className="text-sm text-orange-400">#AD</span>
-                    </div>
-                    <div className="flex-1 ml-4">
-                      <div className="flex items-center space-x-2">
-                        <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                          {listAd.title}
-                        </a>
-                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                          금융 광고
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                        {listAd.content.split(' | ').map((item, idx) => (
-                          <span key={idx}>{item}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* 리스트 광고는 더 이상 사용되지 않으므로 제거 */}
                 
                 {/* 게시글 아이템 */}
                 <div className="flex items-start py-2 hover:bg-gray-50 -mx-2 px-2">
@@ -381,36 +293,7 @@ export default function PersonalPage() {
       </footer>
 
       {/* 스티키 광고 */}
-      {showStickyAd && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  개인회생 전문 법무사 - 15년 경력, 성공률 95%
-                </p>
-                <p className="text-xs text-blue-100 truncate">
-                  무료 상담 | 성공 시 수수료 | 전국 지점 운영
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">
-                상담신청
-              </button>
-              <button
-                onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-1 rounded transition-colors"
-                aria-label="광고 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StickyAd />
     </div>
   );
 } 

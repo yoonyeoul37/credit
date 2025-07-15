@@ -1,34 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
+import StickyAd from '../components/StickyAd';
 
 export default function CalculatorPage() {
-  const [showStickyAd, setShowStickyAd] = useState(true);
-  const [activeTab, setActiveTab] = useState('loan');
+  const [currentCalculator, setCurrentCalculator] = useState('loan');
+  const [loanAmount, setLoanAmount] = useState(10000);
+  const [interestRate, setInterestRate] = useState(3.5);
+  const [loanPeriod, setLoanPeriod] = useState(12);
+  const [monthlyPayment, setMonthlyPayment] = useState(0);
+  const [totalPayment, setTotalPayment] = useState(0);
+  const [totalInterest, setTotalInterest] = useState(0);
   
-  // 대출 이자 계산기 상태
-  const [loanAmount, setLoanAmount] = useState('');
-  const [interestRate, setInterestRate] = useState('');
-  const [loanPeriod, setLoanPeriod] = useState('');
-  const [repaymentType, setRepaymentType] = useState('equal-payment'); // 상환방식
-  const [gracePeriod, setGracePeriod] = useState(''); // 거치기간
-  const [loanResult, setLoanResult] = useState<any>(null);
-  
-  // 개인회생 변제금 계산기 상태
-  const [totalDebt, setTotalDebt] = useState('');
-  const [monthlyIncome, setMonthlyIncome] = useState('');
-  const [familySize, setFamilySize] = useState('');
-  const [hasAssets, setHasAssets] = useState(false);
-  const [assetValue, setAssetValue] = useState('');
-  const [age, setAge] = useState('');
-  const [debtCause, setDebtCause] = useState('');
-  const [jobType, setJobType] = useState('');
-  const [isBasicLivelihood, setIsBasicLivelihood] = useState(false);
-  const [hasChronicDisease, setHasChronicDisease] = useState(false);
-  const [dependents, setDependents] = useState('');
-  const [recoveryResult, setRecoveryResult] = useState<any>(null);
+  // 개인회생 계산기 상태
+  const [totalDebt, setTotalDebt] = useState(50000);
+  const [monthlyIncome, setMonthlyIncome] = useState(200);
+  const [repaymentPeriod, setRepaymentPeriod] = useState(60);
+  const [repaymentRate, setRepaymentRate] = useState(0);
+  const [monthlyRepayment, setMonthlyRepayment] = useState(0);
 
   // 숫자 포맷팅 함수 (콤마 추가)
   const formatNumber = (value: string | number): string => {
@@ -887,36 +878,7 @@ export default function CalculatorPage() {
       </footer>
 
       {/* 스티키 광고 */}
-      {showStickyAd && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  금융 계산기 전문 서비스 - 정확한 금융 계획
-                </p>
-                <p className="text-xs text-blue-100 truncate">
-                  무료 계산 | 맞춤 분석 | 전문가 상담
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">
-                상담신청
-              </button>
-              <button
-                onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-1 rounded transition-colors"
-                aria-label="광고 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StickyAd />
     </div>
   );
 } 

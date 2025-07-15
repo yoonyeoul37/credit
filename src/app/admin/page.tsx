@@ -218,7 +218,7 @@ export default function AdminPage() {
           description: adForm.content,
           image_url: adForm.imageUrl,
           link_url: adForm.url,
-          position: adForm.type === 'premium' ? 'header' : adForm.type === 'list' ? 'sidebar' : 'content',
+          position: adForm.type === 'premium' ? 'header' : adForm.type === 'list' ? 'sidebar' : adForm.type === 'sticky' ? 'footer' : 'content',
           priority: parseInt(adForm.priority) || 0,
           start_date: adForm.startDate,
           end_date: adForm.endDate,
@@ -1709,8 +1709,13 @@ export default function AdminPage() {
                 >
                   <option value="premium">프리미엄 광고</option>
                   <option value="list">리스트 광고</option>
-                  <option value="sticky">스티키 광고</option>
+                  <option value="sticky">스티키 광고 (화면 하단 고정)</option>
                 </select>
+                {adForm.type === 'sticky' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    📌 스티키 광고는 모든 페이지 하단에 고정되어 표시됩니다. 우선순위가 높은 광고가 먼저 표시됩니다.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

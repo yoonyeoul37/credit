@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
+import StickyAd from '../components/StickyAd';
 
 export default function NewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
-
-  const [showStickyAd, setShowStickyAd] = useState(true);
-  
-  const [newsItems, setNewsItems] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // 뉴스 목록 가져오기
@@ -37,7 +35,7 @@ export default function NewsPage() {
             isImportant: item.is_important
           }));
           
-          setNewsItems(formattedNews);
+          setPosts(formattedNews);
         } else {
           throw new Error(data.error || '뉴스를 불러오는데 실패했습니다.');
         }
@@ -45,7 +43,7 @@ export default function NewsPage() {
         console.error('❌ 뉴스 로딩 실패:', error);
         
         // 오류 시 빈 배열로 설정
-        setNewsItems([]);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
@@ -55,10 +53,10 @@ export default function NewsPage() {
   }, []);
   
   // 페이징 계산
-  const totalPages = Math.ceil(newsItems.length / postsPerPage);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const displayedNews = newsItems.slice(startIndex, endIndex);
+  const displayedNews = posts.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -130,7 +128,7 @@ export default function NewsPage() {
         <div className="space-y-4">
           {loading ? (
             <p className="text-center py-8">뉴스 데이터를 불러오는 중입니다...</p>
-          ) : newsItems.length === 0 ? (
+          ) : posts.length === 0 ? (
             <p className="text-center py-8">뉴스 데이터가 없습니다.</p>
           ) : (
             displayedNews.map((news, index) => (
@@ -260,7 +258,7 @@ export default function NewsPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {newsItems.length}개 뉴스 | {currentPage} / {totalPages} 페이지
+            전체 {posts.length}개 뉴스 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
       </main>
@@ -318,36 +316,7 @@ export default function NewsPage() {
       </footer>
 
       {/* 스티키 광고 */}
-      {showStickyAd && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  최신 금융 뉴스 알림 서비스 - 실시간 정보 제공
-                </p>
-                <p className="text-xs text-blue-100 truncate">
-                  무료 구독 | 맞춤 뉴스 | 전문 분석
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">
-                구독신청
-              </button>
-              <button
-                onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-1 rounded transition-colors"
-                aria-label="광고 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StickyAd />
     </div>
   );
 } 

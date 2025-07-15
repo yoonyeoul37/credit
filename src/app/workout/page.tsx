@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
+import StickyAd from '../components/StickyAd';
 
 export default function WorkoutPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
-  const [showStickyAd, setShowStickyAd] = useState(true);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -370,36 +370,7 @@ export default function WorkoutPage() {
       </footer>
 
       {/* 스티키 광고 */}
-      {showStickyAd && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  워크아웃 전문 상담 - 금융 재구조화 지원
-                </p>
-                <p className="text-xs text-blue-100 truncate">
-                  채무 조정 | 이자 감면 | 분할 상환
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">
-                상담신청
-              </button>
-              <button
-                onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-1 rounded transition-colors"
-                aria-label="광고 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StickyAd />
     </div>
   );
 } 

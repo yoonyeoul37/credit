@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ReportModal from '../../components/ReportModal';
 import MobileNav from '../../components/MobileNav';
+import StickyAd from '../../components/StickyAd';
 
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -33,7 +34,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const viewCountIncremented = useRef(false); // 조회수 증가 중복 방지
   const [isLiking, setIsLiking] = useState(false); // 좋아요 처리 중 상태
   const [hasLiked, setHasLiked] = useState(false); // 좋아요 여부 상태
-  const [showStickyAd, setShowStickyAd] = useState(true); // 스티키 광고 표시 상태
 
   // 신고 모달 상태
   const [showReportModal, setShowReportModal] = useState(false);
@@ -1049,36 +1049,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       )}
 
       {/* 스티키 광고 */}
-      {showStickyAd && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg z-50">
-          <div className="max-w-4xl mx-auto px-3 md:px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  신용회복 전문 상담센터 - 24시간 무료 상담
-                </p>
-                <p className="text-xs text-blue-100 truncate">
-                  성공률 95% | 맞춤 솔루션 | 전국 지점 운영
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <button className="bg-white text-blue-600 px-3 md:px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors touch-manipulation">
-                상담신청
-              </button>
-              <button
-                onClick={() => setShowStickyAd(false)}
-                className="text-blue-100 hover:text-white p-2 rounded-lg transition-colors touch-manipulation"
-                aria-label="광고 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StickyAd />
     </div>
   );
 } 
