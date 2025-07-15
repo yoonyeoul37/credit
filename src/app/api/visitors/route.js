@@ -46,6 +46,18 @@ const saveVisitorToFile = async (visitorData) => {
   }
 };
 
+// 로컬 파일에서 방문자 데이터 읽기
+const getVisitorsFromFile = async () => {
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'visitors.json');
+    const fileContent = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(fileContent);
+  } catch (err) {
+    console.log('📄 방문자 파일이 없거나 비어있음, 빈 배열 반환');
+    return [];
+  }
+};
+
 // 방문자 추적
 export async function POST(request) {
   try {
@@ -119,18 +131,6 @@ export async function POST(request) {
     }, { status: 500 });
   }
 }
-
-// 로컬 파일에서 방문자 데이터 읽기
-const getVisitorsFromFile = async () => {
-  try {
-    const filePath = path.join(process.cwd(), 'data', 'visitors.json');
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(fileContent);
-  } catch (err) {
-    console.log('📄 방문자 파일이 없거나 비어있음, 빈 배열 반환');
-    return [];
-  }
-};
 
 // 방문자 통계 조회 (관리자용)
 export async function GET(request) {
@@ -231,9 +231,9 @@ export async function GET(request) {
     
   } catch (error) {
     console.error('❌ 방문자 통계 API 오류:', error);
-         return NextResponse.json({ 
-       error: '서버 오류가 발생했습니다.',
-       details: error.message 
-     }, { status: 500 });
-   }
+    return NextResponse.json({ 
+      error: '서버 오류가 발생했습니다.',
+      details: error.message 
+    }, { status: 500 });
+  }
 } 
