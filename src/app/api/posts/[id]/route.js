@@ -158,6 +158,8 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
     const { password } = await request.json();
     
+    console.log('🗑️ 게시글 삭제 요청:', { id, password: '***' });
+    
     // 수정 권한 확인을 위한 게시글 조회
     const { data: existingPost, error: fetchError } = await supabase
       .from('posts')
@@ -167,15 +169,38 @@ export async function DELETE(request, { params }) {
       .single();
     
     if (fetchError) {
+      console.error('❌ 게시글 조회 실패:', fetchError);
       return NextResponse.json({ error: '게시글을 찾을 수 없습니다.' }, { status: 404 });
     }
     
-    // 패스워드 확인
-    if (existingPost.password_hash !== password) {
+    console.log('✅ 기존 게시글 조회 성공');
+    console.log('📋 게시글 필드:', Object.keys(existingPost));
+    console.log('🔍 비밀번호 필드 확인:', {
+      has_password: !!existingPost.password,
+      has_password_hash: !!existingPost.password_hash,
+      password_value: existingPost.password ? '***' : 'undefined',
+      password_hash_value: existingPost.password_hash ? '***' : 'undefined'
+    });
+    
+    // 패스워드 확인 (password_hash 먼저 시도, 없으면 password 사용)
+    let passwordMatch = false;
+    if (existingPost.password_hash) {
+      passwordMatch = existingPost.password_hash === password;
+      console.log('🔐 password_hash 필드로 비교:', passwordMatch);
+    } else if (existingPost.password) {
+      passwordMatch = existingPost.password === password;
+      console.log('🔐 password 필드로 비교:', passwordMatch);
+    }
+    
+    if (!passwordMatch) {
+      console.log('❌ 비밀번호 불일치');
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
+    console.log('✅ 비밀번호 확인 성공');
+    
     // 논리적 삭제 (is_hidden = true)
+    console.log('🗑️ 게시글 삭제 처리 중...');
     const { error } = await supabase
       .from('posts')
       .update({
@@ -185,14 +210,15 @@ export async function DELETE(request, { params }) {
       .eq('id', id);
     
     if (error) {
-      console.error('게시글 삭제 오류:', error);
+      console.error('❌ 게시글 삭제 처리 실패:', error);
       return NextResponse.json({ error: '게시글 삭제에 실패했습니다.' }, { status: 500 });
     }
     
+    console.log('✅ 게시글 삭제 성공');
     return NextResponse.json({ message: '게시글이 삭제되었습니다.' });
     
   } catch (error) {
-    console.error('게시글 삭제 API 오류:', error);
+    console.error('❌ 게시글 삭제 API 오류:', error);
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
   }
 } 
