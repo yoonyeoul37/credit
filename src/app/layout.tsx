@@ -21,6 +21,7 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="google-site-verification" content="E6q2gRe_we_DNfDqJYaN8JGz3duR2Rb_7FgLl502vdc" />
+        <meta name="naver-site-verification" content="6d7c340ea123ee14e5134140eaefcb68e9882c01" />
         <link
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
           rel="stylesheet"
