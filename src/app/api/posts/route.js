@@ -89,6 +89,22 @@ export async function POST(request) {
     
     console.log('✅ Supabase 연결 성공');
     
+    // 테이블 구조 확인
+    console.log('📋 posts 테이블 구조 확인 중...');
+    const { data: tableStructure, error: structureError } = await supabase
+      .from('posts')
+      .select('*')
+      .limit(1);
+    
+    if (structureError) {
+      console.error('❌ 테이블 구조 확인 실패:', structureError);
+    } else {
+      console.log('📋 posts 테이블 첫 번째 행:', tableStructure[0]);
+      if (tableStructure[0]) {
+        console.log('📋 사용 가능한 컬럼:', Object.keys(tableStructure[0]));
+      }
+    }
+    
     const body = await request.json();
     const { title, content, author, password, category, images } = body;
     
@@ -118,7 +134,7 @@ export async function POST(request) {
       title,
       content,
       author,
-      password: password, // password 필드 사용
+      password_hash: password, // 실제 테이블에서 사용하는 필드
       category,
       images: images || [],
       views: 0,
@@ -127,13 +143,33 @@ export async function POST(request) {
       created_at: new Date().toISOString()
     };
     
-    console.log('📝 DB 삽입 데이터:', { ...insertData, password: '***' });
+    console.log('📝 DB 삽입 데이터:', { ...insertData, password_hash: '***' });
     
-    const { data: post, error } = await supabase
+    let { data: post, error } = await supabase
       .from('posts')
       .insert([insertData])
       .select()
       .single();
+    
+    // password_hash 필드가 실패하면 password 필드로 다시 시도
+    if (error && error.code === '42703') {
+      console.log('🔄 password_hash 필드 실패, password 필드로 재시도...');
+      
+      const insertDataWithPassword = {
+        ...insertData,
+        password: password
+      };
+      delete insertDataWithPassword.password_hash;
+      
+      const retryResult = await supabase
+        .from('posts')
+        .insert([insertDataWithPassword])
+        .select()
+        .single();
+      
+      post = retryResult.data;
+      error = retryResult.error;
+    }
     
     if (error) {
       console.error('❌ 게시글 생성 오류 (상세):', error);

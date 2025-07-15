@@ -53,7 +53,7 @@ export async function POST(request, { params }) {
     }
     
     // 패스워드 확인
-    if (post.password !== password) {
+    if (post.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -86,7 +86,7 @@ export async function PUT(request, { params }) {
     }
     
     // 패스워드 확인 (실제 운영에서는 해싱된 패스워드 비교)
-    if (existingPost.password !== password) {
+    if (existingPost.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -171,7 +171,7 @@ export async function DELETE(request, { params }) {
     }
     
     // 패스워드 확인
-    if (existingPost.password !== password) {
+    if (existingPost.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     

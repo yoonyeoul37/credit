@@ -92,7 +92,7 @@ export async function POST(request) {
           post_id,
           content,
           author,
-          password: password, // 실제 운영에서는 해싱 필요
+          password_hash: password, // 실제 운영에서는 해싱 필요
           parent_id: parent_id || null,
           is_hidden: false,
           created_at: new Date().toISOString()

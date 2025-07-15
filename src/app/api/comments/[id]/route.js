@@ -36,7 +36,7 @@ export async function PUT(request, { params }) {
     // 기존 댓글 조회 (패스워드 확인용)
     const { data: existingComment, error: fetchError } = await supabase
       .from('comments')
-      .select('password')
+      .select('password_hash')
       .eq('id', id)
       .eq('is_hidden', false)
       .single();
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
     }
     
     // 패스워드 확인 (실제 운영에서는 해싱된 패스워드 비교)
-    if (existingComment.password !== password) {
+    if (existingComment.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -83,7 +83,7 @@ export async function DELETE(request, { params }) {
     // 기존 댓글 조회 (패스워드 확인용)
     const { data: existingComment, error: fetchError } = await supabase
       .from('comments')
-      .select('password')
+      .select('password_hash')
       .eq('id', id)
       .eq('is_hidden', false)
       .single();
@@ -93,7 +93,7 @@ export async function DELETE(request, { params }) {
     }
     
     // 패스워드 확인
-    if (existingComment.password !== password) {
+    if (existingComment.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
