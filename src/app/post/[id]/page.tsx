@@ -168,37 +168,28 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         
         // 조회수 증가 (한 번만 실행되도록 보장)
         if (!viewCountIncremented.current) {
-          const viewedPosts = sessionStorage.getItem('viewedPosts');
-          const viewedPostsArray = viewedPosts ? JSON.parse(viewedPosts) : [];
+          viewCountIncremented.current = true; // 즉시 플래그 설정
           
-          if (!viewedPostsArray.includes(resolvedParams.id)) {
-            viewCountIncremented.current = true; // 즉시 플래그 설정
-            
-            // 조회수 증가 API 호출
-            fetch(`/api/posts/${resolvedParams.id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }).then(response => {
-              if (response.ok) {
-                // 세션 스토리지에 추가
-                viewedPostsArray.push(resolvedParams.id);
-                sessionStorage.setItem('viewedPosts', JSON.stringify(viewedPostsArray));
-                
-                // 게시글 조회수 업데이트
-                setPost(prevPost => {
-                  if (prevPost) {
-                    return { ...prevPost, views: prevPost.views + 1 };
-                  }
-                  return prevPost;
-                });
-              }
-            }).catch(error => {
-              console.error('조회수 증가 오류:', error);
-              viewCountIncremented.current = false; // 실패 시 플래그 초기화
-            });
-          }
+          // 조회수 증가 API 호출
+          fetch(`/api/posts/${resolvedParams.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }).then(response => {
+            if (response.ok) {
+              // 게시글 조회수 업데이트
+              setPost(prevPost => {
+                if (prevPost) {
+                  return { ...prevPost, views: prevPost.views + 1 };
+                }
+                return prevPost;
+              });
+            }
+          }).catch(error => {
+            console.error('조회수 증가 오류:', error);
+            viewCountIncremented.current = false; // 실패 시 플래그 초기화
+          });
         }
         
         // 게시글 로드 후 댓글도 로드
