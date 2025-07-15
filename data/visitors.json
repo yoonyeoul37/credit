@@ -58,5 +58,35 @@
     "is_unique_daily": true,
     "id": 1752566343822.2715,
     "visited_at": "2025-07-15T07:59:03.822Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/calculator",
+    "referrer": "http://localhost:3000/calculator",
+    "session_id": "session_1752566081758_kwl19eexw",
+    "is_unique_daily": true,
+    "id": 1752567305325.6497,
+    "visited_at": "2025-07-15T08:15:05.325Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/",
+    "referrer": "http://localhost:3001/",
+    "session_id": "session_1752567330488_tabw0rlsu",
+    "is_unique_daily": true,
+    "id": 1752567331811.0715,
+    "visited_at": "2025-07-15T08:15:31.811Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/calculator",
+    "referrer": "http://localhost:3001/calculator",
+    "session_id": "session_1752567330488_tabw0rlsu",
+    "is_unique_daily": true,
+    "id": 1752567332972.1926,
+    "visited_at": "2025-07-15T08:15:32.972Z"
   }
 ]

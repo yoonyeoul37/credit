@@ -419,27 +419,20 @@ export default function CalculatorPage() {
           <p className="text-sm text-gray-600">다양한 금융 계산기로 미리 계획해보세요</p>
         </div>
 
-        {/* 프리미엄 광고 */}
-        <div className="mb-6 flex justify-center">
-          {premiumAd.isActive ? (
+        {/* 상단 프리미엄 광고 */}
+        {premiumAd?.isActive && (
+          <div className="mb-4 md:mb-6 flex justify-center">
             <div 
-              className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+              className="w-full max-w-[728px] min-h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleAdClick(premiumAd.id, premiumAd.link_url)}
             >
               <div className="text-center">
-                <div className="text-lg mb-1">{premiumAd.title}</div>
-                <div className="text-xs text-blue-500">{premiumAd.content}</div>
+                <div className="text-base md:text-lg mb-1">{premiumAd.title}</div>
+                <div className="text-xs md:text-sm text-blue-500">{premiumAd.content}</div>
               </div>
             </div>
-          ) : (
-            <div className="w-[728px] h-[90px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center justify-center text-sm text-blue-600 rounded-lg">
-              <div className="text-center">
-                <div className="text-lg mb-1">신용회복 전문 상담센터 - 프리미엄 광고</div>
-                <div className="text-xs text-blue-500">24시간 무료 상담 | 성공률 95% | 맞춤 솔루션 제공</div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
         
         {/* 글쓰기 버튼 */}
         <div className="flex justify-center mb-6">
@@ -910,9 +903,9 @@ export default function CalculatorPage() {
           </div>
         )}
 
-        {/* 리스트 광고 */}
-        <div className="mt-6">
-          {listAd.isActive ? (
+        {/* 하단 광고 */}
+        {listAd?.isActive && (
+          <div className="mt-6">
             <div 
               className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2 cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleAdClick(listAd.id, listAd.link_url)}
@@ -934,30 +927,8 @@ export default function CalculatorPage() {
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="flex items-start py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded -mx-2 px-2">
-              <div className="flex-shrink-0 w-8 text-right">
-                <span className="text-sm text-orange-400">#AD</span>
-              </div>
-              <div className="flex-1 ml-4">
-                <div className="flex items-center space-x-2">
-                  <a href="#" className="text-black hover:text-orange-600 text-sm leading-relaxed">
-                    저금리 대출 비교 플랫폼 - AI 맞춤 대출 상품 추천
-                  </a>
-                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                    금융 광고
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-                  <span>핀테크 플랫폼</span>
-                  <span>AI 분석</span>
-                  <span>최저금리</span>
-                  <span>즉시 심사</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* 푸터 */}
