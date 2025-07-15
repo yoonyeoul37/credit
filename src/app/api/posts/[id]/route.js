@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_hidden', false)
+      .eq('is_deleted', false)
       .single();
     
     if (error) {
@@ -39,7 +39,7 @@ export async function PUT(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_hidden', false)
+      .eq('is_deleted', false)
       .single();
     
     if (fetchError) {
@@ -86,7 +86,7 @@ export async function PATCH(request, { params }) {
       .from('posts')
       .select('views')
       .eq('id', id)
-      .eq('is_hidden', false)
+      .eq('is_deleted', false)
       .single();
     
     if (error) {
@@ -124,7 +124,7 @@ export async function DELETE(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_hidden', false)
+      .eq('is_deleted', false)
       .single();
     
     if (fetchError) {
@@ -140,7 +140,7 @@ export async function DELETE(request, { params }) {
     const { error } = await supabase
       .from('posts')
       .update({
-        is_hidden: true,
+        is_deleted: true,
         deleted_at: new Date().toISOString()
       })
       .eq('id', id);

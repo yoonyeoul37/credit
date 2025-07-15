@@ -17,7 +17,7 @@ export async function GET(request) {
         *,
         comments:comments!inner(count)
       `)
-      .eq('is_hidden', false)
+      .eq('is_deleted', false)
       .order(sort, { ascending: false });
     
     // 카테고리 필터링
@@ -44,7 +44,7 @@ export async function GET(request) {
           .from('comments')
           .select('*', { count: 'exact', head: true })
           .eq('post_id', post.id)
-          .eq('is_hidden', false);
+          .eq('is_deleted', false);
         
         return {
           ...post,
@@ -75,8 +75,11 @@ export async function POST(request) {
     const body = await request.json();
     const { title, content, author, password, category, images } = body;
     
+    console.log('📝 게시글 작성 요청 데이터:', { title, content, author, password: '***', category, images: images ? images.length : 0 });
+    
     // 유효성 검사
     if (!title || !content || !author || !category) {
+      console.error('❌ 필수 항목 누락:', { title: !!title, content: !!content, author: !!author, category: !!category });
       return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 });
     }
     
@@ -93,7 +96,7 @@ export async function POST(request) {
           images: images || [],
           views: 0,
           likes: 0,
-          is_hidden: false,
+          is_deleted: false,
           created_at: new Date().toISOString()
         }
       ])
