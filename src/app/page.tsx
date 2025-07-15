@@ -46,38 +46,38 @@ export default function Home() {
   useEffect(() => {
     const fetchAds = async () => {
       // 실제 광고 API 호출 (개발/프로덕션 모두)
-      try {
-        const response = await fetch('/api/ads?position=header');
-        const data = await response.json();
-        
-        if (data.ads && data.ads.length > 0) {
+        try {
+          const response = await fetch('/api/ads?position=header');
+          const data = await response.json();
+          
+          if (data.ads && data.ads.length > 0) {
           // 가중치 기반 랜덤 선택
           const selectedAd = getWeightedRandomAd(data.ads);
-          setPremiumAd({
+            setPremiumAd({
             id: selectedAd.id,
-            isActive: true,
+              isActive: true,
             title: selectedAd.title,
             content: selectedAd.description,
             link_url: selectedAd.url || ''
-          });
-        }
-        
-        const listResponse = await fetch('/api/ads?position=sidebar');
-        const listData = await listResponse.json();
-        
-        if (listData.ads && listData.ads.length > 0) {
+            });
+          }
+          
+          const listResponse = await fetch('/api/ads?position=sidebar');
+          const listData = await listResponse.json();
+          
+          if (listData.ads && listData.ads.length > 0) {
           // 가중치 기반 랜덤 선택
           const selectedListAd = getWeightedRandomAd(listData.ads);
-          setListAd({
+            setListAd({
             id: selectedListAd.id,
-            isActive: true,
+              isActive: true,
             title: selectedListAd.title,
             content: selectedListAd.description,
             link_url: selectedListAd.url || ''
-          });
-        }
-      } catch (error) {
-        console.error('광고 데이터 가져오기 실패:', error);
+            });
+          }
+        } catch (error) {
+          console.error('광고 데이터 가져오기 실패:', error);
         setPremiumAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
         setListAd({ id: null, isActive: false, title: '', content: '', link_url: '' });
       }
@@ -100,7 +100,7 @@ export default function Home() {
       // fallback: 첫 번째 광고 반환
       return ads[0];
     };
-
+    
     fetchAds();
   }, []);
   
@@ -113,42 +113,42 @@ export default function Home() {
         // 실제 API 호출
         console.log('🌐 실제 API 호출 중...');
         
-        const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&sort=created_at`);
-        
-        if (!response.ok) {
-          throw new Error('게시글을 불러오는데 실패했습니다.');
-        }
+          const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&sort=created_at`);
+          
+          if (!response.ok) {
+            throw new Error('게시글을 불러오는데 실패했습니다.');
+          }
 
-        const data = await response.json();
-        
-        // 데이터 포맷 변환 (기존 UI에 맞게)
-        const formattedPosts = data.posts.map(post => {
-          const categoryMap = {
-            'credit': '신용이야기',
-            'personal': '개인회생', 
-            'corporate': '법인회생',
-            'workout': '워크아웃',
-            'card': '신용카드',
-            'loan': '대출',
-            'news': '뉴스정보'
-          };
+          const data = await response.json();
+          
+          // 데이터 포맷 변환 (기존 UI에 맞게)
+          const formattedPosts = data.posts.map(post => {
+            const categoryMap = {
+              'credit': '신용이야기',
+              'personal': '개인회생', 
+              'corporate': '법인회생',
+              'workout': '워크아웃',
+              'card': '신용카드',
+              'loan': '대출',
+              'news': '뉴스정보'
+            };
 
-          const timeAgo = getTimeAgo(post.created_at);
+            const timeAgo = getTimeAgo(post.created_at);
 
-          return {
-            id: post.id,
-            title: post.title,
-            category: categoryMap[post.category] || post.category,
-            author: post.author,
-            createdAt: timeAgo,
-            commentCount: post.commentCount || 0, // 실제 댓글 수 사용
-            views: post.views,
-            likes: post.likes || 0 // 실제 좋아요 수 사용
-          };
-        });
+            return {
+              id: post.id,
+              title: post.title,
+              category: categoryMap[post.category] || post.category,
+              author: post.author,
+              createdAt: timeAgo,
+              commentCount: post.commentCount || 0, // 실제 댓글 수 사용
+              views: post.views,
+              likes: post.likes || 0 // 실제 좋아요 수 사용
+            };
+          });
 
-        setPosts(formattedPosts);
-        setError(null);
+          setPosts(formattedPosts);
+          setError(null);
 
         /* 
         // 실제 API 호출 (Supabase 설정 후 활성화)

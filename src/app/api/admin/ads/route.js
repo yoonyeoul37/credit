@@ -54,11 +54,11 @@ export async function POST(request) {
     
     // 광고 생성 (실제 테이블 구조에 맞춤)
     const insertData = {
-      title,
-      description,
-      position,
-      start_date: start_date || new Date().toISOString(),
-      end_date: end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          title,
+          description,
+          position,
+          start_date: start_date || new Date().toISOString(),
+          end_date: end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       is_active: is_active !== false
     };
 
