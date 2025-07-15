@@ -67,6 +67,25 @@ export async function POST(request) {
     const { page_url, session_id } = body;
     console.log('📝 요청 데이터:', { page_url, session_id });
     
+    // 중복 방지: 같은 세션+페이지는 5분 내 중복 추적 방지
+    const existingVisits = await getVisitorsFromFile();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    
+    const recentDuplicate = existingVisits.find(visit => 
+      visit.session_id === session_id && 
+      visit.page_url === page_url &&
+      new Date(visit.visited_at) > fiveMinutesAgo
+    );
+    
+    if (recentDuplicate) {
+      console.log('🚫 중복 방문 감지, 추적 건너뜀:', { session_id, page_url });
+      return NextResponse.json({ 
+        success: true,
+        message: 'Duplicate visit within 5 minutes, skipped',
+        visitor_id: recentDuplicate.id
+      });
+    }
+    
     // 클라이언트 정보 수집
     const ip_address = request.headers.get('x-forwarded-for') || 
                       request.headers.get('x-real-ip') || 

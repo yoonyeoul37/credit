@@ -1,12 +1,16 @@
 User-agent: *
 Allow: /
 
-# 관리자 페이지는 크롤링 금지
+# 관리자 페이지는 검색엔진 차단
 Disallow: /admin
 
-# 사이트맵 위치 (나중에 추가 예정)
-Sitemap: https://creditstory.kr/sitemap.xml
+# 사이트맵 위치 (배포 후 실제 도메인으로 변경)
+Sitemap: https://yourdomain.com/sitemap.xml
 
-# 검색엔진 최적화
-# 개인회생, 법인회생, 워크아웃, 신용회복 관련 커뮤니티
-# 신용카드, 대출 정보 공유 사이트 
+# 주요 페이지 우선순위
+Allow: /calculator
+Allow: /news
+Allow: /personal
+Allow: /credit
+Allow: /loan
+Allow: /card 
