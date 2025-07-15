@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (error) {
@@ -39,7 +39,7 @@ export async function PUT(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -47,7 +47,7 @@ export async function PUT(request, { params }) {
     }
     
     // 패스워드 확인 (실제 운영에서는 해싱된 패스워드 비교)
-    if (existingPost.password !== password) {
+    if (existingPost.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
@@ -86,7 +86,7 @@ export async function PATCH(request, { params }) {
       .from('posts')
       .select('views')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (error) {
@@ -124,7 +124,7 @@ export async function DELETE(request, { params }) {
       .from('posts')
       .select('*')
       .eq('id', id)
-      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .single();
     
     if (fetchError) {
@@ -132,15 +132,15 @@ export async function DELETE(request, { params }) {
     }
     
     // 패스워드 확인
-    if (existingPost.password !== password) {
+    if (existingPost.password_hash !== password) {
       return NextResponse.json({ error: '패스워드가 일치하지 않습니다.' }, { status: 403 });
     }
     
-    // 논리적 삭제 (is_deleted = true)
+    // 논리적 삭제 (is_hidden = true)
     const { error } = await supabase
       .from('posts')
       .update({
-        is_deleted: true,
+        is_hidden: true,
         deleted_at: new Date().toISOString()
       })
       .eq('id', id);

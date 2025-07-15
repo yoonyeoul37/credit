@@ -228,6 +228,9 @@ function WriteForm() {
 
       const result = await response.json();
 
+      console.log('📝 API 응답 상태:', response.status);
+      console.log('📝 API 응답 데이터:', result);
+
       if (response.ok) {
         alert(isEditMode ? '글이 성공적으로 수정되었습니다!' : '글이 성공적으로 등록되었습니다!');
         if (isEditMode) {
@@ -236,7 +239,11 @@ function WriteForm() {
           router.push(categoryRoutes[formData.category] || '/');
         }
       } else {
-        throw new Error(result.error || (isEditMode ? '글 수정에 실패했습니다.' : '글 등록에 실패했습니다.'));
+        const errorMessage = result.details 
+          ? `${result.error} (${result.details})` 
+          : result.error || (isEditMode ? '글 수정에 실패했습니다.' : '글 등록에 실패했습니다.');
+        console.error('❌ API 에러 상세:', { status: response.status, result });
+        throw new Error(errorMessage);
       }
       
     } catch (error) {
