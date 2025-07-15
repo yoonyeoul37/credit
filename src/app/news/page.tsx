@@ -10,6 +10,7 @@ export default function NewsPage() {
   // 방문자 추적
   useVisitorTracker('/news');
   
+  const [currentPage, setCurrentPage] = useState(1);
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

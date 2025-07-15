@@ -10,20 +10,36 @@ export default function CalculatorPage() {
   // 방문자 추적
   useVisitorTracker('/calculator');
   
+  const [activeTab, setActiveTab] = useState('loan');
   const [currentCalculator, setCurrentCalculator] = useState('loan');
+  
+  // 대출 계산기 상태
   const [loanAmount, setLoanAmount] = useState(10000);
   const [interestRate, setInterestRate] = useState(3.5);
   const [loanPeriod, setLoanPeriod] = useState(12);
+  const [repaymentType, setRepaymentType] = useState('equal-payment');
+  const [gracePeriod, setGracePeriod] = useState(0);
   const [monthlyPayment, setMonthlyPayment] = useState(0);
   const [totalPayment, setTotalPayment] = useState(0);
   const [totalInterest, setTotalInterest] = useState(0);
+  const [loanResult, setLoanResult] = useState(null);
   
   // 개인회생 계산기 상태
   const [totalDebt, setTotalDebt] = useState(50000);
   const [monthlyIncome, setMonthlyIncome] = useState(200);
+  const [age, setAge] = useState('');
+  const [familySize, setFamilySize] = useState('');
+  const [dependents, setDependents] = useState('');
+  const [debtCause, setDebtCause] = useState('');
+  const [jobType, setJobType] = useState('');
+  const [isBasicLivelihood, setIsBasicLivelihood] = useState(false);
+  const [hasChronicDisease, setHasChronicDisease] = useState(false);
+  const [hasAssets, setHasAssets] = useState(false);
+  const [assetValue, setAssetValue] = useState('');
   const [repaymentPeriod, setRepaymentPeriod] = useState(60);
   const [repaymentRate, setRepaymentRate] = useState(0);
   const [monthlyRepayment, setMonthlyRepayment] = useState(0);
+  const [recoveryResult, setRecoveryResult] = useState(null);
 
   // 숫자 포맷팅 함수 (콤마 추가)
   const formatNumber = (value: string | number): string => {
