@@ -89,6 +89,18 @@ CREATE TABLE ad_clicks (
     page_url VARCHAR(500)
 );
 
+-- 7. 방문자 추적 테이블 (visitors)
+CREATE TABLE visitors (
+    id BIGSERIAL PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    page_url VARCHAR(500),
+    referrer VARCHAR(500),
+    visited_at TIMESTAMPTZ DEFAULT NOW(),
+    session_id VARCHAR(100),
+    is_unique_daily BOOLEAN DEFAULT false -- 일일 고유 방문자 여부
+);
+
 -- 인덱스 생성
 CREATE INDEX idx_posts_category ON posts(category);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
@@ -115,6 +127,11 @@ CREATE INDEX idx_reports_status ON reports(status);
 CREATE INDEX idx_ad_clicks_ad_id ON ad_clicks(ad_id);
 CREATE INDEX idx_ad_clicks_clicked_at ON ad_clicks(clicked_at);
 CREATE INDEX idx_ad_clicks_date ON ad_clicks(DATE(clicked_at));
+
+CREATE INDEX idx_visitors_ip_date ON visitors(ip_address, DATE(visited_at));
+CREATE INDEX idx_visitors_visited_at ON visitors(visited_at);
+CREATE INDEX idx_visitors_session ON visitors(session_id);
+CREATE INDEX idx_visitors_unique_daily ON visitors(is_unique_daily, DATE(visited_at));
 
 -- 트리거 함수 생성 (updated_at 자동 업데이트)
 CREATE OR REPLACE FUNCTION update_updated_at_column()

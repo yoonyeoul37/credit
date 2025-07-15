@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
 import StickyAd from '../components/StickyAd';
+import { useVisitorTracker } from '../components/useVisitorTracker';
 
 export default function CalculatorPage() {
+  // 방문자 추적
+  useVisitorTracker('/calculator');
+  
   const [currentCalculator, setCurrentCalculator] = useState('loan');
   const [loanAmount, setLoanAmount] = useState(10000);
   const [interestRate, setInterestRate] = useState(3.5);

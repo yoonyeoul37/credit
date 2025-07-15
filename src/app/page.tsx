@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from './components/MobileNav';
 import StickyAd from './components/StickyAd';
+import { useVisitorTracker } from './components/useVisitorTracker';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,6 +12,9 @@ export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // 방문자 추적
+  useVisitorTracker('/');
   
   // 시간 포맷 함수
   const getTimeAgo = (dateString) => {

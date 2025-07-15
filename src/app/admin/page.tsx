@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
+import { useRouter } from 'next/navigation';
+import { useVisitorTracker } from '../components/useVisitorTracker';
 
 export default function AdminPage() {
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
@@ -40,6 +43,9 @@ export default function AdminPage() {
     isActive: true
   });
 
+  // 방문자 추적 (인증된 사용자만)
+  useVisitorTracker(isAuthenticated ? '/admin' : null);
+  
   // 샘플 데이터
   const [ads, setAds] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -47,19 +53,27 @@ export default function AdminPage() {
   const [reports, setReports] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // 방문자 통계 상태
+  const [visitorStats, setVisitorStats] = useState({
+    today: { total: 0, unique: 0 },
+    yesterday: { total: 0, unique: 0 },
+    total_visits: 0,
+    page_stats: {},
+    daily_stats: {},
+    recent_visits: []
+  });
 
   // 로그인 처리
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     
-    // 환경변수에서 관리자 계정 확인 (기본값 설정)
-    const adminUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'admin';
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'dudnf1212@@';
-    
-    if (loginForm.username === adminUsername && loginForm.password === adminPassword) {
+    if (loginForm.username === 'admin' && loginForm.password === 'dudnf1212@@') {
       setIsAuthenticated(true);
       setLoginError('');
-      sessionStorage.setItem('admin_auth', 'true');
+      
+      // 로그인 후 관리자 데이터 로드
+      await fetchAdminData();
     } else {
       setLoginError('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
@@ -81,62 +95,77 @@ export default function AdminPage() {
   }, []);
 
   // 관리자 데이터 가져오기
+  const fetchAdminData = async () => {
+    const isProduction = true; // 항상 실제 API 호출
+    
+    if (isProduction) {
+      // 프로덕션: 실제 API 호출
+      try {
+        const [adsResponse, postsResponse, commentsResponse, reportsResponse, newsResponse, visitorsResponse] = await Promise.all([
+          fetch('/api/admin/ads'),
+          fetch('/api/admin/posts'),
+          fetch('/api/admin/comments'),
+          fetch('/api/admin/reports'),
+          fetch('/api/admin/news'),
+          fetch('/api/visitors?days=7')
+        ]);
+        
+        if (adsResponse.ok) {
+          const adsData = await adsResponse.json();
+          setAds(adsData.ads || []);
+        }
+        
+        if (postsResponse.ok) {
+          const postsData = await postsResponse.json();
+          setPosts(postsData.posts || []);
+        }
+        
+        if (commentsResponse.ok) {
+          const commentsData = await commentsResponse.json();
+          setComments(commentsData.comments || []);
+        }
+        
+        if (reportsResponse.ok) {
+          const reportsData = await reportsResponse.json();
+          setReports(reportsData.reports || []);
+        }
+        
+        if (newsResponse.ok) {
+          const newsData = await newsResponse.json();
+          setNewsItems(newsData.news || []);
+        }
+        
+        if (visitorsResponse.ok) {
+          const visitorsData = await visitorsResponse.json();
+          setVisitorStats(visitorsData);
+        }
+      } catch (error) {
+        console.error('관리자 데이터 로딩 실패:', error);
+      }
+    } else {
+      // 개발환경: 빈 배열로 설정
+      console.log('🚧 개발 모드: API 연결 대기 중');
+      setAds([]);
+      setPosts([]);
+      setComments([]);
+      setReports([]);
+      setNewsItems([]);
+      setVisitorStats({
+        today: { total: 0, unique: 0 },
+        yesterday: { total: 0, unique: 0 },
+        total_visits: 0,
+        page_stats: {},
+        daily_stats: {},
+        recent_visits: []
+      });
+    }
+    
+    setLoading(false);
+  };
+
+  // 관리자 데이터 가져오기
   useEffect(() => {
     if (!isAuthenticated) return; // 인증되지 않으면 데이터 로드 안함
-    
-    const fetchAdminData = async () => {
-      const isProduction = true; // 항상 실제 API 호출
-      
-      if (isProduction) {
-        // 프로덕션: 실제 API 호출
-        try {
-          const [adsResponse, postsResponse, commentsResponse, reportsResponse, newsResponse] = await Promise.all([
-            fetch('/api/admin/ads'),
-            fetch('/api/admin/posts'),
-            fetch('/api/admin/comments'),
-            fetch('/api/admin/reports'),
-            fetch('/api/admin/news')
-          ]);
-          
-          if (adsResponse.ok) {
-            const adsData = await adsResponse.json();
-            setAds(adsData.ads || []);
-          }
-          
-          if (postsResponse.ok) {
-            const postsData = await postsResponse.json();
-            setPosts(postsData.posts || []);
-          }
-          
-          if (commentsResponse.ok) {
-            const commentsData = await commentsResponse.json();
-            setComments(commentsData.comments || []);
-          }
-          
-          if (reportsResponse.ok) {
-            const reportsData = await reportsResponse.json();
-            setReports(reportsData.reports || []);
-          }
-          
-          if (newsResponse.ok) {
-            const newsData = await newsResponse.json();
-            setNewsItems(newsData.news || []);
-          }
-        } catch (error) {
-          console.error('관리자 데이터 로딩 실패:', error);
-        }
-      } else {
-        // 개발환경: 빈 배열로 설정
-        console.log('🚧 개발 모드: API 연결 대기 중');
-        setAds([]);
-        setPosts([]);
-        setComments([]);
-        setReports([]);
-        setNewsItems([]);
-      }
-      
-      setLoading(false);
-    };
     
     fetchAdminData();
   }, [isAuthenticated]);
@@ -145,13 +174,13 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="font-pretendard font-light min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div className="bg-white p-8 rounded-lg shadow-sm w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">관리자 로그인</h1>
-            <p className="text-gray-600">크레딧스토리 관리자 페이지</p>
+            <h1 className="text-2xl font-normal text-black mb-2">관리자 로그인</h1>
+            <p className="text-sm text-gray-600">크레딧스토리 관리자 페이지</p>
           </div>
           
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 아이디
@@ -160,8 +189,7 @@ export default function AdminPage() {
                 type="text"
                 value={loginForm.username}
                 onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
-                placeholder="관리자 아이디를 입력하세요"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 required
               />
             </div>
@@ -174,31 +202,24 @@ export default function AdminPage() {
                 type="password"
                 value={loginForm.password}
                 onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
-                placeholder="비밀번호를 입력하세요"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 required
               />
             </div>
             
             {loginError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-sm">{loginError}</p>
+              <div className="text-red-600 text-sm text-center">
+                {loginError}
               </div>
             )}
             
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
             >
               로그인
             </button>
           </form>
-          
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500">
-              기본 계정: admin / dudnf1212@@
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -770,6 +791,16 @@ export default function AdminPage() {
                 신고 관리
               </button>
               <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                방문자 통계
+              </button>
+              <button
                 onClick={() => setActiveTab('news')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'news'
@@ -778,19 +809,6 @@ export default function AdminPage() {
                 }`}
               >
                 뉴스 관리
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('analytics');
-                  fetchAdAnalytics();
-                }}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                광고 분석
               </button>
             </nav>
           </div>
@@ -1257,6 +1275,161 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* 방문자 통계 */}
+          {activeTab === 'analytics' && (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-medium text-gray-900">방문자 통계</h2>
+                <button
+                  onClick={() => fetchAdminData()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  새로고침
+                </button>
+              </div>
+
+              {/* 전체 통계 카드 */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">오늘 방문자</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {visitorStats.today?.total?.toLocaleString() || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">고유: {visitorStats.today?.unique || 0}</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">어제 방문자</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {visitorStats.yesterday?.total?.toLocaleString() || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">고유: {visitorStats.yesterday?.unique || 0}</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">전체 방문</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {visitorStats.total_visits?.toLocaleString() || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">최근 7일</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow border">
+                  <div className="text-sm font-medium text-gray-500">전일 대비</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {visitorStats.today && visitorStats.yesterday ? 
+                      ((visitorStats.today.total - visitorStats.yesterday.total) >= 0 ? '+' : '') +
+                      (visitorStats.today.total - visitorStats.yesterday.total).toLocaleString()
+                      : '0'
+                    }
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {visitorStats.today && visitorStats.yesterday && visitorStats.yesterday.total > 0 ? 
+                      ((visitorStats.today.total - visitorStats.yesterday.total) / visitorStats.yesterday.total * 100).toFixed(1) + '%'
+                      : '0%'
+                    }
+                  </div>
+                </div>
+              </div>
+
+              {/* 일별 방문 통계 */}
+              {visitorStats.daily_stats && Object.keys(visitorStats.daily_stats).length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">일별 방문 통계</h3>
+                  <div className="space-y-2">
+                    {Object.entries(visitorStats.daily_stats)
+                      .sort(([a], [b]) => b.localeCompare(a))
+                      .slice(0, 7)
+                      .map(([date, stats]) => (
+                        <div key={date} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                          <span className="text-sm text-gray-600">{date}</span>
+                          <div className="text-sm font-medium text-gray-900">
+                            전체 {stats.total}회 / 고유 {stats.unique}회
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 페이지별 방문 통계 */}
+              {visitorStats.page_stats && Object.keys(visitorStats.page_stats).length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">페이지별 방문 통계</h3>
+                  <div className="space-y-2">
+                    {Object.entries(visitorStats.page_stats)
+                      .sort(([,a], [,b]) => b - a)
+                      .slice(0, 10)
+                      .map(([page, visits]) => (
+                        <div key={page} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                          <span className="text-sm text-gray-600 truncate max-w-xs">{page}</span>
+                          <span className="text-sm font-medium text-gray-900">{visits}회</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 최근 방문 목록 */}
+              {visitorStats.recent_visits && visitorStats.recent_visits.length > 0 && (
+                <div className="bg-white rounded-lg shadow border">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">최근 방문 내역</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            시간
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            IP 주소
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            페이지
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            유형
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {visitorStats.recent_visits.map((visit, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(visit.visited_at).toLocaleString('ko-KR')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {visit.ip_address}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 max-w-xs truncate">
+                              {visit.page_url || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              {visit.is_unique_daily ? 
+                                <span className="text-green-600">새 방문</span> : 
+                                <span className="text-gray-500">재방문</span>
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 데이터가 없을 때 */}
+              {(!visitorStats.total_visits || visitorStats.total_visits === 0) && (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-lg mb-2">📊</div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">아직 방문자 데이터가 없습니다</h3>
+                  <p className="text-sm text-gray-500">
+                    사용자가 사이트를 방문하면 여기에 통계가 표시됩니다.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 뉴스 관리 */}
           {activeTab === 'news' && (
             <div className="p-6">
@@ -1398,126 +1571,6 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-
-          {/* 광고 분석 */}
-          {activeTab === 'analytics' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-medium text-gray-900">광고 분석</h2>
-                <button
-                  onClick={() => fetchAdAnalytics()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  새로고침
-                </button>
-              </div>
-
-              {/* 전체 통계 카드 */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-lg shadow border">
-                  <div className="text-sm font-medium text-gray-500">총 클릭 수</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {adAnalytics.total_clicks?.toLocaleString() || 0}
-                  </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow border">
-                  <div className="text-sm font-medium text-gray-500">순 방문자</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {adAnalytics.unique_visitors?.toLocaleString() || 0}
-                  </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow border">
-                  <div className="text-sm font-medium text-gray-500">클릭률</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {adAnalytics.total_clicks && adAnalytics.unique_visitors 
-                      ? ((adAnalytics.total_clicks / adAnalytics.unique_visitors) * 100).toFixed(1) + '%'
-                      : '0%'
-                    }
-                  </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow border">
-                  <div className="text-sm font-medium text-gray-500">기간</div>
-                  <div className="text-lg font-bold text-gray-900">최근 30일</div>
-                </div>
-              </div>
-
-              {/* 일별 클릭 통계 */}
-              {adAnalytics.daily_stats && Object.keys(adAnalytics.daily_stats).length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow border mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">일별 클릭 통계</h3>
-                  <div className="space-y-2">
-                    {Object.entries(adAnalytics.daily_stats)
-                      .sort(([a], [b]) => b.localeCompare(a))
-                      .slice(0, 7)
-                      .map(([date, clicks]) => (
-                        <div key={date} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                          <span className="text-sm text-gray-600">{date}</span>
-                          <span className="text-sm font-medium text-gray-900">{clicks}회</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 최근 클릭 목록 */}
-              {adAnalytics.recent_clicks && adAnalytics.recent_clicks.length > 0 && (
-                <div className="bg-white rounded-lg shadow border">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">최근 클릭 내역</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            시간
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            광고 ID
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            사용자 IP
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            페이지
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {adAnalytics.recent_clicks.map((click, index) => (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(click.clicked_at).toLocaleString('ko-KR')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              #{click.ad_id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {click.user_ip}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 max-w-xs truncate">
-                              {click.page_url || click.referrer || '-'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* 데이터가 없을 때 */}
-              {(!adAnalytics.total_clicks || adAnalytics.total_clicks === 0) && (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 text-lg mb-2">📊</div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">아직 클릭 데이터가 없습니다</h3>
-                  <p className="text-sm text-gray-500">
-                    광고가 클릭되면 여기에 분석 데이터가 표시됩니다.
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </div>

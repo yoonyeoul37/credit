@@ -1,0 +1,42 @@
+[
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/",
+    "referrer": "http://localhost:3000/",
+    "session_id": "session_1752561227149_t56cgocfa",
+    "is_unique_daily": true,
+    "id": 1752561358657.1067,
+    "visited_at": "2025-07-15T06:35:58.657Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/",
+    "referrer": "http://localhost:3000/",
+    "session_id": "session_1752561227149_t56cgocfa",
+    "is_unique_daily": true,
+    "id": 1752561411885.295,
+    "visited_at": "2025-07-15T06:36:51.885Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/admin",
+    "referrer": "http://localhost:3000/admin",
+    "session_id": "session_1752561227149_t56cgocfa",
+    "is_unique_daily": true,
+    "id": 1752561430657.8977,
+    "visited_at": "2025-07-15T06:37:10.657Z"
+  },
+  {
+    "ip_address": "::1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Whale/4.32.315.22 Safari/537.36",
+    "page_url": "/admin",
+    "referrer": "http://localhost:3000/admin",
+    "session_id": "session_1752561227149_t56cgocfa",
+    "is_unique_daily": true,
+    "id": 1752561432142.424,
+    "visited_at": "2025-07-15T06:37:12.142Z"
+  }
+]

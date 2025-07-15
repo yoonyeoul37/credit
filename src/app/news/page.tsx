@@ -4,59 +4,43 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MobileNav from '../components/MobileNav';
 import StickyAd from '../components/StickyAd';
+import { useVisitorTracker } from '../components/useVisitorTracker';
 
 export default function NewsPage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // 방문자 추적
+  useVisitorTracker('/news');
   
-  // 뉴스 목록 가져오기
+  const [newsItems, setNewsItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showMobileNav, setShowMobileNav] = useState(false);
+
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        console.log('🌐 뉴스 API 호출 시도...');
-        
-        const response = await fetch('/api/news');
-        const data = await response.json();
-        
-        if (response.ok) {
-          console.log('✅ 뉴스 데이터 로드 성공:', data.news?.length || 0, '개');
-          
-          // 데이터 포맷 변환 (기존 UI에 맞게)
-          const formattedNews = (data.news || []).map(item => ({
-            id: item.id,
-            title: item.title,
-            summary: item.summary,
-            source: item.source,
-            url: item.url || '#',
-            publishedAt: new Date(item.published_at).toLocaleDateString(),
-            category: item.category,
-            isImportant: item.is_important
-          }));
-          
-          setPosts(formattedNews);
-        } else {
-          throw new Error(data.error || '뉴스를 불러오는데 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('❌ 뉴스 로딩 실패:', error);
-        
-        // 오류 시 빈 배열로 설정
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchNews();
+    fetchNewsItems();
   }, []);
+
+  const fetchNewsItems = async () => {
+    try {
+      const response = await fetch('/api/news');
+      if (response.ok) {
+        const data = await response.json();
+        setNewsItems(data.news || []);
+      } else {
+        setError('뉴스를 불러오는 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('뉴스 API 호출 오류:', error);
+      setError('뉴스를 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // 페이징 계산
-  const totalPages = Math.ceil(posts.length / postsPerPage);
-  const startIndex = (currentPage - 1) * postsPerPage;
-  const endIndex = startIndex + postsPerPage;
-  const displayedNews = posts.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(newsItems.length / 10);
+  const startIndex = (currentPage - 1) * 10;
+  const endIndex = startIndex + 10;
+  const displayedNews = newsItems.slice(startIndex, endIndex);
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -128,7 +112,7 @@ export default function NewsPage() {
         <div className="space-y-4">
           {loading ? (
             <p className="text-center py-8">뉴스 데이터를 불러오는 중입니다...</p>
-          ) : posts.length === 0 ? (
+          ) : newsItems.length === 0 ? (
             <p className="text-center py-8">뉴스 데이터가 없습니다.</p>
           ) : (
             displayedNews.map((news, index) => (
@@ -233,7 +217,7 @@ export default function NewsPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {posts.length}개 뉴스 | {currentPage} / {totalPages} 페이지
+            전체 {newsItems.length}개 뉴스 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
       </main>
