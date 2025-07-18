@@ -12,6 +12,7 @@ export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totalPosts, setTotalPosts] = useState(0);
   
   // 방문자 추적
   useVisitorTracker('/');
@@ -152,6 +153,7 @@ export default function Home() {
           });
 
           setPosts(formattedPosts);
+          setTotalPosts(data.pagination?.total || 0);
           setError(null);
 
         /* 
@@ -206,8 +208,8 @@ export default function Home() {
 
 
 
-  // 페이징 계산 (API에서 페이징 처리되므로 간소화)
-  const totalPages = Math.ceil(posts.length / postsPerPage);
+  // 페이징 계산 (API에서 받은 전체 게시글 수 사용)
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
   const currentPosts = posts;
 
   // 페이지네이션 범위 계산 (10페이지씩)
@@ -454,7 +456,7 @@ export default function Home() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
       </main>

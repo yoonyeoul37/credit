@@ -10,6 +10,7 @@ export default function WorkoutPage() {
   const postsPerPage = 10;
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalPosts, setTotalPosts] = useState(0);
   
   // 프리미엄 광고 상태
   const [premiumAd, setPremiumAd] = useState({
@@ -31,6 +32,7 @@ export default function WorkoutPage() {
           
           if (response.ok) {
             setPosts(data.posts || []);
+            setTotalPosts(data.pagination?.total || 0);
           } else {
             throw new Error('게시글을 불러오는데 실패했습니다.');
           }
@@ -89,8 +91,8 @@ export default function WorkoutPage() {
     fetchAds();
   }, []);
   
-  // 페이징 계산
-  const totalPages = Math.ceil(posts.length / postsPerPage);
+  // 페이징 계산 (API에서 받은 전체 게시글 수 사용)
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
   const workoutPosts = posts.slice(startIndex, endIndex);
@@ -288,7 +290,7 @@ export default function WorkoutPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {posts.length}개 글 | {currentPage} / {totalPages} 페이지
+            전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
       </main>

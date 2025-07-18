@@ -14,6 +14,7 @@ export default function NewsPage() {
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totalNews, setTotalNews] = useState(0);
   const [showMobileNav, setShowMobileNav] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function NewsPage() {
       if (response.ok) {
         const data = await response.json();
         setNewsItems(data.news || []);
+        setTotalNews(data.pagination?.total || 0);
       } else {
         setError('뉴스를 불러오는 중 오류가 발생했습니다.');
       }
@@ -37,8 +39,8 @@ export default function NewsPage() {
     }
   };
   
-  // 페이징 계산
-  const totalPages = Math.ceil(newsItems.length / 10);
+  // 페이징 계산 (API에서 받은 전체 뉴스 수 사용)
+  const totalPages = Math.ceil(totalNews / 10);
   const startIndex = (currentPage - 1) * 10;
   const endIndex = startIndex + 10;
   const displayedNews = newsItems.slice(startIndex, endIndex);
@@ -218,7 +220,7 @@ export default function NewsPage() {
         {/* 페이지 정보 */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            전체 {newsItems.length}개 뉴스 | {currentPage} / {totalPages} 페이지
+            전체 {totalNews}개 뉴스 | {currentPage} / {totalPages} 페이지
           </p>
         </div>
       </main>
