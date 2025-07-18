@@ -11,7 +11,6 @@ export default function LoanPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPosts, setTotalPosts] = useState(0);
-  const [totalPosts, setTotalPosts] = useState(0);
   
   // 프리미엄 광고 상태
   const [premiumAd, setPremiumAd] = useState({
