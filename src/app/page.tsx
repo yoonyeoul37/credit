@@ -156,10 +156,7 @@ export default function Home() {
           setTotalPosts(data.pagination?.total || 0);
           setError(null);
           
-          // API 응답 디버깅
-          console.log('📊 API 응답 데이터:', data);
-          console.log('📊 pagination 정보:', data.pagination);
-          console.log('📊 totalPosts 설정:', data.pagination?.total || 0);
+
 
         /* 
         // 실제 API 호출 (Supabase 설정 후 활성화)
@@ -217,16 +214,7 @@ export default function Home() {
   const totalPages = Math.ceil(totalPosts / postsPerPage);
   const currentPosts = posts;
   
-  // 디버깅용 로그
-  console.log('🔍 페이지네이션 디버깅:', {
-    totalPosts,
-    postsPerPage,
-    totalPages,
-    currentPage,
-    postsLength: posts.length,
-    startPage,
-    endPage
-  });
+
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
