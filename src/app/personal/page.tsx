@@ -172,43 +172,44 @@ export default function PersonalPage() {
         {/* 페이지네이션 */}
         {totalPages > 1 && (
           <div className="mt-8 flex justify-center">
-          <div className="flex items-center space-x-2">
-            {/* 이전 10페이지 */}
-            {startPage > 1 && (
-              <button
-                onClick={() => handlePageChange(startPage - 1)}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
-              >
-                ← 이전
-              </button>
-            )}
-            
-            {/* 페이지 번호들 */}
-            {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-2 text-sm rounded ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            
-            {/* 다음 10페이지 */}
-            {endPage < totalPages && (
-              <button
-                onClick={() => handlePageChange(endPage + 1)}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
-              >
-                다음 →
-              </button>
-            )}
+            <div className="flex items-center space-x-2">
+              {/* 이전 10페이지 */}
+              {startPage > 1 && (
+                <button
+                  onClick={() => handlePageChange(startPage - 1)}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
+                >
+                  ← 이전
+                </button>
+              )}
+              
+              {/* 페이지 번호들 */}
+              {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-2 text-sm rounded ${
+                    currentPage === page
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              {/* 다음 10페이지 */}
+              {endPage < totalPages && (
+                <button
+                  onClick={() => handlePageChange(endPage + 1)}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded"
+                >
+                  다음 →
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 페이지 정보 */}
         {totalPages > 1 && (
