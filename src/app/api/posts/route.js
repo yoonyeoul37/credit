@@ -25,12 +25,24 @@ export async function GET(request) {
       query = query.eq('category', category);
     }
     
+    // 전체 게시글 수 먼저 조회
+    const { count: totalCount } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_hidden', false)
+      .then(result => {
+        if (category && category !== 'all') {
+          return result.eq('category', category);
+        }
+        return result;
+      });
+    
     // 페이지네이션
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     query = query.range(from, to);
     
-    const { data: posts, error, count } = await query;
+    const { data: posts, error } = await query;
     
     if (error) {
       console.error('게시글 조회 오류:', error);
@@ -58,8 +70,8 @@ export async function GET(request) {
       pagination: {
         page,
         limit,
-        total: count || 0,
-        hasMore: count > page * limit
+        total: totalCount || 0,
+        hasMore: totalCount > page * limit
       }
     });
     

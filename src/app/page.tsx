@@ -155,6 +155,11 @@ export default function Home() {
           setPosts(formattedPosts);
           setTotalPosts(data.pagination?.total || 0);
           setError(null);
+          
+          // API 응답 디버깅
+          console.log('📊 API 응답 데이터:', data);
+          console.log('📊 pagination 정보:', data.pagination);
+          console.log('📊 totalPosts 설정:', data.pagination?.total || 0);
 
         /* 
         // 실제 API 호출 (Supabase 설정 후 활성화)
@@ -211,6 +216,17 @@ export default function Home() {
   // 페이징 계산 (API에서 받은 전체 게시글 수 사용)
   const totalPages = Math.ceil(totalPosts / postsPerPage);
   const currentPosts = posts;
+  
+  // 디버깅용 로그
+  console.log('🔍 페이지네이션 디버깅:', {
+    totalPosts,
+    postsPerPage,
+    totalPages,
+    currentPage,
+    postsLength: posts.length,
+    startPage,
+    endPage
+  });
 
   // 페이지네이션 범위 계산 (10페이지씩)
   const pageGroup = Math.ceil(currentPage / 10);
@@ -414,7 +430,8 @@ export default function Home() {
         )}
 
         {/* 페이지네이션 */}
-        <div className="mt-6 md:mt-8 flex justify-center">
+        {totalPages > 1 && (
+          <div className="mt-6 md:mt-8 flex justify-center">
           <div className="flex items-center space-x-1 md:space-x-2">
             {/* 이전 10페이지 */}
             {startPage > 1 && (
@@ -454,11 +471,13 @@ export default function Home() {
         </div>
 
         {/* 페이지 정보 */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
-          </p>
-        </div>
+        {totalPages > 1 && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-500">
+              전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
+            </p>
+          </div>
+        )}
       </main>
 
       {/* 푸터 */}

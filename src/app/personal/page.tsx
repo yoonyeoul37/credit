@@ -170,7 +170,8 @@ export default function PersonalPage() {
         )}
 
         {/* 페이지네이션 */}
-        <div className="mt-8 flex justify-center">
+        {totalPages > 1 && (
+          <div className="mt-8 flex justify-center">
           <div className="flex items-center space-x-2">
             {/* 이전 10페이지 */}
             {startPage > 1 && (
@@ -210,11 +211,13 @@ export default function PersonalPage() {
         </div>
 
         {/* 페이지 정보 */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
-          </p>
-        </div>
+        {totalPages > 1 && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-500">
+              전체 {totalPosts}개 글 | {currentPage} / {totalPages} 페이지
+            </p>
+          </div>
+        )}
       </main>
 
       {/* 푸터 */}
