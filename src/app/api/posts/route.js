@@ -26,16 +26,17 @@ export async function GET(request) {
     }
     
     // 전체 게시글 수 먼저 조회
-    const { count: totalCount } = await supabase
+    let countQuery = supabase
       .from('posts')
       .select('*', { count: 'exact', head: true })
-      .eq('is_hidden', false)
-      .then(result => {
-        if (category && category !== 'all') {
-          return result.eq('category', category);
-        }
-        return result;
-      });
+      .eq('is_hidden', false);
+    
+    // 카테고리 필터링 적용
+    if (category && category !== 'all') {
+      countQuery = countQuery.eq('category', category);
+    }
+    
+    const { count: totalCount } = await countQuery;
     
     // 페이지네이션
     const from = (page - 1) * limit;
